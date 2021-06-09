@@ -44,12 +44,12 @@ class SignaturePdf
   public function __construct(string $pdfPath, ManageCert $cert, string $mode = self::MODE_RESOURCE)
   {
     /**
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\FileNotFoundException
+     * @throws FileNotFoundException
      */
     if (!File::exists($pdfPath)) throw new FileNotFoundException($pdfPath);
 
     /**
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\InvalidPdfSignModeTypeException
+     * @throws InvalidPdfSignModeTypeException
      */
     if (!in_array($mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) throw new InvalidPdfSignModeTypeException($mode);
 

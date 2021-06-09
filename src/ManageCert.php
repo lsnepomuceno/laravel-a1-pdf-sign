@@ -156,11 +156,17 @@ class ManageCert
    */
   public function validate(): void
   {
+    /**
+     * @throws InvalidCertificateContentException
+     */
     if (!$this->certContent) {
       $this->invalidate();
       throw new InvalidCertificateContentException;
     }
 
+    /**
+     * @throws Invalidx509PrivateKeyException
+     */
     if (!openssl_x509_check_private_key($this->certContent, $this->originalCertContent)) {
       $this->invalidate();
       throw new Invalidx509PrivateKeyException;
@@ -224,6 +230,7 @@ class ManageCert
    * setHashKey - Set a new hash key
    *
    * @param  string $hashKey
+   *
    * @return \App\Services\A1PdfSign\ManageCert
    */
   public function setHashKey(string $hashKey): ManageCert
@@ -270,6 +277,7 @@ class ManageCert
    *
    * @param  string $blobString
    * @throws \Illuminate\Contracts\Encryption\EncryptException
+   *
    * @return string
    */
   public function encryptBase64BlobString(string $blobString): string
@@ -286,6 +294,7 @@ class ManageCert
    *
    * @param  string $encryptedBlobString
    * @throws \Illuminate\Contracts\Encryption\DecryptException
+   *
    * @return string
    */
   public function decryptBase64BlobString(string $encryptedBlobString): string
