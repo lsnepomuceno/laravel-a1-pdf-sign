@@ -35,7 +35,7 @@ class SignaturePdf
    * __construct
    *
    * @param  string $pdfPath
-   * @param  \App\Services\A1PdfSign\ManageCert $cert
+   * @param  \LSNepomuceno\LaravelA1PdfSign\ManageCert $cert
    * @param  string $mode self::MODE_RESOURCE
    * @throws \Throwable
    * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,InvalidPdfSignModeTypeException}
