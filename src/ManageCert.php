@@ -65,7 +65,7 @@ class ManageCert
    * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{CertificateOutputNotFounfException,FileNotFoundException,InvalidPFXException}
    * @throws \Symfony\Component\Process\Exception\ProcessFailedException
    *
-   * @return \App\Services\A1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
    */
   public function fromPfx(string $pfxPath, string $password): ManageCert
   {
@@ -112,7 +112,7 @@ class ManageCert
    * @param  \Illuminate\Http\UploadedFile $uploadedPfx
    * @param  string $password
    *
-   * @return \App\Services\A1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
    */
   public function fromUpload(UploadedFile $uploadedPfx, string $password): ManageCert
   {
@@ -136,7 +136,7 @@ class ManageCert
    * setCertContent - Set a valid OpenSSLCertificate certificate content
    *
    * @param  string $certContent
-   * @return \App\Services\A1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
    */
   public function setCertContent(string $certContent): ManageCert
   {
@@ -215,7 +215,7 @@ class ManageCert
    * generateHashKey - Generates a new hash key, based on self::CIPHER const
    * @see self::CIPHER
    *
-   * @return \App\Services\A1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
    */
   public function generateHashKey(): ManageCert
   {
@@ -231,7 +231,7 @@ class ManageCert
    *
    * @param  string $hashKey
    *
-   * @return \App\Services\A1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
    */
   public function setHashKey(string $hashKey): ManageCert
   {
@@ -305,5 +305,41 @@ class ManageCert
     } catch (DecryptException $th) {
       throw $th;
     }
+  }
+
+  /**
+   * makeDebugCertificate - Generate fake certificate for debug reasons
+   *
+   * @throws \Symfony\Component\Process\Exception\ProcessFailedException
+   *
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
+   */
+  public function makeDebugCertificate(): ManageCert
+  {
+    $pass = 123456;
+
+    $name = $this->tempDir . Str::orderedUuid();
+
+    $genCommands = [
+      "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=test.com\" -days 600 -passout pass:{$pass}",
+      "openssl pkcs12 -export -name “test.com” -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$pass} -passout pass:{$pass}"
+    ];
+
+    foreach ($genCommands as $command) {
+      try {
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        while ($process->isRunning());
+
+        $process->stop(1);
+      } catch (ProcessFailedException $exception) {
+        throw $exception;
+      }
+    }
+
+    File::delete(["{$name}.key", "{$name}.crt"]);
+
+    return $this->fromPfx("{$name}.pfx", $pass);
   }
 }

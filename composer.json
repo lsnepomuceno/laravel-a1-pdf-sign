@@ -3,7 +3,11 @@
 	"description": "Sign PDF files with valid x509 certificates",
 	"license": "MIT",
 	"type": "library",
-	"version": "0.0.1",
+	"homepage": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign",
+	"support": {
+		"issues": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign/issues",
+		"source": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign"
+	},
 	"keywords": [
 		"a1",
 		"sign pdf",
@@ -26,17 +30,29 @@
 	},
 	"minimum-stability": "dev",
 	"require-dev": {
-		"phpunit/phpunit": "^8.5.8|^9.3.3"
+		"phpunit/phpunit": "^8.5.8|^9.3.3",
+		"orchestra/testbench": "6.x-dev",
+		"nunomaduro/collision": "dev-stable"
 	},
 	"authors": [
 		{
 			"name": "Lucas Nepomuceno",
-			"email": "lsn.nepomuceno@gmail.com"
+			"email": "lsn.nepomuceno@gmail.com",
+			"homepage": "https://github.com/lsnepomuceno"
 		}
 	],
 	"autoload": {
 		"psr-4": {
 			"LSNepomuceno\\LaravelA1PdfSign\\": "src"
 		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"LSNepomuceno\\LaravelA1PdfSign\\Tests\\": "tests"
+		}
+	},
+	"scripts": {
+		"test": "vendor/bin/phpunit",
+		"test-coverage": "vendor/bin/phpunit --coverage-html coverage"
 	}
 }
