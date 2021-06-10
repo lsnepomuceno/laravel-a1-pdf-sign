@@ -3,7 +3,6 @@
 	"description": "Sign PDF files with valid x509 certificates",
 	"license": "MIT",
 	"type": "library",
-	"version": "0.0.1",
 	"homepage": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign",
 	"support": {
 		"issues": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign/issues",
