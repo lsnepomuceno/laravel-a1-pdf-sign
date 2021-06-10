@@ -51,5 +51,8 @@
 		"psr-4": {
 			"LSNepomuceno\\LaravelA1PdfSign\\Tests\\": "tests"
 		}
+	},
+	"scripts": {
+		"test": "vendor/bin/phpunit"
 	}
 }
