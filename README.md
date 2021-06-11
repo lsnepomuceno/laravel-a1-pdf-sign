@@ -209,3 +209,13 @@ class ExampleController() {
 
 #### 3 - The expected result in Adobe Acrobat/Reader will be as shown below.
 ![Signed File](https://user-images.githubusercontent.com/14093492/121451955-f2184c00-c974-11eb-90af-257fc814784f.png)
+
+# Tests
+#### Run the tests with:
+```Shell
+composer run-script test
+```
+or
+```Shell
+vendor/bin/phpunit
+```
