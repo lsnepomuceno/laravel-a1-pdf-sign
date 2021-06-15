@@ -10,6 +10,63 @@ Require this package in your composer.json and update composer. This will downlo
 ```Shell
 composer require lsnepomuceno/laravel-a1-pdf-sign
 ```
+# :collision: Is your project not Laravel / Lumen?
+### If you want to use this package in a project that is not based on Laravel / Lumen, you need to make the adjustments below
+#### 1 - Install dependencies to work correctly. 
+```Shell
+composer require illuminate/container illuminate/filesystem ramsey/uuid
+```
+
+#### 2 - Prepare the code to launch the Container and FileSystem instance.
+```PHP
+<?php
+
+require_once 'vendor/autoload.php';
+
+use Illuminate\Container\Container;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Facade;
+
+try {
+  $app = new Container();
+  $app->singleton('app', Container::class);
+  $app->singleton('files', fn () => new Filesystem);
+  Facade::setFacadeApplication($app);
+  
+  // Allow the use of Facades, only if necessary
+  // $app->withFacades();
+} catch (\Throwable $th) {
+  // TODO necessary
+}
+
+
+```
+#### 3 - After this parameterization, your project will work normally.
+```PHP
+<?php
+
+require_once 'vendor/autoload.php';
+
+use Illuminate\Container\Container;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Facade;
+use LSNepomuceno\LaravelA1PdfSign\ManageCert;
+
+try {
+  $app = new Container();
+  $app->singleton('app', Container::class);
+  $app->singleton('files', fn () => new Filesystem);
+  Facade::setFacadeApplication($app);
+  
+  $cert = new ManageCert;
+  $cert->fromPfx(path/to/certificate.pfx', 'password');
+  var_dump($cert->getCert());
+} catch (\Throwable $th) {
+  // TODO necessary
+}
+
+
+```
 
 # Usage
 ## Working with certificate
