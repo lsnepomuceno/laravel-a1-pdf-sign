@@ -1,8 +1,6 @@
 name: A1 Pdf Sign
 
 on:
-  push:
-    branches: [ dev ]
   pull_request:
     branches: [ main ]
 
