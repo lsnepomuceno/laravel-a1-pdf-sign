@@ -49,7 +49,7 @@ class ManageCert
    */
   public function __construct()
   {
-    $this->tempDir = __DIR__ . '/temp/';
+    $this->tempDir = __DIR__ . '/Temp/';
 
     $this->generateHashKey()->setEncrypter();
 
