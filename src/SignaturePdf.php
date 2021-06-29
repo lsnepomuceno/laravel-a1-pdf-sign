@@ -3,7 +3,6 @@
 namespace LSNepomuceno\LaravelA1PdfSign;
 
 use TCPDI;
-use Illuminate\Http\Response;
 use Illuminate\Support\{Str, Facades\File};
 use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfSignModeTypeException};
 
@@ -118,8 +117,7 @@ class SignaturePdf
 
       case self::MODE_DOWNLOAD:
       default:
-        return Response::download($output, $fileName, ['Content-Type' => 'application/pdf'])
-          ->deleteFileAfterSend(true);
+        return response()->download($output)->deleteFileAfterSend();
         break;
     }
   }
