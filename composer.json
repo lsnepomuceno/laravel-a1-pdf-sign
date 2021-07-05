@@ -47,7 +47,7 @@
 			"LSNepomuceno\\LaravelA1PdfSign\\": "src"
 		},
 		"files": [
-			"helpers.php"
+			"src/helpers.php"
 		]
 	},
 	"autoload-dev": {
