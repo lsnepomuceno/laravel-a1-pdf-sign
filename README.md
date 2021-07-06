@@ -6,23 +6,23 @@
 
 # TL;DR
  -  [Install](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#install)
- - [Usage](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#usage)
-    - [Working with certificate](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#working-with-certificate)
-	    - [Reading the certificate from file](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#1---reading-the-certificate-from-file)
-      - [Reading the certificate from upload](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#2---reading-the-certificate-from-upload)
-      - [The expected result](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#3---the-expected-result-will-be-as-shown-below)
-      - [Store certificate data securely in the database](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#4---store-certificate-data-securely-in-the-database)
-      - [Reading certificate from database](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#5---reading-certificate-from-database)
-    - [Sign PDF File](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#sign-pdf-file)
-       - [Sign PDF with certificate from file or upload](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#1---sign-pdf-with-certificate-from-file-or-upload) 
-       - [Sign PDF with certificate from database (model based)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#2---sign-pdf-with-certificate-from-database-model-based) 
-       - [The expected result](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#3---the-expected-result-in-adobe-acrobatreader-will-be-as-shown-below) 
-  - [:collision: Is your project not Laravel/Lumen?](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#collision-is-your-project-not-laravel--lumen)
-    - [If you want to use this package in a project that is not based on Laravel / Lumen, you need to make the adjustments below](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#if-you-want-to-use-this-package-in-a-project-that-is-not-based-on-laravel--lumen-you-need-to-make-the-adjustments-below)
-       - [Install dependencies to work correctly](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#1---install-dependencies-to-work-correctly) 
-       - [Prepare the code to launch the Container and FileSystem instance](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#2---prepare-the-code-to-launch-the-container-and-filesystem-instance) 
-       - [After this parameterization, your project will work normally](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#3---after-this-parameterization-your-project-will-work-normally) 
-   - [Tests](https://github.com/lsnepomuceno/laravel-a1-pdf-sign#tests)
+ - [Usage](#usage)
+    - [Working with certificate](#working-with-certificate)
+	    - [Reading the certificate from file](#1---reading-the-certificate-from-file)
+      - [Reading the certificate from upload](#2---reading-the-certificate-from-upload)
+      - [The expected result](#3---the-expected-result-will-be-as-shown-below)
+      - [Store certificate data securely in the database](#4---store-certificate-data-securely-in-the-database)
+      - [Reading certificate from database](#5---reading-certificate-from-database)
+    - [Sign PDF File](#sign-pdf-file)
+       - [Sign PDF with certificate from file or upload](#1---sign-pdf-with-certificate-from-file-or-upload) 
+       - [Sign PDF with certificate from database (model based)](#2---sign-pdf-with-certificate-from-database-model-based) 
+       - [The expected result](#3---the-expected-result-in-adobe-acrobatreader-will-be-as-shown-below) 
+  - [:collision: Is your project not Laravel/Lumen?](#collision-is-your-project-not-laravel--lumen)
+    - [If you want to use this package in a project that is not based on Laravel / Lumen, you need to make the adjustments below](#if-you-want-to-use-this-package-in-a-project-that-is-not-based-on-laravel--lumen-you-need-to-make-the-adjustments-below)
+       - [Install dependencies to work correctly](#1---install-dependencies-to-work-correctly) 
+       - [Prepare the code to launch the Container and FileSystem instance](#2---prepare-the-code-to-launch-the-container-and-filesystem-instance) 
+       - [After this parameterization, your project will work normally](#3---after-this-parameterization-your-project-will-work-normally) 
+   - [Tests](#tests)
 
 <hr />
 
@@ -239,6 +239,49 @@ class ExampleController() {
 #### 3 - The expected result in Adobe Acrobat/Reader will be as shown below.
 ![Signed File](https://user-images.githubusercontent.com/14093492/121451955-f2184c00-c974-11eb-90af-257fc814784f.png)
 
+## Helpers - signPdfFromFile(), signPdfFromUpload(), encryptCertData(), decryptCertData()
+
+```PHP
+<?php
+
+use Illuminate\Http\Request;
+
+class ExampleController() {
+    public function dummyFunction(Request $request){
+    	// SIGNATURE FROM FILE
+        try {
+            signPdfFromFile('path/to/certificate.pfx', 'password', 'path/to/pdf/file.pdf');
+        } catch (\Throwable $th) {
+            // TODO necessary
+        }
+	
+	// SIGNATURE FROM UPLOAD
+        try {
+            signPdfFromUpload($request->pfxUploadedFile, $request->password, 'path/to/pdf/file.pdf');
+        } catch (\Throwable $th) {
+            // TODO necessary
+        }
+		
+	// ENCRYPT CERTIFICATE DATA
+	// path/to/certificate.pfx or uploaded certificate file
+	// return object with attr`s [hash, certificate, password]
+        try {
+            $encriptedCertificate = encryptCertData('path/to/certificate.pfx', 'password');
+        } catch (\Throwable $th) {
+            // TODO necessary
+        }
+	
+	// DECRYPT THE CERTIFICATE DATA
+        try {
+	    decryptCertData($encriptedCertificate->hash, $encriptedCertificate->certificate, $encriptedCertificate->password);
+        } catch (\Throwable $th) {
+            // TODO necessary
+        }
+    }
+}
+
+```
+
 <hr />
 
 # :collision: Is your project not Laravel / Lumen?
@@ -290,7 +333,7 @@ try {
   Facade::setFacadeApplication($app);
   
   $cert = new ManageCert;
-  $cert->fromPfx(path/to/certificate.pfx', 'password');
+  $cert->fromPfx('path/to/certificate.pfx', 'password');
   var_dump($cert->getCert());
 } catch (\Throwable $th) {
   // TODO necessary
