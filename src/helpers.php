@@ -1,7 +1,7 @@
 <?php
 
 use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SignaturePdf};
-use illuminate\Support\{Str, Facades\File, Fluent};
+use Illuminate\Support\{Str, Facades\File, Fluent};
 use Illuminate\Http\UploadedFile;
 
 if (!function_exists('signPdf')) {
@@ -11,11 +11,11 @@ if (!function_exists('signPdf')) {
   function signPdfFromFile(string $pfxPath, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
   {
     try {
-      return new SignaturePdf(
+      return (new SignaturePdf(
         $pdfPath,
         (new ManageCert)->fromPfx($pfxPath, $password),
         $mode
-      );
+      ))->signature();
     } catch (\Throwable $th) {
       throw $th;
     }
@@ -29,11 +29,11 @@ if (!function_exists('signPdfFromUpload')) {
   function signPdfFromUpload(UploadedFile $uploadedPfx, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
   {
     try {
-      return new SignaturePdf(
+      return (new SignaturePdf(
         $pdfPath,
         (new ManageCert)->fromUpload($uploadedPfx, $password),
         $mode
-      );
+      ))->signature();
     } catch (\Throwable $th) {
       throw $th;
     }
