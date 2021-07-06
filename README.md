@@ -17,6 +17,7 @@
        - [Sign PDF with certificate from file or upload](#1---sign-pdf-with-certificate-from-file-or-upload) 
        - [Sign PDF with certificate from database (model based)](#2---sign-pdf-with-certificate-from-database-model-based) 
        - [The expected result](#3---the-expected-result-in-adobe-acrobatreader-will-be-as-shown-below) 
+    - [Helpers - signPdfFromFile(), signPdfFromUpload(), encryptCertData(), decryptCertData()](#helpers---signpdffromfile-signpdffromupload-encryptcertdata-decryptcertdata)
   - [:collision: Is your project not Laravel/Lumen?](#collision-is-your-project-not-laravel--lumen)
     - [If you want to use this package in a project that is not based on Laravel / Lumen, you need to make the adjustments below](#if-you-want-to-use-this-package-in-a-project-that-is-not-based-on-laravel--lumen-you-need-to-make-the-adjustments-below)
        - [Install dependencies to work correctly](#1---install-dependencies-to-work-correctly) 
