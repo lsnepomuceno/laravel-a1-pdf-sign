@@ -26,7 +26,7 @@
 		"illuminate/encryption": "^8.0",
 		"illuminate/http": "^8.0",
 		"tecnickcom/tc-lib-pdf": "^8.0",
-		"iio/libmergepdf": "^4.0",
+        	"setasign/fpdi": "^2.0",
 		"symfony/process": "^5.0"
 	},
 	"minimum-stability": "dev",
