@@ -2,7 +2,7 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign;
 
-use TCPDI;
+use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Support\{Str, Facades\File};
 use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfSignModeTypeException};
 
@@ -16,9 +16,9 @@ class SignaturePdf
     MODE_RESOURCE = 'MODE_RESOURCE';
 
   /**
-   * @var TCPDI
+   * @var \setasign\Fpdi\Tcpdf\Fpdi
    */
-  private TCPDI $pdf;
+  private Fpdi $pdf;
 
   /**
    * @var \LSNepomuceno\LaravelA1PdfSign\ManageCert
@@ -63,7 +63,7 @@ class SignaturePdf
 
     $this->mode    = $mode;
     $this->pdfPath = $pdfPath;
-    $this->pdf     =  new TCPDI(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    $this->pdf     =  new Fpdi(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
   }
 
   /**

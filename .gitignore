@@ -11,3 +11,8 @@ Vagrantfile
 composer.lock
 .phpunit.result.cache
 *.bak
+demo.php
+*Zone.Identifier
+Temp
+*.pdf
+*.pfx
