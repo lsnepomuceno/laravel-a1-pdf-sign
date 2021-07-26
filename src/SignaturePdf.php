@@ -77,6 +77,8 @@ class SignaturePdf
 
     for ($i = 1; $i <= $pagecount; $i++) {
       $tplidx = $this->pdf->importPage($i);
+      $this->pdf->SetPrintHeader(false);
+      $this->pdf->SetPrintFooter(false);
       $this->pdf->AddPage();
       $this->pdf->useTemplate($tplidx);
     }
