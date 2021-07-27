@@ -1,6 +1,6 @@
 <?php
 
-use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SignaturePdf};
+use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SignaturePdf, ValidatePdfSignature};
 use Illuminate\Support\{Str, Facades\File, Fluent};
 use Illuminate\Http\UploadedFile;
 
@@ -87,5 +87,19 @@ if (!function_exists('decryptCertData')) {
     } catch (\Throwable $th) {
       throw $th;
     }
+  }
+}
+
+if (!function_exists('a1TempDir')) {
+  /**
+   * a1TempDir - Helper to make temp dir and files
+   */
+  function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx')
+  {
+    $tempDir = __DIR__ . '/Temp/';
+
+    if ($tempFile) $tempDir .= Str::orderedUuid() . $fileExt;
+
+    return $tempDir;
   }
 }
