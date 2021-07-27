@@ -103,3 +103,17 @@ if (!function_exists('a1TempDir')) {
     return $tempDir;
   }
 }
+
+if (!function_exists('validatePdfSignature')) {
+  /**
+   * validatePdfSignature - Validate pdf signature
+   */
+  function validatePdfSignature(string $pdfPath): Fluent
+  {
+    try {
+      return ValidatePdfSignature::from($pdfPath);
+    } catch (\Throwable $th) {
+      throw $th;
+    }
+  }
+}
