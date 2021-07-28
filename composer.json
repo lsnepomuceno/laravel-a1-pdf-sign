@@ -26,12 +26,13 @@
 		"illuminate/encryption": "^8.0",
 		"illuminate/http": "^8.0",
 		"tecnickcom/tc-lib-pdf": "^8.0",
-		"iio/libmergepdf": "^4.0",
+		"tecnickcom/tcpdf": "6.4.*",
+		"setasign/fpdi": "^2.0",
 		"symfony/process": "^5.0"
 	},
 	"minimum-stability": "dev",
 	"require-dev": {
-		"phpunit/phpunit": "^8.5.8|^9.3.3",
+		"phpunit/phpunit": "^9.5",
 		"orchestra/testbench": "6.x-dev",
 		"nunomaduro/collision": "dev-stable"
 	},
@@ -56,6 +57,7 @@
 		}
 	},
 	"scripts": {
+		"serv": "php -S localhost:8000",
 		"test": "vendor/bin/phpunit",
 		"test-coverage": "vendor/bin/phpunit --coverage-html coverage"
 	}

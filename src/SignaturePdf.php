@@ -2,9 +2,9 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign;
 
-use TCPDI;
+use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Support\{Str, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfSignModeTypeException};
+use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfFileException, InvalidPdfSignModeTypeException};
 
 class SignaturePdf
 {
@@ -16,9 +16,9 @@ class SignaturePdf
     MODE_RESOURCE = 'MODE_RESOURCE';
 
   /**
-   * @var TCPDI
+   * @var \setasign\Fpdi\Tcpdf\Fpdi
    */
-  private TCPDI $pdf;
+  private Fpdi $pdf;
 
   /**
    * @var \LSNepomuceno\LaravelA1PdfSign\ManageCert
@@ -37,14 +37,16 @@ class SignaturePdf
    * @param  \LSNepomuceno\LaravelA1PdfSign\ManageCert $cert
    * @param  string $mode self::MODE_RESOURCE
    * @throws \Throwable
-   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,InvalidPdfSignModeTypeException}
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,InvalidPdfSignModeTypeException,InvalidPdfFileException}
    * @return void
    */
   public function __construct(string $pdfPath, ManageCert $cert, string $mode = self::MODE_RESOURCE)
   {
     /**
      * @throws FileNotFoundException
+     * @throws InvalidPdfFileException
      */
+    if (!Str::of($pdfPath)->lower()->endsWith('.pdf')) throw new InvalidPdfFileException($pdfPath);
     if (!File::exists($pdfPath)) throw new FileNotFoundException($pdfPath);
 
     /**
@@ -63,7 +65,7 @@ class SignaturePdf
 
     $this->mode    = $mode;
     $this->pdfPath = $pdfPath;
-    $this->pdf     =  new TCPDI(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    $this->pdf     =  new Fpdi(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
   }
 
   /**

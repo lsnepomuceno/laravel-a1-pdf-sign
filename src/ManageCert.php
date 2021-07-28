@@ -49,7 +49,7 @@ class ManageCert
    */
   public function __construct()
   {
-    $this->tempDir = __DIR__ . '/Temp/';
+    $this->tempDir = a1TempDir();
 
     $this->generateHashKey()->setEncrypter();
 
@@ -80,7 +80,7 @@ class ManageCert
     if (!File::exists($pfxPath)) throw new FileNotFoundException($pfxPath);
 
     $this->password = $password;
-    $output  = $this->tempDir . Str::orderedUuid() . '.crt';
+    $output  = a1TempDir(true, '.crt');
     $openssl = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
 
     try {
@@ -116,8 +116,7 @@ class ManageCert
    */
   public function fromUpload(UploadedFile $uploadedPfx, string $password): ManageCert
   {
-    $pfxTemp = Str::orderedUuid();
-    $pfxTemp = "{$this->getTempDir()}{$pfxTemp}.pfx";
+    $pfxTemp = a1TempDir(true);
 
     if (File::exists($pfxTemp)) {
       $pfxTemp = microtime() . $pfxTemp;
