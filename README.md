@@ -184,7 +184,7 @@ class ExampleController() {
         
         // Returning signed resource string
         try {
-            $pdf = new SignaturePdf('path/to/pdf/file.pdf', $cert, SignaturePdf::MODE_RESOURCE) // Resource mode is default
+            $pdf = new SignaturePdf('path/to/pdf/file.pdf', $cert->getCert(), SignaturePdf::MODE_RESOURCE) // Resource mode is default
             $resource = $pdf->signature();
             // TODO necessary
         } catch (\Throwable $th) {
@@ -193,7 +193,7 @@ class ExampleController() {
         
         // Downloading signed file
         try {
-            $pdf = new SignaturePdf('path/to/pdf/file.pdf', $cert, SignaturePdf::MODE_DOWNLOAD)
+            $pdf = new SignaturePdf('path/to/pdf/file.pdf', $cert->getCert(), SignaturePdf::MODE_DOWNLOAD)
             return $pdf->signature(); // The file will be downloaded
         } catch (\Throwable $th) {
             // TODO necessary
