@@ -16,7 +16,8 @@
     - [Sign PDF File](#sign-pdf-file)
        - [Sign PDF with certificate from file or upload](#1---sign-pdf-with-certificate-from-file-or-upload) 
        - [Sign PDF with certificate from database (model based)](#2---sign-pdf-with-certificate-from-database-model-based) 
-       - [The expected result](#3---the-expected-result-in-adobe-acrobatreader-will-be-as-shown-below) 
+       - [The expected result](#3---the-expected-result-in-adobe-acrobatreader-will-be-as-shown-below)
+    - [Validating signature](#validating-signature) 
     - [Helpers](#helpers)
   - [:collision: Is your project not Laravel/Lumen?](#collision-is-your-project-not-laravel--lumen)
     - [If you want to use this package in a project that is not based on Laravel / Lumen, you need to make the adjustments below](#if-you-want-to-use-this-package-in-a-project-that-is-not-based-on-laravel--lumen-you-need-to-make-the-adjustments-below)
@@ -197,15 +198,6 @@ class ExampleController() {
         } catch (\Throwable $th) {
             // TODO necessary
         }
-	
-	// Returning signed resource from upload
-        try {
-            $pdf = new SignaturePdf($request->file('PDFfile'), $cert, SignaturePdf::MODE_RESOURCE) // Resource mode is default
-            $resource = $pdf->signature();
-            // TODO necessary
-        } catch (\Throwable $th) {
-            // TODO necessary
-        }
     }
 }
 
@@ -248,6 +240,29 @@ class ExampleController() {
 
 #### 3 - The expected result in Adobe Acrobat/Reader will be as shown below.
 ![Signed File](https://user-images.githubusercontent.com/14093492/121451955-f2184c00-c974-11eb-90af-257fc814784f.png)
+
+## Validating signature
+```PHP
+<?php
+
+use Illuminate\Http\Request;
+use App\Models\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\ValidatePdfSignature;
+
+class ExampleController() {
+    public function dummyFunction(Request $request){
+        // Returning signed resource string
+        try {
+            dd(ValidatePdfSignature::from('path/to/pdf/file.pdf');
+        } catch (\Throwable $th) {
+            // TODO necessary
+        }
+    }
+}
+
+```
+#### The expected result will be as shown below.
+![signed fluent](https://user-images.githubusercontent.com/14093492/127238859-a02aec7b-8564-4e44-854b-4fde5de8e946.png)
 
 ## Helpers
 
