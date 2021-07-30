@@ -311,17 +311,17 @@ class ManageCert
    *
    * @throws \Symfony\Component\Process\Exception\ProcessFailedException
    *
-   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert|string
    */
-  public function makeDebugCertificate(): ManageCert
+  public function makeDebugCertificate(bool $returnPathAndPass = false)
   {
     $pass = 123456;
 
     $name = $this->tempDir . Str::orderedUuid();
 
     $genCommands = [
-      "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=test.com\" -days 600 -passout pass:{$pass}",
-      "openssl pkcs12 -export -name “test.com” -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$pass} -passout pass:{$pass}"
+      "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=Test Certificate /OU=LucasNepomuceno\" -days 600 -passout pass:{$pass}",
+      "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$pass} -passout pass:{$pass}"
     ];
 
     foreach ($genCommands as $command) {
@@ -339,6 +339,6 @@ class ManageCert
 
     File::delete(["{$name}.key", "{$name}.crt"]);
 
-    return $this->fromPfx("{$name}.pfx", $pass);
+    return $returnPathAndPass ? ["{$name}.pfx", $pass] : $this->fromPfx("{$name}.pfx", $pass);
   }
 }
