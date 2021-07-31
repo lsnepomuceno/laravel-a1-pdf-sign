@@ -30,7 +30,11 @@ class ManageCertTest extends TestCase
     }
 
     $this->assertStringContainsStringIgnoringCase('BEGIN CERTIFICATE', $cert->getCert()->original);
-    $this->assertIsResource($cert->getCert()->openssl);
+
+    is_object($cert->getCert()->openssl)
+      ? $this->assertInstanceOf(\OpenSSLCertificate::class, $cert->getCert()->openssl)
+      :  $this->assertIsResource($cert->getCert()->openssl);
+
     $this->assertIsArray($cert->getCert()->data);
     $this->assertArrayHasKey('validTo_time_t', $cert->getCert()->data); //important field
     $this->assertNotNull($cert->getCert()->password);
