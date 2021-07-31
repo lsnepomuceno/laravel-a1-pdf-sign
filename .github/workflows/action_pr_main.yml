@@ -2,30 +2,28 @@ name: A1 Pdf Sign
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ homologation ]
 
 jobs:
-  build:
-
+  php-unit:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
-
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v2
+    - name: Setup PHP, with composer and extensions
+      uses: shivammathur/setup-php@v2
       with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
+        php-version: '7.4'
+        tools: composer:v2
+        extensions: mbstring, dom, fileinfo, openssl, json
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+    - name: Validate composer.json e composer.lock
+      run: composer validate
 
-    - name: Run test suite
-      run: composer run-script test
+    - name: Install dependencys
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+    - name: Execute tests
+      run: vendor/bin/phpunit
