@@ -8,4 +8,32 @@
 [![Latest Unstable Version](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable)](https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign) 
 [![License](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md)
 
-[DOCUMENTATION ON WIKI](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki)
+<table>
+  <thead>
+    <tr>
+      <th colspan="4">Reference</th>
+    </tr>
+  </thead>
+  <tr>
+    <td>Laravel version</td>
+    <td>PHP version</td>
+    <td>Package version</td>
+    <td>Docs</td>
+  </tr>
+  
+  <tr>
+    <td>^8</td>
+    <td>^7.4</td>
+    <td>^0</td>
+    <td><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
+  </tr>
+  
+  <tr>
+    <td>^9</td>
+    <td>^8.1</td>
+    <td>^1</td>
+    <td>SOON</td>
+  </tr>
+  
+</table>
+
