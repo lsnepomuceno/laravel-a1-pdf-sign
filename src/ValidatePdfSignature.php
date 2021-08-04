@@ -3,7 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Support\{Str, Fluent, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfFileException};
+use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, HasNoSignatureOrInvalidPkcs7Exception, InvalidPdfFileException};
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -12,7 +12,7 @@ class ValidatePdfSignature
   /**
    * @var string
    */
-  private string $pdfPath, $pkcs7Path, $plainTextContent;
+  private string $pdfPath, $plainTextContent, $pkcs7Path = '';
 
   /**
    * from - Defines PDF file to validate
@@ -53,6 +53,8 @@ class ValidatePdfSignature
   /**
    * extractSignatureData - Extract signature from pdf file and send to temporary .pkcs7 file
    *
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\HasNoSignatureOrInvalidPkcs7Exception
+   *
    * @return \LSNepomuceno\LaravelA1PdfSign\ValidatePdfSignature
    */
   private function extractSignatureData(): ValidatePdfSignature
@@ -64,19 +66,19 @@ class ValidatePdfSignature
     $result = [];
     preg_match_all($regexp, $content, $result);
 
+    /**
+     * @throws HasNoSignatureOrInvalidPkcs7Exception
+     */
     // $result[2][0] and $result[3][0] are b and c
-    if (isset($result[2]) && isset($result[3]) && isset($result[2][0]) && isset($result[3][0])) {
-      $start = $result[2][0];
-      $end   = $result[3][0];
-      if ($stream  = fopen($this->pdfPath, 'rb')) {
-        $signature = stream_get_contents($stream, $end - $start - 2, $start + 1); // because we need to exclude < and > from start and end
+    if (!isset($result[2][0]) && !isset($result[3][0])) throw new HasNoSignatureOrInvalidPkcs7Exception($this->pdfPath);
 
-        fclose($stream);
-      }
-
+    $start = $result[2][0];
+    $end   = $result[3][0];
+    if ($stream  = fopen($this->pdfPath, 'rb')) {
+      $signature = stream_get_contents($stream, $end - $start - 2, $start + 1); // because we need to exclude < and > from start and end
+      fclose($stream);
       $this->pkcs7Path = a1TempDir(true, '.pkcs7');
-
-      file_put_contents($this->pkcs7Path, hex2bin($signature));
+      File::put($this->pkcs7Path, hex2bin($signature));
     }
 
     return $this;
@@ -85,11 +87,16 @@ class ValidatePdfSignature
   /**
    * convertSignatureDataToPlainText - Convert the .pkcs7 file to a temporary text file
    *
-   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\FileNotFoundException
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,HasNoSignatureOrInvalidPkcs7Exception}
    * @return \LSNepomuceno\LaravelA1PdfSign\ValidatePdfSignature
    */
   private function convertSignatureDataToPlainText(): ValidatePdfSignature
   {
+    /**
+     * @throws HasNoSignatureOrInvalidPkcs7Exception
+     */
+    if (!$this->pkcs7Path) throw new HasNoSignatureOrInvalidPkcs7Exception($this->pdfPath);
+
     $output  = a1TempDir(true, '.txt');
     $command = "openssl pkcs7 -in {$this->pkcs7Path} -inform DER -print_certs > {$output}";
 
