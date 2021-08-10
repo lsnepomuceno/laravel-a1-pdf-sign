@@ -31,7 +31,9 @@ class SealImage
     IMAGE_DRIVER_IMAGICK = 'imagick',
     FONT_SIZE_SMALL      = 'FONT_SIZE_SMALL',
     FONT_SIZE_MEDIUM     = 'FONT_SIZE_MEDIUM',
-    FONT_SIZE_LARGE      = 'FONT_SIZE_LARGE';
+    FONT_SIZE_LARGE      = 'FONT_SIZE_LARGE',
+    RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT',
+    RETURN_BASE64        = 'RETURN_BASE64';
 
   /**
    * __construct
@@ -187,13 +189,13 @@ class SealImage
   }
 
   /**
-   * generateImage - Return base64 generated image
+   * generateImage - Return generated image
    *
    * @throws \Intervention\Image\Exception\NotReadableException
    *
    * @return string
    */
-  public function generateImage(): string
+  public function generateImage(string $returnType = self::RETURN_IMAGE_CONTENT): string
   {
     try {
       $image = new IMG(['driver' => $this->imageDriver]);
@@ -204,7 +206,9 @@ class SealImage
         $image->text($text, $x, $y, $callback);
       }
 
-      return $image->encode('data-url')->encoded;
+      return $returnType === self::RETURN_IMAGE_CONTENT
+        ? $image->encode('png')
+        : $image->encode('data-url')->encoded;
     } catch (NotReadableException $th) {
       throw $th;
     }
