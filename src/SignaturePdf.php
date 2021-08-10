@@ -31,6 +31,11 @@ class SignaturePdf
   private string $pdfPath, $mode;
 
   /**
+   * @var array|null
+   */
+  private ?array $image = null;
+
+  /**
    * __construct
    *
    * @param  string $pdfPath
@@ -64,6 +69,28 @@ class SignaturePdf
     $this->mode    = $mode;
     $this->pdfPath = $pdfPath;
     $this->pdf     =  new Fpdi(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+  }
+
+  /**
+   * setImage - Defines an image as a signature identifier
+   *
+   * @param  string $imagePath - Support only for PNG images
+   * @param  float  $pageX
+   * @param  float  $pageY
+   * @param  float  $imageH
+   * @param  float  $imageW
+   *
+   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
+   */
+  public function setImage(
+    string $imagePath,
+    float  $pageX = 155,
+    float  $pageY = 250,
+    float  $imageW = 50,
+    float  $imageH = 0
+  ): SignaturePdf {
+    $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH');
+    return $this;
   }
 
   /**
@@ -101,6 +128,12 @@ class SignaturePdf
       $info,
       'A' // Authorize certificate
     );
+
+    if ($this->image) {
+      extract($this->image);
+      $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
+      $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH);
+    }
 
     $fileName = Str::orderedUuid() . '.pdf';
     $output   = "{$this->cert->getTempDir()}{$fileName}";

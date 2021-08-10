@@ -19,7 +19,9 @@
 	],
 	"require": {
 		"php": "^7.4 || ^8.0",
+		"ext-gd": "*",
 		"ext-json": "*",
+		"ext-fileinfo": "*",
 		"ext-mbstring": "*",
 		"ext-openssl": "*",
 		"illuminate/support": "^8.0",
@@ -28,13 +30,18 @@
 		"tecnickcom/tc-lib-pdf": "^8.0",
 		"tecnickcom/tcpdf": "6.4.*",
 		"setasign/fpdi": "^2.0",
-		"symfony/process": "^5.0"
+		"symfony/process": "^5.0",
+		"intervention/image": "^2.6"
 	},
 	"minimum-stability": "dev",
 	"require-dev": {
 		"phpunit/phpunit": "^9.5",
 		"orchestra/testbench": "6.x-dev",
 		"nunomaduro/collision": "dev-stable"
+	},
+	"suggest": {
+		"ext-gd": "to use GD library based image processing.",
+		"ext-imagick": "to use Imagick based image processing."
 	},
 	"authors": [
 		{
