@@ -2,9 +2,9 @@ name: A1 Pdf Sign
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev]
 
 jobs:
   php-unit:
