@@ -4,19 +4,19 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exception;
 
 use Exception;
 
-class InvalidPdfSignModeTypeException extends Exception
+class InvalidImageDriverException extends Exception
 {
   /**
    * __construct
    *
-   * @param string $mode
+   * @param string $driver
    * @param  int $code
    * @param  \Exception $previous
    * @return void
    */
-  public function __construct(string $mode, int $code = 0, Exception $previous = null)
+  public function __construct(string $driver, int $code = 0, Exception $previous = null)
   {
-    $message = "Error: Invalid mode type, use avaliable modes: \"SignaturePdf::MODE_RESOURCE\" or \"SignaturePdf::MODE_DOWNLOAD\". Current mode: {$mode}";
+    $message = "Error: Invalid image driver, use avaliable: \"SealImage::IMAGE_DRIVER_GD\" or \"SealImage::IMAGE_DRIVER_IMAGICK\". Current driver: {$driver}";
     parent::__construct($message, $code, $previous);
   }
 
