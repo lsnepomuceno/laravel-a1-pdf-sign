@@ -15,8 +15,8 @@ class HelpersTest extends TestCase
     $cert = new ManageCert;
     list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-    $signed     = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-    $pdfPath    = a1TempDir(true, '.pdf');
+    $signed   = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+    $pdfPath  = a1TempDir(true, '.pdf');
 
     File::put($pdfPath, $signed);
     $fileExists = File::exists($pdfPath);
