@@ -28,7 +28,7 @@ class SignaturePdf
   /**
    * @var string
    */
-  private string $pdfPath, $mode;
+  private string $pdfPath, $mode, $fileName;
 
   /**
    * @var array|null
@@ -36,16 +36,23 @@ class SignaturePdf
   private ?array $image = null;
 
   /**
+   * @var boolean
+   */
+  private bool $hasSignedSuffix;
+
+  /**
    * __construct
    *
    * @param  string $pdfPath
    * @param  \LSNepomuceno\LaravelA1PdfSign\ManageCert $cert
    * @param  string $mode self::MODE_RESOURCE
+   * @param  string $fileName null
+   * @param  bool $hasSignedSuffix false
    * @throws \Throwable
    * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,InvalidPdfSignModeTypeException}
    * @return void
    */
-  public function __construct(string $pdfPath, ManageCert $cert, string $mode = self::MODE_RESOURCE)
+  public function __construct(string $pdfPath, ManageCert $cert, string $mode = self::MODE_RESOURCE, string $fileName = '', bool $hasSignedSuffix = true)
   {
     /**
      * @throws FileNotFoundException
@@ -65,6 +72,9 @@ class SignaturePdf
     } catch (\Throwable $th) {
       throw $th;
     }
+
+    $this->setFileName($fileName)
+      ->setHasSignedSuffix($hasSignedSuffix);
 
     $this->mode    = $mode;
     $this->pdfPath = $pdfPath;
@@ -90,6 +100,32 @@ class SignaturePdf
     float  $imageH = 0
   ): SignaturePdf {
     $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH');
+    return $this;
+  }
+
+  /**
+   * setFileName - Set output file name
+   *
+   * @param  string $fileName
+   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
+   */
+  public function setFileName(string $fileName): SignaturePdf
+  {
+    $ext = explode('.', $fileName);
+    $ext = end($ext);
+    $this->fileName = str_replace(".{$ext}", '', $fileName);
+    return $this;
+  }
+
+  /**
+   * setHasSignedSuffix - Set if the output file has a "signed" suffix
+   *
+   * @param  bool $hasSignedSuffix
+   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
+   */
+  public function setHasSignedSuffix(bool $hasSignedSuffix): SignaturePdf
+  {
+    $this->hasSignedSuffix = $hasSignedSuffix;
     return $this;
   }
 
@@ -135,13 +171,15 @@ class SignaturePdf
       $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH);
     }
 
-    $fileName = Str::orderedUuid() . '.pdf';
-    $output   = "{$this->cert->getTempDir()}{$fileName}";
+    if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
+    if ($this->hasSignedSuffix) $this->fileName .= '_signed';
 
-    if (!File::exists($output)) {
-      // Required to receive data from the server, such as timestamp and allocation hash.
-      File::put($output, $this->pdf->output($fileName, 'S'));
-    }
+    $this->fileName .= '.pdf';
+
+    $output = "{$this->cert->getTempDir()}{$this->fileName}";
+
+    // Required to receive data from the server, such as timestamp and allocation hash.
+    if (!File::exists($output)) File::put($output, $this->pdf->output($this->fileName, 'S'));
 
     switch ($this->mode) {
       case self::MODE_RESOURCE:
