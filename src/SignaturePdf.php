@@ -97,9 +97,10 @@ class SignaturePdf
     float  $pageX = 155,
     float  $pageY = 250,
     float  $imageW = 50,
-    float  $imageH = 0
+    float  $imageH = 0,
+    int  $page = -1
   ): SignaturePdf {
-    $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH');
+    $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
     return $this;
   }
 
@@ -168,7 +169,7 @@ class SignaturePdf
     if ($this->image) {
       extract($this->image);
       $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
-      $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH);
+      $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $page);
     }
 
     if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
