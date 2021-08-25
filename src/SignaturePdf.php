@@ -78,7 +78,29 @@ class SignaturePdf
 
     $this->mode    = $mode;
     $this->pdfPath = $pdfPath;
-    $this->pdf     =  new Fpdi(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    $this->setPdf();
+  }
+
+  /**
+   * setPdf - Set PDF settings
+   *
+   * @param  string $orientation  PDF_PAGE_ORIENTATION,
+   * @param  string $unit  PDF_UNIT,
+   * @param  string $pageFormat  PDF_PAGE_FORMAT,
+   * @param  bool   $unicode  true,
+   * @param  string $encoding  'UTF-8'
+   *
+   * @return void
+   */
+  public function setPdf(
+    string $orientation = 'P',
+    string $unit = 'mm',
+    string $pageFormat = 'A4',
+    bool $unicode = true,
+    string $encoding = 'UTF-8'
+  ): SignaturePdf {
+    $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
+    return $this;
   }
 
   /**
