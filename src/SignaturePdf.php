@@ -82,7 +82,7 @@ class SignaturePdf
   }
 
   /**
-   * setPdf - Set PDF config
+   * setPdf - Set PDF settings
    *
    * @param  string $orientation  PDF_PAGE_ORIENTATION,
    * @param  string $unit  PDF_UNIT,
@@ -93,9 +93,9 @@ class SignaturePdf
    * @return void
    */
   public function setPdf(
-    string $orientation = PDF_PAGE_ORIENTATION,
-    string $unit = PDF_UNIT,
-    string $pageFormat = PDF_PAGE_FORMAT,
+    string $orientation = 'P',
+    string $unit = 'mm',
+    string $pageFormat = 'A4',
     bool $unicode = true,
     string $encoding = 'UTF-8'
   ): SignaturePdf {
