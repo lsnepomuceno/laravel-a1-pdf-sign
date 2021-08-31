@@ -3,13 +3,15 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Tests;
 
 use Illuminate\Encryption\Encrypter;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Fluent;
 use LSNepomuceno\LaravelA1PdfSign\ManageCert;
 use Orchestra\Testbench\TestCase;
 use Throwable;
 use LSNepomuceno\LaravelA1PdfSign\Exception\{
   FileNotFoundException,
-  InvalidPFXException
+  InvalidPFXException,
+  ProcessRunTimeException
 };
 
 class ManageCertTest extends TestCase
@@ -77,5 +79,32 @@ class ManageCertTest extends TestCase
     $this->assertTrue(
       $cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER)
     );
+  }
+
+  public function testValidateProcessRunTimeException()
+  {
+    $this->expectException(ProcessRunTimeException::class);
+
+    try {
+      $cert = new ManageCert;
+      $cert->makeDebugCertificate(false, true);
+    } catch (ProcessRunTimeException $th) {
+      throw $th;
+    }
+  }
+
+  public function testValidatesIfThePfxFileWillBeDeletedAfterBeingPreserved()
+  {
+    try {
+      $cert = new ManageCert;
+      list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+
+      $cert->setPreservePfx()->fromPfx($pfxPath, $pass);
+
+      $this->assertTrue(File::exists($pfxPath));
+      $this->assertTrue(File::delete($pfxPath));
+    } catch (ProcessRunTimeException $th) {
+      throw $th;
+    }
   }
 }

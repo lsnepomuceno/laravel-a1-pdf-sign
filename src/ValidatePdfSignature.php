@@ -3,7 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Support\{Str, Fluent, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, HasNoSignatureOrInvalidPkcs7Exception, InvalidPdfFileException};
+use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, HasNoSignatureOrInvalidPkcs7Exception, InvalidPdfFileException, ProcessRunTimeException};
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -60,10 +60,8 @@ class ValidatePdfSignature
   private function extractSignatureData(): ValidatePdfSignature
   {
     $content = File::get($this->pdfPath);
-
-    $regexp = '#ByteRange\[\s*(\d+) (\d+) (\d+)#'; // subexpressions are used to extract b and c
-
-    $result = [];
+    $regexp  = '#ByteRange\[\s*(\d+) (\d+) (\d+)#'; // subexpressions are used to extract b and c
+    $result  = [];
     preg_match_all($regexp, $content, $result);
 
     /**
@@ -87,7 +85,7 @@ class ValidatePdfSignature
   /**
    * convertSignatureDataToPlainText - Convert the .pkcs7 file to a temporary text file
    *
-   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,HasNoSignatureOrInvalidPkcs7Exception}
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,HasNoSignatureOrInvalidPkcs7Exception,ProcessRunTimeException}
    * @return \LSNepomuceno\LaravelA1PdfSign\ValidatePdfSignature
    */
   private function convertSignatureDataToPlainText(): ValidatePdfSignature
@@ -105,6 +103,11 @@ class ValidatePdfSignature
       $process->run();
 
       while ($process->isRunning());
+
+      /**
+       * @throws ProcessRunTimeException
+       */
+      if (!$process->isSuccessful()) throw new ProcessRunTimeException($process->getErrorOutput());
 
       $process->stop(1);
     } catch (ProcessFailedException $exception) {
