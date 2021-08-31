@@ -12,7 +12,8 @@ use LSNepomuceno\LaravelA1PdfSign\Exception\{
   FileNotFoundException,
   InvalidCertificateContentException,
   InvalidPFXException,
-  Invalidx509PrivateKeyException
+  Invalidx509PrivateKeyException,
+  ProcessRunTimeException
 };
 
 class ManageCert
@@ -21,6 +22,11 @@ class ManageCert
    * @var string
    */
   private string $tempDir, $originalCertContent, $password, $hashKey;
+
+  /**
+   * @var bool
+   */
+  private bool $preservePfx = false;
 
   /**
    * @var array
@@ -57,12 +63,25 @@ class ManageCert
   }
 
   /**
+   * setPreservePfx - Defines whether the pfx file should be preserved after processing
+   *
+   * @param boolean $preservePfx true
+   *
+   * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
+   */
+  public function setPreservePfx(bool $preservePfx = true): ManageCert
+  {
+    $this->preservePfx = $preservePfx;
+    return $this;
+  }
+
+  /**
    * fromPfx - Generate CRT certificate from PFX file
    *
    * @param  string $pfxPath
    * @param  string $password
    *
-   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{CertificateOutputNotFounfException,FileNotFoundException,InvalidPFXException}
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{CertificateOutputNotFounfException,FileNotFoundException,InvalidPFXException,ProcessRunTimeException}
    * @throws \Symfony\Component\Process\Exception\ProcessFailedException
    *
    * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert
@@ -89,6 +108,11 @@ class ManageCert
 
       while ($process->isRunning());
 
+      /**
+       * @throws ProcessRunTimeException
+       */
+      if (!$process->isSuccessful()) throw new ProcessRunTimeException($process->getErrorOutput());
+
       $process->stop(1);
     } catch (ProcessFailedException $exception) {
       throw $exception;
@@ -101,7 +125,11 @@ class ManageCert
 
     $content = File::get($output);
 
-    File::delete([$pfxPath, $output]);
+    $filesToBeDelete = [$output];
+
+    !$this->preservePfx && ($filesToBeDelete[] = $pfxPath);
+
+    File::delete($filesToBeDelete);
 
     return $this->setCertContent($content);
   }
@@ -309,14 +337,17 @@ class ManageCert
   /**
    * makeDebugCertificate - Generate fake certificate for debug reasons
    *
+   * @param bool $returnPathAndPass false
+   * @param bool $wrongPass false
+   *
+   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\ProcessRunTimeException
    * @throws \Symfony\Component\Process\Exception\ProcessFailedException
    *
    * @return \LSNepomuceno\LaravelA1PdfSign\ManageCert|string
    */
-  public function makeDebugCertificate(bool $returnPathAndPass = false)
+  public function makeDebugCertificate(bool $returnPathAndPass = false, bool $wrongPass = false)
   {
     $pass = 123456;
-
     $name = $this->tempDir . Str::orderedUuid();
 
     $genCommands = [
@@ -331,6 +362,11 @@ class ManageCert
 
         while ($process->isRunning());
 
+        /**
+         * @throws ProcessRunTimeException
+         */
+        if (!$process->isSuccessful()) throw new ProcessRunTimeException($process->getErrorOutput());
+
         $process->stop(1);
       } catch (ProcessFailedException $exception) {
         throw $exception;
@@ -339,6 +375,6 @@ class ManageCert
 
     File::delete(["{$name}.key", "{$name}.crt"]);
 
-    return $returnPathAndPass ? ["{$name}.pfx", $pass] : $this->fromPfx("{$name}.pfx", $pass);
+    return $returnPathAndPass ? ["{$name}.pfx", $pass] : $this->fromPfx("{$name}.pfx", $wrongPass ? 'wrongPass' : $pass);
   }
 }
