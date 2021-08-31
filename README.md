@@ -23,10 +23,16 @@
   </tr>
   
   <tr>
-    <td>^8</td>
+    <td>^8~8.54</td>
     <td>^7.4</td>
-    <td>^0</td>
-    <td><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
+    <td>^0~0.0.11</td>
+    <td rowspan="2"><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
+  </tr>
+  
+  <tr>
+    <td>^8.56+</td>
+    <td>^7.4</td>
+    <td>^0.0.12</td>
   </tr>
   
   <tr>
