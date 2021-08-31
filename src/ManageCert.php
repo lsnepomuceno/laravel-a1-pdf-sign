@@ -41,7 +41,7 @@ class ManageCert
   /**
    * @var string
    */
-  const CIPHER = 'AES-128-CBC';
+  const CIPHER = 'aes-128-cbc';
 
   /**
    * @var \Illuminate\Encryption\Encrypter
