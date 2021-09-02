@@ -36,6 +36,11 @@ class SignaturePdf
   private ?array $image = null;
 
   /**
+   * @var array
+   */
+  private array $info = [];
+
+  /**
    * @var boolean
    */
   private bool $hasSignedSuffix;
@@ -82,6 +87,41 @@ class SignaturePdf
   }
 
   /**
+   * setInfo - Set signature info
+   *
+   * @param  string|null $name
+   * @param  string|null $location
+   * @param  string|null $reason
+   * @param  string|null $contactInfo
+   *
+   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
+   */
+  public function setInfo(
+    ?string $name = null,
+    ?string $location = null,
+    ?string $reason = null,
+    ?string $contactInfo = null
+  ): SignaturePdf {
+    $info        = [];
+    $name        && ($info['Name'] = $name);
+    $location    && ($info['Location'] = $location);
+    $reason      && ($info['Reason'] = $reason);
+    $contactInfo && ($info['ContactInfo'] = $contactInfo);
+    $this->info  = $info;
+    return $this;
+  }
+
+  /**
+   * getPdfInstance - Return current Fdpi object instance
+   *
+   * @return \setasign\Fpdi\Tcpdf\Fpdi
+   */
+  public function getPdfInstance(): Fpdi
+  {
+    return $this->pdf;
+  }
+
+  /**
    * setPdf - Set PDF settings
    *
    * @param  string $orientation  PDF_PAGE_ORIENTATION,
@@ -90,7 +130,7 @@ class SignaturePdf
    * @param  bool   $unicode  true,
    * @param  string $encoding  'UTF-8'
    *
-   * @return void
+   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
    */
   public function setPdf(
     string $orientation = 'P',
@@ -171,12 +211,6 @@ class SignaturePdf
 
     $certificate = $this->cert->getCert()->original;
     $password    = $this->cert->getCert()->password;
-    $info        = [ // Future implementation
-      // 'Name'        => '',
-      // 'Location'    => '',
-      // 'Reason'      => '',
-      // 'ContactInfo' => '',
-    ];
 
     $this->pdf->setSignature(
       $certificate,
@@ -184,7 +218,7 @@ class SignaturePdf
       $password,
       '',
       3,
-      $info,
+      $this->info,
       'A' // Authorize certificate
     );
 
