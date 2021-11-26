@@ -2,14 +2,27 @@
   <img src="https://user-images.githubusercontent.com/14093492/127516361-48fbde85-1f34-4626-82ae-44b11aa0de15.png" alt="Signature image">
 </p>
 
-# Sign PDF files with valid x509 certificate
-[![Latest Stable Version](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/releases/latest) 
-[![Total Downloads](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads)](https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats) 
-[![Latest Unstable Version](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/tree/dev) 
-[![License](http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md)
-[![Tests](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml/badge.svg)](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml)
+<h1 align="center">Sign PDF files with valid x509 certificate</h1>
 
-<table>
+<p align="center">
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/releases/latest">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v" alt="Latest Stable Version">
+  </a>
+  <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads" alt="Total Downloads">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/tree/dev">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable" alt="Latest Unstable Version">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md">
+    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml">
+    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml/badge.svg" alt="Tests">
+  </a>
+</p>
+
+<table align="center">
   <thead>
     <tr>
       <th colspan="4">Reference</th>
@@ -24,14 +37,13 @@
   
   <tr>
     <td>^8~8.54</td>
-    <td>^7.4</td>
+    <td rowspan="2">^7.4</td>
     <td>^0~0.0.11</td>
     <td rowspan="2"><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
   </tr>
   
   <tr>
     <td>^8.56+</td>
-    <td>^7.4</td>
     <td>^0.0.12</td>
   </tr>
   
