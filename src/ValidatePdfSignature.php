@@ -167,8 +167,10 @@ class ValidatePdfSignature
     $finalData = [];
 
     foreach ($data as $info) {
-      $infoTemp = explode(' = ', trim($info));
-      $finalData[] = [$infoTemp[0] => $infoTemp[1]];
+        $infoTemp = explode(' = ', trim($info));
+        if (isset($infoTemp[0]) && $infoTemp[1]) {
+            $finalData[] = [$infoTemp[0] => $infoTemp[1]];
+        }
     }
     return $finalData;
   }
