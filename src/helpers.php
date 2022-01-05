@@ -5,9 +5,16 @@ use Illuminate\Support\{Str, Facades\File, Fluent};
 use Illuminate\Http\UploadedFile;
 
 if (!function_exists('signPdf')) {
-  /**
-   * signPdf - Helper to fast signature pdf from pfx file
-   */
+    /**
+     * signPdf - Helper to fast signature pdf from pfx file
+     *
+     * @param string $pfxPath
+     * @param string $password
+     * @param string $pdfPath
+     * @param string $mode
+     * @return mixed
+     * @throws Throwable
+     */
   function signPdfFromFile(string $pfxPath, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
   {
     try {
@@ -23,9 +30,16 @@ if (!function_exists('signPdf')) {
 }
 
 if (!function_exists('signPdfFromUpload')) {
-  /**
-   * signPdfFromUpload - Helper to fast signature pdf from uploaded certificate
-   */
+    /**
+     * signPdfFromUpload - Helper to fast signature pdf from uploaded certificate
+     *
+     * @param UploadedFile $uploadedPfx
+     * @param string $password
+     * @param string $pdfPath
+     * @param string $mode
+     * @return mixed
+     * @throws Throwable
+     */
   function signPdfFromUpload(UploadedFile $uploadedPfx, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
   {
     try {
@@ -41,16 +55,20 @@ if (!function_exists('signPdfFromUpload')) {
 }
 
 if (!function_exists('encryptCertData')) {
-  /**
-   * encryptCertData - Helper to fast encrypt certificate data
-   * @param \Illuminate\Http\UploadedFile|string $uploadedOrPfxPath
-   */
+    /**
+     * encryptCertData - Helper to fast encrypt certificate data
+     *
+     * @param UploadedFile|string $uploadedOrPfxPath
+     * @param string $password
+     * @return Fluent
+     * @throws Throwable
+     */
   function encryptCertData($uploadedOrPfxPath, string $password): Fluent
   {
     try {
       $cert = new ManageCert;
 
-      if ($cert instanceof UploadedFile) {
+      if ($uploadedOrPfxPath instanceof UploadedFile) {
         $cert->fromUpload($uploadedOrPfxPath, $password);
       } else {
         $cert->fromPfx($uploadedOrPfxPath, $password);
@@ -68,10 +86,16 @@ if (!function_exists('encryptCertData')) {
 }
 
 if (!function_exists('decryptCertData')) {
-  /**
-   * decryptCertData - Helper to fast decrypt certificate
-   */
-  function decryptCertData(string $hashKey, string $encryptCert, string $password)
+    /**
+     * decryptCertData - Helper to fast decrypt certificate
+     *
+     * @param string $hashKey
+     * @param string $encryptCert
+     * @param string $password
+     * @return ManageCert
+     * @throws Throwable
+     */
+  function decryptCertData(string $hashKey, string $encryptCert, string $password): ManageCert
   {
     try {
       $cert    = (new ManageCert)->setHashKey($hashKey);
@@ -91,10 +115,14 @@ if (!function_exists('decryptCertData')) {
 }
 
 if (!function_exists('a1TempDir')) {
-  /**
-   * a1TempDir - Helper to make temp dir and files
-   */
-  function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx')
+    /**
+     * a1TempDir - Helper to make temp dir and files
+     *
+     * @param bool $tempFile
+     * @param string $fileExt
+     * @return string
+     */
+  function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx'): string
   {
     $tempDir = __DIR__ . '/Temp/';
 
@@ -105,9 +133,13 @@ if (!function_exists('a1TempDir')) {
 }
 
 if (!function_exists('validatePdfSignature')) {
-  /**
-   * validatePdfSignature - Validate pdf signature
-   */
+    /**
+     * validatePdfSignature - Validate pdf signature
+     *
+     * @param string $pdfPath
+     * @return Fluent
+     * @throws Throwable
+     */
   function validatePdfSignature(string $pdfPath): Fluent
   {
     try {
