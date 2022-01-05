@@ -15,18 +15,18 @@ if (!function_exists('signPdf')) {
      * @return mixed
      * @throws Throwable
      */
-  function signPdfFromFile(string $pfxPath, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
-  {
-    try {
-      return (new SignaturePdf(
-        $pdfPath,
-        (new ManageCert)->fromPfx($pfxPath, $password),
-        $mode
-      ))->signature();
-    } catch (\Throwable $th) {
-      throw $th;
+    function signPdfFromFile(string $pfxPath, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
+    {
+        try {
+            return (new SignaturePdf(
+                $pdfPath,
+                (new ManageCert)->fromPfx($pfxPath, $password),
+                $mode
+            ))->signature();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
-  }
 }
 
 if (!function_exists('signPdfFromUpload')) {
@@ -40,18 +40,18 @@ if (!function_exists('signPdfFromUpload')) {
      * @return mixed
      * @throws Throwable
      */
-  function signPdfFromUpload(UploadedFile $uploadedPfx, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
-  {
-    try {
-      return (new SignaturePdf(
-        $pdfPath,
-        (new ManageCert)->fromUpload($uploadedPfx, $password),
-        $mode
-      ))->signature();
-    } catch (\Throwable $th) {
-      throw $th;
+    function signPdfFromUpload(UploadedFile $uploadedPfx, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
+    {
+        try {
+            return (new SignaturePdf(
+                $pdfPath,
+                (new ManageCert)->fromUpload($uploadedPfx, $password),
+                $mode
+            ))->signature();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
-  }
 }
 
 if (!function_exists('encryptCertData')) {
@@ -63,26 +63,26 @@ if (!function_exists('encryptCertData')) {
      * @return Fluent
      * @throws Throwable
      */
-  function encryptCertData($uploadedOrPfxPath, string $password): Fluent
-  {
-    try {
-      $cert = new ManageCert;
+    function encryptCertData($uploadedOrPfxPath, string $password): Fluent
+    {
+        try {
+            $cert = new ManageCert;
 
-      if ($uploadedOrPfxPath instanceof UploadedFile) {
-        $cert->fromUpload($uploadedOrPfxPath, $password);
-      } else {
-        $cert->fromPfx($uploadedOrPfxPath, $password);
-      }
+            if ($uploadedOrPfxPath instanceof UploadedFile) {
+                $cert->fromUpload($uploadedOrPfxPath, $password);
+            } else {
+                $cert->fromPfx($uploadedOrPfxPath, $password);
+            }
 
-      return new Fluent([
-        'certificate' => $cert->getEncrypter()->encryptString($cert->getCert()->original),
-        'password'    => $cert->getEncrypter()->encryptString($password),
-        'hash'        => $cert->getHashKey(), // IMPORTANT, USE ON DECRYPT HELPER
-      ]);
-    } catch (\Throwable $th) {
-      throw $th;
+            return new Fluent([
+                'certificate' => $cert->getEncrypter()->encryptString($cert->getCert()->original),
+                'password' => $cert->getEncrypter()->encryptString($password),
+                'hash' => $cert->getHashKey(), // IMPORTANT, USE ON DECRYPT HELPER
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
-  }
 }
 
 if (!function_exists('decryptCertData')) {
@@ -92,26 +92,28 @@ if (!function_exists('decryptCertData')) {
      * @param string $hashKey
      * @param string $encryptCert
      * @param string $password
+     * @param bool $isBase64
      * @return ManageCert
      * @throws Throwable
      */
-  function decryptCertData(string $hashKey, string $encryptCert, string $password): ManageCert
-  {
-    try {
-      $cert    = (new ManageCert)->setHashKey($hashKey);
-      $uuid    = Str::orderedUuid();
-      $pfxName = "{$cert->getTempDir()}{$uuid}.pfx";
+    function decryptCertData(string $hashKey, string $encryptCert, string $password, bool $isBase64 = false): ManageCert
+    {
+        try {
+            $cert = (new ManageCert)->setHashKey($hashKey);
+            $uuid = Str::orderedUuid();
+            $pfxName = "{$cert->getTempDir()}{$uuid}.pfx";
 
-      File::put($pfxName, $cert->getEncrypter()->decryptString($encryptCert));
+            $decryptedData = $cert->getEncrypter()->decryptString($encryptCert);
+            File::put($pfxName, $isBase64 ? base64_decode($decryptedData) : $decryptedData);
 
-      return $cert->fromPfx(
-        $pfxName,
-        $cert->getEncrypter()->decryptString($password)
-      );
-    } catch (\Throwable $th) {
-      throw $th;
+            return $cert->fromPfx(
+                $pfxName,
+                $cert->getEncrypter()->decryptString($password)
+            );
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
-  }
 }
 
 if (!function_exists('a1TempDir')) {
@@ -122,14 +124,14 @@ if (!function_exists('a1TempDir')) {
      * @param string $fileExt
      * @return string
      */
-  function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx'): string
-  {
-    $tempDir = __DIR__ . '/Temp/';
+    function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx'): string
+    {
+        $tempDir = __DIR__ . '/Temp/';
 
-    if ($tempFile) $tempDir .= Str::orderedUuid() . $fileExt;
+        if ($tempFile) $tempDir .= Str::orderedUuid() . $fileExt;
 
-    return $tempDir;
-  }
+        return $tempDir;
+    }
 }
 
 if (!function_exists('validatePdfSignature')) {
@@ -140,12 +142,12 @@ if (!function_exists('validatePdfSignature')) {
      * @return Fluent
      * @throws Throwable
      */
-  function validatePdfSignature(string $pdfPath): Fluent
-  {
-    try {
-      return ValidatePdfSignature::from($pdfPath);
-    } catch (\Throwable $th) {
-      throw $th;
+    function validatePdfSignature(string $pdfPath): Fluent
+    {
+        try {
+            return ValidatePdfSignature::from($pdfPath);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
-  }
 }
