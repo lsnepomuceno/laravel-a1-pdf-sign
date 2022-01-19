@@ -4,251 +4,180 @@ namespace LSNepomuceno\LaravelA1PdfSign;
 
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Support\{Str, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfFileException, InvalidPdfSignModeTypeException};
+use LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException, InvalidPdfSignModeTypeException};
+use Throwable;
 
 class SignaturePdf
 {
-  /**
-   * @var string
-   */
-  const
-    MODE_DOWNLOAD = 'MODE_DOWNLOAD',
-    MODE_RESOURCE = 'MODE_RESOURCE';
+    private bool $hasSignedSuffix;
+    private ?array $image = null;
+    private array $info = [];
+    private Fpdi $pdf;
 
-  /**
-   * @var \setasign\Fpdi\Tcpdf\Fpdi
-   */
-  private Fpdi $pdf;
+    const
+        MODE_DOWNLOAD = 'MODE_DOWNLOAD',
+        MODE_RESOURCE = 'MODE_RESOURCE';
 
-  /**
-   * @var \LSNepomuceno\LaravelA1PdfSign\ManageCert
-   */
-  private ManageCert $cert;
-
-  /**
-   * @var string
-   */
-  private string $pdfPath, $mode, $fileName;
-
-  /**
-   * @var array|null
-   */
-  private ?array $image = null;
-
-  /**
-   * @var array
-   */
-  private array $info = [];
-
-  /**
-   * @var boolean
-   */
-  private bool $hasSignedSuffix;
-
-  /**
-   * __construct
-   *
-   * @param  string $pdfPath
-   * @param  \LSNepomuceno\LaravelA1PdfSign\ManageCert $cert
-   * @param  string $mode self::MODE_RESOURCE
-   * @param  string $fileName null
-   * @param  bool $hasSignedSuffix false
-   * @throws \Throwable
-   * @throws \LSNepomuceno\LaravelA1PdfSign\Exception\{FileNotFoundException,InvalidPdfSignModeTypeException}
-   * @return void
-   */
-  public function __construct(string $pdfPath, ManageCert $cert, string $mode = self::MODE_RESOURCE, string $fileName = '', bool $hasSignedSuffix = true)
-  {
     /**
+     * @throws Throwable
      * @throws FileNotFoundException
+     * @throws Exception\InvalidCertificateContentException
+     * @throws InvalidPdfSignModeTypeException
+     * @throws Exception\Invalidx509PrivateKeyException
      */
-    if (!File::exists($pdfPath)) throw new FileNotFoundException($pdfPath);
+    public function __construct(
+        private string     $pdfPath,
+        private ManageCert $cert,
+        private string     $mode = self::MODE_RESOURCE,
+        private string     $fileName = '',
+        bool               $hasSignedSuffix = true
+    )
+    {
+        if (!File::exists($this->pdfPath)) throw new FileNotFoundException($this->pdfPath);
+
+        if (!in_array($this->mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) {
+            throw new InvalidPdfSignModeTypeException($this->mode);
+        }
+
+        // Throws exception on invalidate certificate
+        $this->cert->validate();
+
+        $this->setFileName($this->fileName)
+            ->setHasSignedSuffix($hasSignedSuffix);
+
+        $this->setPdf();
+    }
+
+    public function setInfo(
+        ?string $name = null,
+        ?string $location = null,
+        ?string $reason = null,
+        ?string $contactInfo = null
+    ): self
+    {
+        $info = [];
+        $name && ($info['Name'] = $name);
+        $location && ($info['Location'] = $location);
+        $reason && ($info['Reason'] = $reason);
+        $contactInfo && ($info['ContactInfo'] = $contactInfo);
+        $this->info = $info;
+        return $this;
+    }
+
+    public function getPdfInstance(): Fpdi
+    {
+        return $this->pdf;
+    }
+
+    public function setPdf(
+        string $orientation = 'P',
+        string $unit = 'mm',
+        string $pageFormat = 'A4',
+        bool   $unicode = true,
+        string $encoding = 'UTF-8'
+    ): self
+    {
+        $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
+        return $this;
+    }
+
+    public function setImage(
+        string $imagePath,
+        float  $pageX = 155,
+        float  $pageY = 250,
+        float  $imageW = 50,
+        float  $imageH = 0,
+        int    $page = -1
+    ): self
+    {
+        $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
+        return $this;
+    }
+
+    public function setFileName(string $fileName): self
+    {
+        $ext = explode('.', $fileName);
+        $ext = end($ext);
+        $this->fileName = str_replace(search: ".{$ext}", replace: '', subject: $fileName);
+        return $this;
+    }
+
+    public function setHasSignedSuffix(bool $hasSignedSuffix): self
+    {
+        $this->hasSignedSuffix = $hasSignedSuffix;
+        return $this;
+    }
 
     /**
-     * @throws InvalidPdfSignModeTypeException
+     * @throws \setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException
+     * @throws \setasign\Fpdi\PdfReader\PdfReaderException
+     * @throws \setasign\Fpdi\PdfParser\PdfParserException
+     * @throws \setasign\Fpdi\PdfParser\Type\PdfTypeException
+     * @throws \setasign\Fpdi\PdfParser\Filter\FilterException
      */
-    if (!in_array($mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) throw new InvalidPdfSignModeTypeException($mode);
+    public function signature(): string
+    {
+        $pageCount = $this->pdf->setSourceFile($this->pdfPath);
 
-    $this->cert = $cert;
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tplidx = $this->pdf->importPage($i);
+            $this->pdf->SetPrintHeader(false);
+            $this->pdf->SetPrintFooter(false);
+            $this->pdf->AddPage();
+            $this->pdf->useTemplate($tplidx);
+        }
 
-    // Throws exception on invalidate certificate
-    try {
-      $this->cert->validate();
-    } catch (\Throwable $th) {
-      throw $th;
+        $certificate = $this->cert->getCert()->original;
+        $password = $this->cert->getCert()->password;
+
+        $this->pdf->setSignature(
+            signing_cert: $certificate,
+            private_key: $certificate,
+            private_key_password: $password,
+            extracerts: '',
+            cert_type: 3,
+            info: $this->info,
+            approval: 'A' // Authorize certificate
+        );
+
+        if ($this->image) {
+            $this->pdf->Image(
+                file: $this->image['imagePath'],
+                x: $this->image['pageX'],
+                y: $this->image['pageY'],
+                w: $this->image['imageW'],
+                h: $this->image['imageH'],
+                type: 'PNG'
+            );
+            $this->pdf->setSignatureAppearance(
+                x: $this->image['pageX'],
+                y: $this->image['pageY'],
+                w: $this->image['imageW'],
+                h: $this->image['imageH'],
+                page: $this->image['page']
+            );
+        }
+
+        if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
+        if ($this->hasSignedSuffix) $this->fileName .= '_signed';
+        $this->fileName .= '.pdf';
+
+        $output = "{$this->cert->getTempDir()}{$this->fileName}";
+
+        // Required to receive data from the server, such as timestamp and allocation hash.
+        if (!File::exists($output)) File::put($output, $this->pdf->output($this->fileName, 'S'));
+
+        switch ($this->mode) {
+            case self::MODE_RESOURCE:
+                $content = File::get($output);
+                File::delete([$output]);
+                return $content;
+                break;
+
+            case self::MODE_DOWNLOAD:
+            default:
+                return response()->download($output)->deleteFileAfterSend();
+                break;
+        }
     }
-
-    $this->setFileName($fileName)
-      ->setHasSignedSuffix($hasSignedSuffix);
-
-    $this->mode    = $mode;
-    $this->pdfPath = $pdfPath;
-    $this->setPdf();
-  }
-
-  /**
-   * setInfo - Set signature info
-   *
-   * @param  string|null $name
-   * @param  string|null $location
-   * @param  string|null $reason
-   * @param  string|null $contactInfo
-   *
-   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
-   */
-  public function setInfo(
-    ?string $name = null,
-    ?string $location = null,
-    ?string $reason = null,
-    ?string $contactInfo = null
-  ): SignaturePdf {
-    $info        = [];
-    $name        && ($info['Name'] = $name);
-    $location    && ($info['Location'] = $location);
-    $reason      && ($info['Reason'] = $reason);
-    $contactInfo && ($info['ContactInfo'] = $contactInfo);
-    $this->info  = $info;
-    return $this;
-  }
-
-  /**
-   * getPdfInstance - Return current Fdpi object instance
-   *
-   * @return \setasign\Fpdi\Tcpdf\Fpdi
-   */
-  public function getPdfInstance(): Fpdi
-  {
-    return $this->pdf;
-  }
-
-  /**
-   * setPdf - Set PDF settings
-   *
-   * @param  string $orientation  PDF_PAGE_ORIENTATION,
-   * @param  string $unit  PDF_UNIT,
-   * @param  string $pageFormat  PDF_PAGE_FORMAT,
-   * @param  bool   $unicode  true,
-   * @param  string $encoding  'UTF-8'
-   *
-   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
-   */
-  public function setPdf(
-    string $orientation = 'P',
-    string $unit = 'mm',
-    string $pageFormat = 'A4',
-    bool $unicode = true,
-    string $encoding = 'UTF-8'
-  ): SignaturePdf {
-    $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
-    return $this;
-  }
-
-  /**
-   * setImage - Defines an image as a signature identifier
-   *
-   * @param  string $imagePath - Support only for PNG images
-   * @param  float  $pageX
-   * @param  float  $pageY
-   * @param  float  $imageH
-   * @param  float  $imageW
-   *
-   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
-   */
-  public function setImage(
-    string $imagePath,
-    float  $pageX = 155,
-    float  $pageY = 250,
-    float  $imageW = 50,
-    float  $imageH = 0,
-    int  $page = -1
-  ): SignaturePdf {
-    $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
-    return $this;
-  }
-
-  /**
-   * setFileName - Set output file name
-   *
-   * @param  string $fileName
-   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
-   */
-  public function setFileName(string $fileName): SignaturePdf
-  {
-    $ext = explode('.', $fileName);
-    $ext = end($ext);
-    $this->fileName = str_replace(".{$ext}", '', $fileName);
-    return $this;
-  }
-
-  /**
-   * setHasSignedSuffix - Set if the output file has a "signed" suffix
-   *
-   * @param  bool $hasSignedSuffix
-   * @return \LSNepomuceno\LaravelA1PdfSign\SignaturePdf
-   */
-  public function setHasSignedSuffix(bool $hasSignedSuffix): SignaturePdf
-  {
-    $this->hasSignedSuffix = $hasSignedSuffix;
-    return $this;
-  }
-
-  /**
-   * signature - Sign a PDF file
-   *
-   * @return mixed
-   */
-  public function signature()
-  {
-    $pagecount = $this->pdf->setSourceFile($this->pdfPath);
-
-    for ($i = 1; $i <= $pagecount; $i++) {
-      $tplidx = $this->pdf->importPage($i);
-      $this->pdf->SetPrintHeader(false);
-      $this->pdf->SetPrintFooter(false);
-      $this->pdf->AddPage();
-      $this->pdf->useTemplate($tplidx);
-    }
-
-    $certificate = $this->cert->getCert()->original;
-    $password    = $this->cert->getCert()->password;
-
-    $this->pdf->setSignature(
-      $certificate,
-      $certificate,
-      $password,
-      '',
-      3,
-      $this->info,
-      'A' // Authorize certificate
-    );
-
-    if ($this->image) {
-      extract($this->image);
-      $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
-      $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $page);
-    }
-
-    if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
-    if ($this->hasSignedSuffix) $this->fileName .= '_signed';
-
-    $this->fileName .= '.pdf';
-
-    $output = "{$this->cert->getTempDir()}{$this->fileName}";
-
-    // Required to receive data from the server, such as timestamp and allocation hash.
-    if (!File::exists($output)) File::put($output, $this->pdf->output($this->fileName, 'S'));
-
-    switch ($this->mode) {
-      case self::MODE_RESOURCE:
-        $content = File::get($output);
-        File::delete([$output]);
-        return $content;
-        break;
-
-      case self::MODE_DOWNLOAD:
-      default:
-        return response()->download($output)->deleteFileAfterSend();
-        break;
-    }
-  }
 }
