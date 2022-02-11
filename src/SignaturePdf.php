@@ -68,8 +68,8 @@ class SignaturePdf
         ManageCert $cert,
         string     $mode = self::MODE_RESOURCE,
         string     $fileName = '',
-        bool       $hasSignedSuffix = true)
-    {
+        bool       $hasSignedSuffix = true
+    ) {
         /**
          * @throws FileNotFoundException
          */
@@ -112,8 +112,7 @@ class SignaturePdf
         ?string $location = null,
         ?string $reason = null,
         ?string $contactInfo = null
-    ): SignaturePdf
-    {
+    ): SignaturePdf {
         $info = [];
         $name && ($info['Name'] = $name);
         $location && ($info['Location'] = $location);
@@ -150,8 +149,7 @@ class SignaturePdf
         string $pageFormat = 'A4',
         bool   $unicode = true,
         string $encoding = 'UTF-8'
-    ): SignaturePdf
-    {
+    ): SignaturePdf {
         $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
         return $this;
     }
@@ -174,8 +172,7 @@ class SignaturePdf
         float  $imageW = 50,
         float  $imageH = 0,
         int    $page = -1
-    ): SignaturePdf
-    {
+    ): SignaturePdf {
         $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
         return $this;
     }
@@ -219,7 +216,17 @@ class SignaturePdf
             $tplidx = $this->pdf->importPage($i);
             $this->pdf->SetPrintHeader(false);
             $this->pdf->SetPrintFooter(false);
-            $this->pdf->AddPage();
+
+            $templateSize = $this->pdf->getTemplateSize($tplidx);
+
+            ['width' => $width, 'height' => $height] = $templateSize;
+
+            if ($width > $height) {
+                $this->pdf->AddPage("L", [$width, $height]);
+            } else {
+                $this->pdf->AddPage("P", [$width, $height]);
+            }
+
             $this->pdf->useTemplate($tplidx);
         }
 
