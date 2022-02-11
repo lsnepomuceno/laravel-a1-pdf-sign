@@ -69,7 +69,8 @@ class SignaturePdf
         string     $mode = self::MODE_RESOURCE,
         string     $fileName = '',
         bool       $hasSignedSuffix = true
-    ) {
+    ) 
+    {
         /**
          * @throws FileNotFoundException
          */
@@ -112,7 +113,8 @@ class SignaturePdf
         ?string $location = null,
         ?string $reason = null,
         ?string $contactInfo = null
-    ): SignaturePdf {
+    ): SignaturePdf 
+    {
         $info = [];
         $name && ($info['Name'] = $name);
         $location && ($info['Location'] = $location);
@@ -149,7 +151,8 @@ class SignaturePdf
         string $pageFormat = 'A4',
         bool   $unicode = true,
         string $encoding = 'UTF-8'
-    ): SignaturePdf {
+    ): SignaturePdf 
+    {
         $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
         return $this;
     }
@@ -172,7 +175,8 @@ class SignaturePdf
         float  $imageW = 50,
         float  $imageH = 0,
         int    $page = -1
-    ): SignaturePdf {
+    ): SignaturePdf 
+    {
         $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
         return $this;
     }
