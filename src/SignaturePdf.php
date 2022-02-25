@@ -47,7 +47,7 @@ class SignaturePdf
     /**
      * @var boolean
      */
-    private bool $hasSignedSuffix;
+    private bool $hasSignedSuffix, $hasSealImgOnEveryPages;
 
     /**
      * __construct
@@ -68,8 +68,7 @@ class SignaturePdf
         ManageCert $cert,
         string     $mode = self::MODE_RESOURCE,
         string     $fileName = '',
-        bool       $hasSignedSuffix = true
-    ) 
+        bool       $hasSignedSuffix = true)
     {
         /**
          * @throws FileNotFoundException
@@ -91,7 +90,8 @@ class SignaturePdf
         }
 
         $this->setFileName($fileName)
-            ->setHasSignedSuffix($hasSignedSuffix);
+            ->setHasSignedSuffix($hasSignedSuffix)
+            ->setSealImgOnEveryPages(false);
 
         $this->mode = $mode;
         $this->pdfPath = $pdfPath;
@@ -113,7 +113,7 @@ class SignaturePdf
         ?string $location = null,
         ?string $reason = null,
         ?string $contactInfo = null
-    ): SignaturePdf 
+    ): SignaturePdf
     {
         $info = [];
         $name && ($info['Name'] = $name);
@@ -151,7 +151,7 @@ class SignaturePdf
         string $pageFormat = 'A4',
         bool   $unicode = true,
         string $encoding = 'UTF-8'
-    ): SignaturePdf 
+    ): SignaturePdf
     {
         $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
         return $this;
@@ -175,9 +175,21 @@ class SignaturePdf
         float  $imageW = 50,
         float  $imageH = 0,
         int    $page = -1
-    ): SignaturePdf 
+    ): SignaturePdf
     {
         $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
+        return $this;
+    }
+
+    /**
+     * setSealImgOnEveryPages - Set whether the signature image will be on all pages
+     *
+     * @param bool $hasSealImgOnEveryPages
+     * @return SignaturePdf
+     */
+    public function setSealImgOnEveryPages(bool $hasSealImgOnEveryPages = true): SignaturePdf
+    {
+        $this->hasSealImgOnEveryPages = $hasSealImgOnEveryPages;
         return $this;
     }
 
@@ -208,30 +220,50 @@ class SignaturePdf
     }
 
     /**
+     * implementSignatureImage - Apply image to document
+     * 
+     * @param int|null $currentPage
+     * @return void
+     */
+    private function implementSignatureImage(?int $currentPage = null): void
+    {
+        if ($this->image) {
+            /**
+             * @var string $imagePath
+             * @var float|null $pageX
+             * @var float|null $pageY
+             * @var float $imageW
+             * @var float $imageH
+             * @var int $page
+             * @see setImage()
+             */
+            extract($this->image);
+            $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
+            $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $currentPage ?? $page);
+        }
+    }
+
+    /**
      * signature - Sign a PDF file
      *
      * @return mixed
      */
     public function signature()
     {
-        $pagecount = $this->pdf->setSourceFile($this->pdfPath);
+        $pageCount = $this->pdf->setSourceFile($this->pdfPath);
 
-        for ($i = 1; $i <= $pagecount; $i++) {
-            $tplidx = $this->pdf->importPage($i);
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $pageIndex = $this->pdf->importPage($i);
             $this->pdf->SetPrintHeader(false);
             $this->pdf->SetPrintFooter(false);
 
-            $templateSize = $this->pdf->getTemplateSize($tplidx);
-
+            $templateSize = $this->pdf->getTemplateSize($pageIndex);
             ['width' => $width, 'height' => $height] = $templateSize;
 
-            if ($width > $height) {
-                $this->pdf->AddPage("L", [$width, $height]);
-            } else {
-                $this->pdf->AddPage("P", [$width, $height]);
-            }
+            $this->pdf->AddPage($width > $height ? 'L' : 'P', [$width, $height]);
+            $this->pdf->useTemplate($pageIndex);
 
-            $this->pdf->useTemplate($tplidx);
+            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage($pageIndex);
         }
 
         $certificate = $this->cert->getCert()->original;
@@ -247,21 +279,7 @@ class SignaturePdf
             'A' // Authorize certificate
         );
 
-        if ($this->image) {
-            /**
-             * @var string $imagePath
-             * @var float|null $pageX
-             * @var float|null $pageY
-             * @var float $imageW
-             * @var float $imageH
-             * @var int $page
-             * @see setImage()
-             */
-            extract($this->image);
-            $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
-            $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $page);
-        }
-
+        if (!$this->hasSealImgOnEveryPages) $this->implementSignatureImage();
         if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
         if ($this->hasSignedSuffix) $this->fileName .= '_signed';
 
