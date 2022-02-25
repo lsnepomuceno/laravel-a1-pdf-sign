@@ -232,6 +232,21 @@ class SignaturePdf
             }
 
             $this->pdf->useTemplate($tplidx);
+
+            if ($this->image) {
+                /**
+                 * @var string $imagePath
+                 * @var float|null $pageX
+                 * @var float|null $pageY
+                 * @var float $imageW
+                 * @var float $imageH
+                 * @var int $page
+                 * @see setImage()
+                 */
+                extract($this->image);
+                $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
+                $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $page);
+            }
         }
 
         $certificate = $this->cert->getCert()->original;
@@ -246,21 +261,6 @@ class SignaturePdf
             $this->info,
             'A' // Authorize certificate
         );
-
-        if ($this->image) {
-            /**
-             * @var string $imagePath
-             * @var float|null $pageX
-             * @var float|null $pageY
-             * @var float $imageW
-             * @var float $imageH
-             * @var int $page
-             * @see setImage()
-             */
-            extract($this->image);
-            $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
-            $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $page);
-        }
 
         if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
         if ($this->hasSignedSuffix) $this->fileName .= '_signed';
