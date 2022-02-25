@@ -263,7 +263,7 @@ class SignaturePdf
             $this->pdf->AddPage($width > $height ? 'L' : 'P', [$width, $height]);
             $this->pdf->useTemplate($pageIndex);
 
-            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage($pageIndex);
+            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage((int) $pageIndex);
         }
 
         $certificate = $this->cert->getCert()->original;
