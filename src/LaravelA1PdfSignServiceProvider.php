@@ -1,6 +1,6 @@
 <?php
 
-namespace Lsnepomuceno\LaravelA1PdfSign;
+namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\ServiceProvider;
 
