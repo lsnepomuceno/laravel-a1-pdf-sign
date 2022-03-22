@@ -4,13 +4,28 @@ namespace LSNepomuceno\LaravelA1PdfSign\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\ManageCert;
-use \Illuminate\Http\UploadedFile;
-use Orchestra\Testbench\TestCase;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
+use Illuminate\Http\UploadedFile;
+use Throwable;
 
 class HelpersTest extends TestCase
 {
-  public function testValidateSignPdfFromFileHelper()
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws Throwable
+     * @throws InvalidCertificateContentException
+     * @throws InvalidPFXException
+     * @throws CertificateOutputNotFoundException
+     */
+    public function testValidateSignPdfFromFileHelper()
   {
     $cert = new ManageCert;
     list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -25,7 +40,16 @@ class HelpersTest extends TestCase
     File::delete([$pfxPath, $pdfPath]);
   }
 
-  public function testValidateSignPdfFromUploadHelper()
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws Throwable
+     * @throws InvalidCertificateContentException
+     * @throws CertificateOutputNotFoundException
+     * @throws InvalidPFXException
+     */
+    public function testValidateSignPdfFromUploadHelper()
   {
     $cert = new ManageCert;
     list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -41,7 +65,16 @@ class HelpersTest extends TestCase
     File::delete([$pfxPath, $pdfPath]);
   }
 
-  public function testValidateEncryptCertDataHelper()
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws Throwable
+     * @throws InvalidCertificateContentException
+     * @throws CertificateOutputNotFoundException
+     * @throws InvalidPFXException
+     */
+    public function testValidateEncryptCertDataHelper()
   {
     $cert = new ManageCert;
     list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -71,7 +104,16 @@ class HelpersTest extends TestCase
     );
   }
 
-  public function testValidatePdfSignatureHelper()
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws InvalidCertificateContentException
+     * @throws Throwable
+     * @throws CertificateOutputNotFoundException
+     * @throws InvalidPFXException
+     */
+    public function testValidatePdfSignatureHelper()
   {
     $cert = new ManageCert;
     list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
