@@ -26,19 +26,19 @@ class HelpersTest extends TestCase
      * @throws CertificateOutputNotFoundException
      */
     public function testValidateSignPdfFromFileHelper()
-  {
-    $cert = new ManageCert;
-    list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-    $signed   = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-    $pdfPath  = a1TempDir(true, '.pdf');
+        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+        $pdfPath = a1TempDir(true, '.pdf');
 
-    File::put($pdfPath, $signed);
-    $fileExists = File::exists($pdfPath);
+        File::put($pdfPath, $signed);
+        $fileExists = File::exists($pdfPath);
 
-    $this->assertTrue($fileExists);
-    File::delete([$pfxPath, $pdfPath]);
-  }
+        $this->assertTrue($fileExists);
+        File::delete([$pfxPath, $pdfPath]);
+    }
 
     /**
      * @throws FileNotFoundException
@@ -50,20 +50,20 @@ class HelpersTest extends TestCase
      * @throws InvalidPFXException
      */
     public function testValidateSignPdfFromUploadHelper()
-  {
-    $cert = new ManageCert;
-    list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-    $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
-    $signed       = signPdfFromUpload($uploadedFile, $pass, __DIR__ . '/Resources/test.pdf');
-    $pdfPath      = a1TempDir(true, '.pdf');
+        $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
+        $signed = signPdfFromUpload($uploadedFile, $pass, __DIR__ . '/Resources/test.pdf');
+        $pdfPath = a1TempDir(true, '.pdf');
 
-    File::put($pdfPath, $signed);
-    $fileExists = File::exists($pdfPath);
+        File::put($pdfPath, $signed);
+        $fileExists = File::exists($pdfPath);
 
-    $this->assertTrue($fileExists);
-    File::delete([$pfxPath, $pdfPath]);
-  }
+        $this->assertTrue($fileExists);
+        File::delete([$pfxPath, $pdfPath]);
+    }
 
     /**
      * @throws FileNotFoundException
@@ -75,34 +75,34 @@ class HelpersTest extends TestCase
      * @throws InvalidPFXException
      */
     public function testValidateEncryptCertDataHelper()
-  {
-    $cert = new ManageCert;
-    list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-    $encryptedData = encryptCertData($pfxPath, $pass);
+        $encryptedData = encryptCertData($pfxPath, $pass);
 
-    foreach (['certificate', 'password', 'hash'] as $key) {
-      $this->assertArrayHasKey($key, $encryptedData->toArray());
+        foreach (['certificate', 'password', 'hash'] as $key) {
+            $this->assertArrayHasKey($key, $encryptedData->toArray());
+        }
     }
-  }
 
-  public function testValidateA1TempDirHelper()
-  {
-    $this->assertTrue(
-      File::isDirectory(a1TempDir())
-    );
+    public function testValidateA1TempDirHelper()
+    {
+        $this->assertTrue(
+            File::isDirectory(a1TempDir())
+        );
 
-    $this->assertTrue(
-      Str::endsWith(a1TempDir(true), '.pfx')
-    );
+        $this->assertTrue(
+            Str::endsWith(a1TempDir(true), '.pfx')
+        );
 
-    $this->assertTrue(
-      Str::endsWith(
-        a1TempDir(true, '.pdf'),
-        '.pdf'
-      )
-    );
-  }
+        $this->assertTrue(
+            Str::endsWith(
+                a1TempDir(true, '.pdf'),
+                '.pdf'
+            )
+        );
+    }
 
     /**
      * @throws FileNotFoundException
@@ -114,21 +114,21 @@ class HelpersTest extends TestCase
      * @throws InvalidPFXException
      */
     public function testValidatePdfSignatureHelper()
-  {
-    $cert = new ManageCert;
-    list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-    $signed     = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-    $pdfPath    = a1TempDir(true, '.pdf');
+        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+        $pdfPath = a1TempDir(true, '.pdf');
 
-    File::put($pdfPath, $signed);
-    $fileExists = File::exists($pdfPath);
+        File::put($pdfPath, $signed);
+        $fileExists = File::exists($pdfPath);
 
-    $this->assertTrue($fileExists);
+        $this->assertTrue($fileExists);
 
-    $validation = validatePdfSignature($pdfPath);
-    $this->assertTrue($validation->validated);
+        $validation = validatePdfSignature($pdfPath);
+        $this->assertTrue($validation->validated);
 
-    File::delete([$pfxPath, $pdfPath]);
-  }
+        File::delete([$pfxPath, $pdfPath]);
+    }
 }

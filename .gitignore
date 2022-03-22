@@ -1,15 +1,14 @@
-.env
 /.settings
 /.project
 /.buildpath
 /composer.phar
-composer.lock
 /vendor
 /nbproject
 .vagrant
 Vagrantfile
 .idea
 .php_cs.cache
+composer.lock
 .phpunit.result.cache
 *.bak
 demo.php

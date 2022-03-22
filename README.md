@@ -34,25 +34,25 @@
     <td>Package version</td>
     <td>Docs</td>
   </tr>
-
+  
   <tr>
     <td>^8~8.54</td>
     <td rowspan="2">^7.4</td>
     <td>^0~0.0.11</td>
     <td rowspan="2"><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
   </tr>
-
+  
   <tr>
     <td>^8.56+</td>
     <td>^0.0.12</td>
   </tr>
-
+  
   <tr>
     <td>^9</td>
     <td>^8.1</td>
     <td>^1</td>
     <td>SOON</td>
   </tr>
-
+  
 </table>
 
