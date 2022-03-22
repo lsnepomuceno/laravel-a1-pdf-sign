@@ -2,6 +2,7 @@
 
 namespace Lsnepomuceno\LaravelA1PdfSign\Tests;
 
+use Lsnepomuceno\LaravelA1PdfSign\LaravelA1PdfSignServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
@@ -16,7 +17,7 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
-            \Lsnepomuceno\LaravelA1PdfSign\LaravelA1PdfSignServiceProvider::class,
+            LaravelA1PdfSignServiceProvider::class,
         ];
     }
 
