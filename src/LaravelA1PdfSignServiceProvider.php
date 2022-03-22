@@ -1,28 +1,24 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign\Sign;
+namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Support\ServiceProvider;
+use LSNepomuceno\LaravelA1PdfSign\Commands\{SignPdfCommand, ValidatePdfSignatureCommand};
 
 class LaravelA1PdfSignServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
-        //
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SignPdfCommand::class,
+                ValidatePdfSignatureCommand::class
+            ]);
+        }
     }
 }
