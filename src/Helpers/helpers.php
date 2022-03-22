@@ -79,7 +79,7 @@ if (!function_exists('decryptCertData')) {
 if (!function_exists('a1TempDir')) {
     function a1TempDir(bool $tempFile = false, string $fileExt = '.pfx'): string
     {
-        $tempDir = __DIR__ . '/Temp/';
+        $tempDir = dirname(__DIR__) . '/Temp/';
 
         if ($tempFile) $tempDir .= Str::orderedUuid() . $fileExt;
 
@@ -93,7 +93,7 @@ if (!function_exists('validatePdfSignature')) {
      */
     function validatePdfSignature(string $pdfPath): Fluent
     {
-        return alidatePdfSignature::from($pdfPath);
+        return ValidatePdfSignature::from($pdfPath);
     }
 }
 
