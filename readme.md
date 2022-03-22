@@ -1,35 +1,58 @@
-# laravel-a1-pdf-sign
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/14093492/127516361-48fbde85-1f34-4626-82ae-44b11aa0de15.png" alt="Signature image">
+</p>
 
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Travis](https://img.shields.io/travis/lsnepomuceno/laravel-a1-pdf-sign.svg?style=flat-square)]()
-[![Total Downloads](https://img.shields.io/packagist/dt/lsnepomuceno/laravel-a1-pdf-sign.svg?style=flat-square)](https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign)
+<h1 align="center">Sign PDF files with valid x509 certificate</h1>
 
-## Install
-`composer require lsnepomuceno/laravel-a1-pdf-sign`
+<p align="center">
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/releases/latest">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v" alt="Latest Stable Version">
+  </a>
+  <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads" alt="Total Downloads">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/tree/dev">
+    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable" alt="Latest Unstable Version">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md">
+    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
+  </a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml">
+    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml/badge.svg" alt="Tests">
+  </a>
+</p>
 
-## Usage
-Write a few lines about the usage of this package.
+<table align="center">
+  <thead>
+    <tr>
+      <th colspan="4">Reference</th>
+    </tr>
+  </thead>
+  <tr>
+    <td>Laravel version</td>
+    <td>PHP version</td>
+    <td>Package version</td>
+    <td>Docs</td>
+  </tr>
 
-## Testing
-Run the tests with:
+  <tr>
+    <td>^8~8.54</td>
+    <td rowspan="2">^7.4</td>
+    <td>^0~0.0.11</td>
+    <td rowspan="2"><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
+  </tr>
 
-``` bash
-vendor/bin/phpunit
-```
+  <tr>
+    <td>^8.56+</td>
+    <td>^0.0.12</td>
+  </tr>
 
-## Changelog
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+  <tr>
+    <td>^9</td>
+    <td>^8.1</td>
+    <td>^1</td>
+    <td>SOON</td>
+  </tr>
 
-## Contributing
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+</table>
 
-## Credits
-
-- [lsn.nepomuceno@gmail.com](https://github.com/lsnepomuceno)
-- [All Contributors](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/contributors)
-
-## Security
-If you discover any security-related issues, please email lsn.nepomuceno@gmail.com instead of using the issue tracker.
-
-## License
-The MIT License (MIT). Please see [License File](/LICENSE.md) for more information.
