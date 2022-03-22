@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	printerClass="NunoMaduro\Collision\Adapters\Phpunit\Printer"
-	backupGlobals="false"
-	backupStaticAttributes="false"
-	bootstrap="./vendor/autoload.php"
-	colors="true"
-	convertErrorsToExceptions="true"
-	convertNoticesToExceptions="true"
-	convertWarningsToExceptions="true"
-	processIsolation="false"
-	stopOnFailure="false"
-	verbose="false"
-	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
-  <coverage/>
-  <testsuites>
-    <testsuite name="LSNepomuceno/LaravelA1PdfSign Tests">
-      <directory>./tests/</directory>
-    </testsuite>
-  </testsuites>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    printerClass="NunoMaduro\Collision\Adapters\Phpunit\Printer"
+    backupGlobals="false"
+    backupStaticAttributes="false"
+    bootstrap="./vendor/autoload.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    processIsolation="false"
+    stopOnFailure="false"
+    verbose="false"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+    <coverage/>
+    <testsuites>
+        <testsuite name="LSNepomuceno/LaravelA1PdfSign Test Suite">
+            <directory>./tests/</directory>
+        </testsuite>
+    </testsuites>
 </phpunit>

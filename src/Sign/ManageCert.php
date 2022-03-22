@@ -1,15 +1,14 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign;
+namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\{Fluent, Str, Facades\File};
 use Illuminate\Contracts\Encryption\{DecryptException, EncryptException};
-use OpenSSLCertificate;
 use Symfony\Component\Process\{Process, Exception\ProcessFailedException};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{
-    CertificateOutputNotFounfException,
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
+    CertificateOutputNotFoundException,
     FileNotFoundException,
     InvalidCertificateContentException,
     InvalidPFXException,
@@ -22,20 +21,18 @@ class ManageCert
     private string $tempDir, $originalCertContent, $password, $hashKey;
     private bool $preservePfx = false;
     private array $parsedData;
-    private Encrypter $encrypter;
-
-    /** @var OpenSSLCertificate|resource|boolean */
-    private mixed $certContent;
-
+    private \OpenSSLCertificate|bool $certContent;
     const CIPHER = 'aes-128-cbc';
+    private Encrypter $encrypter;
 
     public function __construct()
     {
         $this->tempDir = a1TempDir();
-
         $this->generateHashKey()->setEncrypter();
 
-        if (!File::exists($this->tempDir)) File::makeDirectory($this->tempDir);
+        if (!File::exists($this->tempDir)) {
+            File::makeDirectory($this->tempDir);
+        }
     }
 
     public function setPreservePfx(bool $preservePfx = true): self
@@ -45,22 +42,7 @@ class ManageCert
     }
 
     /**
-     * @throws ProcessRunTimeException
-     */
-    private function executeProcess(string $command): void
-    {
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        while ($process->isRunning()) ;
-
-        if (!$process->isSuccessful()) throw new ProcessRunTimeException($process->getErrorOutput());
-
-        $process->stop(1);
-    }
-
-    /**
-     * @throws CertificateOutputNotFounfException
+     * @throws CertificateOutputNotFoundException
      * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
      * @throws InvalidPFXException
@@ -69,19 +51,26 @@ class ManageCert
      */
     public function fromPfx(string $pfxPath, string $password): self
     {
-        if (!Str::of($pfxPath)->lower()->endsWith('.pfx')) throw new InvalidPFXException($pfxPath);
+        if (!Str::of($pfxPath)->lower()->endsWith('.pfx')) {
+            throw new InvalidPFXException($pfxPath);
+        }
 
-        if (!File::exists($pfxPath)) throw new FileNotFoundException($pfxPath);
+        if (!File::exists($pfxPath)) {
+            throw new FileNotFoundException($pfxPath);
+        }
 
         $this->password = $password;
         $output = a1TempDir(true, '.crt');
-        $openssl = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
+        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
 
-        $this->executeProcess(command: $openssl);
+        runCliCommandProcesses($openSslCommand);
 
-        if (!File::exists($output)) throw new CertificateOutputNotFounfException;
+        if (!File::exists($output)) {
+            throw new CertificateOutputNotFoundException;
+        }
 
         $content = File::get($output);
+
         $filesToBeDelete = [$output];
 
         !$this->preservePfx && ($filesToBeDelete[] = $pfxPath);
@@ -92,11 +81,9 @@ class ManageCert
     }
 
     /**
-     * @throws CertificateOutputNotFounfException
+     * @throws CertificateOutputNotFoundException
      * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
      * @throws InvalidPFXException
-     * @throws Invalidx509PrivateKeyException
      * @throws ProcessRunTimeException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -104,7 +91,9 @@ class ManageCert
     {
         $pfxTemp = a1TempDir(true);
 
-        if (File::exists($pfxTemp)) $pfxTemp = microtime() . $pfxTemp;
+        if (File::exists($pfxTemp)) {
+            $pfxTemp = microtime() . $pfxTemp;
+        }
 
         File::put($pfxTemp, $uploadedPfx->get());
 
@@ -168,12 +157,9 @@ class ManageCert
         return $this->tempDir;
     }
 
-    /**
-     * @see ManageCert::CIPHER
-     */
     public function generateHashKey(): self
     {
-        $this->hashKey = Encrypter::generateKey(cipher: self::CIPHER);
+        $this->hashKey = Encrypter::generateKey(self::CIPHER);
         $this->setEncrypter();
         return $this;
     }
@@ -187,7 +173,7 @@ class ManageCert
 
     private function setEncrypter(): void
     {
-        $this->encrypter = new Encrypter(key: $this->hashKey, cipher: self::CIPHER);
+        $this->encrypter = new Encrypter($this->hashKey, self::CIPHER);
     }
 
     public function getHashKey(): string
@@ -218,7 +204,7 @@ class ManageCert
     }
 
     /**
-     * @throws CertificateOutputNotFounfException
+     * @throws CertificateOutputNotFoundException
      * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
      * @throws InvalidPFXException
@@ -236,11 +222,15 @@ class ManageCert
         ];
 
         foreach ($genCommands as $command) {
-            $this->executeProcess($command);
+            runCliCommandProcesses($command);
         }
 
         File::delete(["{$name}.key", "{$name}.crt"]);
 
-        return $returnPathAndPass ? ["{$name}.pfx", $pass] : $this->fromPfx("{$name}.pfx", $wrongPass ? 'wrongPass' : $pass);
+        if ($returnPathAndPass) {
+            return ["{$name}.pfx", $pass];
+        }
+
+        return $this->fromPfx("{$name}.pfx", $wrongPass ? 'wrongPass' : $pass);
     }
 }
