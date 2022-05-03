@@ -1,0 +1,54 @@
+{
+  "name": "laravel-a1-pdf-sign",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "test:e2e": "vue-cli-service test:e2e",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@mdi/font": "5.9.55",
+    "core-js": "^3.8.3",
+    "roboto-fontface": "*",
+    "vue": "^3.2.13",
+    "vue-router": "^4.0.3",
+    "vuetify": "npm:@vuetify/nightly@next",
+    "webfontloader": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "@types/webfontloader": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@vue/cli-plugin-babel": "~5.0.0",
+    "@vue/cli-plugin-e2e-cypress": "~5.0.0",
+    "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-router": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
+    "@vue/cli-plugin-unit-jest": "~5.0.0",
+    "@vue/cli-service": "~5.0.0",
+    "@vue/eslint-config-typescript": "^9.1.0",
+    "@vue/test-utils": "^2.0.0-0",
+    "@vue/vue3-jest": "^27.0.0-alpha.1",
+    "babel-jest": "^27.0.6",
+    "cypress": "^8.3.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-vue": "^8.0.3",
+    "jest": "^27.0.5",
+    "lint-staged": "^11.1.2",
+    "sass": "^1.38.0",
+    "sass-loader": "^12.0.0",
+    "ts-jest": "^27.0.4",
+    "typescript": "~4.5.5",
+    "vue-cli-plugin-vuetify": "~2.4.8",
+    "vuetify-loader": "^2.0.0-alpha.0"
+  },
+  "_id": "laravel-a1-pdf-sign@0.1.0",
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "readme": "ERROR: No README data found!"
+}
