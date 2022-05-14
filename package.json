@@ -7,15 +7,17 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint",
+    "lint": "vue-cli-service lint --fix",
     "publish": "sh publish.sh"
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
     "core-js": "^3.8.3",
+    "highlight.js": "^11.5.1",
     "roboto-fontface": "*",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
+    "vue3-markdown-it": "^1.0.10",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {
@@ -33,14 +35,18 @@
     "@vue/eslint-config-typescript": "^9.1.0",
     "@vue/test-utils": "^2.0.0-0",
     "@vue/vue3-jest": "^27.0.0-alpha.1",
+    "autoprefixer": "^10.4.7",
     "babel-jest": "^27.0.6",
     "cypress": "^8.3.0",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
     "jest": "^27.0.5",
     "lint-staged": "^11.1.2",
+    "postcss": "^8.4.13",
+    "postcss-import": "^14.1.0",
     "sass": "^1.38.0",
     "sass-loader": "^12.0.0",
+    "tailwindcss": "^3.0.24",
     "ts-jest": "^27.0.4",
     "typescript": "~4.5.5"
   },
