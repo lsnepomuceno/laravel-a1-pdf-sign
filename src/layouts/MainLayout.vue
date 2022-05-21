@@ -1,6 +1,6 @@
 <template>
-  <div class="md:container md:mx-auto">
-    <div class="flex gap-4">
+  <div class="container">
+    <div class="row vh-100">
       <SideBar/>
 
       <MainContent/>
@@ -9,5 +9,5 @@
 </template>
 
 <script setup>
-import { MainContent, SideBar } from '@/components/'
+import { MainContent, SideBar } from '@/components'
 </script>

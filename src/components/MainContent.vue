@@ -1,5 +1,5 @@
 <template>
-  <main class="w-9/12">
+  <main class="col">
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <Markdown v-if="currentDoc" :source="currentDoc"/>
     </div>
