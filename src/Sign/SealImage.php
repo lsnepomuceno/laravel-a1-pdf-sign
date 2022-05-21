@@ -3,7 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
-use Intervention\Image\{ImageManager as IMG, Exception\NotReadableException};
+use Intervention\Image\ImageManager as IMG;
 use Illuminate\Support\Fluent;
 use Closure;
 
@@ -148,7 +148,7 @@ class SealImage
     }
 
     /**
-     * @throw NotReadableException
+     * @throw \Intervention\Image\ImageManager\Exception\NotReadableException
      */
     public function generateImage(string $returnType = self::RETURN_IMAGE_CONTENT): string
     {

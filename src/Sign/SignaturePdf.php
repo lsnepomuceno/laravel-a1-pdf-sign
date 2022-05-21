@@ -5,6 +5,10 @@ namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Support\{Str, Facades\File};
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
+    Invalidx509PrivateKeyException,
+    InvalidCertificateContentException
+};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
     FileNotFoundException,
     InvalidPdfSignModeTypeException
 };
@@ -57,8 +61,8 @@ class SignaturePdf
      * @param string $mode self::MODE_RESOURCE
      * @param string $fileName null
      * @param bool $hasSignedSuffix false
-     * @throws Exception\InvalidCertificateContentException
-     * @throws Exception\Invalidx509PrivateKeyException
+     * @throws InvalidCertificateContentException
+     * @throws Invalidx509PrivateKeyException
      * @throws FileNotFoundException
      * @throws InvalidPdfSignModeTypeException
      * @throws Throwable

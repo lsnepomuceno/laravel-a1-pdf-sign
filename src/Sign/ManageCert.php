@@ -6,7 +6,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\{Fluent, Str, Facades\File};
 use Illuminate\Contracts\Encryption\{DecryptException, EncryptException};
-use Symfony\Component\Process\{Process, Exception\ProcessFailedException};
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
     CertificateOutputNotFoundException,
     FileNotFoundException,
