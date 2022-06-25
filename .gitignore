@@ -1,6 +1,24 @@
 .DS_Store
 node_modules
 /dist
+/.settings
+/.project
+/.buildpath
+/composer.phar
+/vendor
+/nbproject
+.vagrant
+Vagrantfile
+.idea
+.php_cs.cache
+composer.lock
+.phpunit.result.cache
+*.bak
+demo.php
+*Zone.Identifier
+Temp
+*.pdf
+*.pfx
 
 /tests/e2e/videos/
 /tests/e2e/screenshots/

@@ -1,9 +1,11 @@
 <template>
-  <main class="col">
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <Markdown v-if="currentDoc" :source="currentDoc"/>
+    <div class="docs-content">
+        <div class="container">
+            <Markdown v-if="currentDoc"
+                      :source="currentDoc"
+                      class="docs-article"/>
+        </div>
     </div>
-  </main>
 </template>
 
 <script setup>

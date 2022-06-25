@@ -1,39 +1,62 @@
 <template>
-  <div class="col-12 col-md-4 col-lg-3 d-flex flex-column flex-shrink-0 p-3 text-black">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-black text-decoration-none">
-      <span class="fs-4">Sidebar</span>
-    </a>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item">
-        <a href="#" class="nav-link active" aria-current="page">
-          <svg class="bi me-2" width="16" height="16">
-            <use xlink:href="#home"></use>
-          </svg>
-          Home
-        </a>
-      </li>
-    </ul>
-    <hr>
-    <div class="dropdown">
-      <a href="#" class="d-flex align-items-center text-black text-decoration-none dropdown-toggle" id="dropdownUser1"
-         data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
-        <strong>mdo</strong>
-      </a>
-      <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-        <li><a class="dropdown-item" href="#">New project...</a></li>
-        <li><a class="dropdown-item" href="#">Settings</a></li>
-        <li><a class="dropdown-item" href="#">Profile</a></li>
-        <li>
-          <hr class="dropdown-divider">
-        </li>
-        <li><a class="dropdown-item" href="#">Sign out</a></li>
-      </ul>
+    <div :class="{
+            'sidebar-visible' : drawer,
+            'sidebar-hidden' : !drawer
+        }"
+         class="docs-sidebar">
+        <div class="top-search-box d-lg-none p-3">
+            <form class="search-form">
+                <input type="text"
+                       placeholder="Search the docs..."
+                       name="search"
+                       class="form-control search-input">
+                <button type="submit"
+                        class="btn search-btn"
+                        value="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <nav id="docs-nav" class="docs-nav navbar">
+            <ul class="section-items list-unstyled nav flex-column pb-3">
+                <li class="nav-item section-title">
+                    <a class="nav-link scrollto active"
+                       href="#section-1">
+                        <span class="theme-icon-holder me-2">
+                            <i class="fas fa-map-signs"></i>
+                        </span>
+                        Introduction
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link scrollto"
+                       href="#item-1-1">
+                        Section Item 1.1
+                    </a>
+                </li>
+                <li class="nav-item section-title mt-3">
+                    <a class="nav-link scrollto"
+                       href="#section-2">
+                        <span class="theme-icon-holder me-2">
+                            <i class="fas fa-arrow-down"></i>
+                        </span>
+                        Installation
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link scrollto"
+                       href="#item-2-1">
+                        Section Item 2.1
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
-  </div>
 </template>
 
 <script setup>
-import { NavBar } from '@/components'
+import useLayout from "@/composables/useLayout";
+
+const { drawer } = useLayout()
 </script>

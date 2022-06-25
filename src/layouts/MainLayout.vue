@@ -1,13 +1,9 @@
 <template>
-  <div class="container">
-    <div class="row vh-100">
-      <SideBar/>
-
-      <MainContent/>
-    </div>
-  </div>
+    <HeaderTitle/>
+    <SideBar/>
+    <MainContent/>
+    <FooterContent/>
 </template>
 
 <script setup>
-import { MainContent, SideBar } from '@/components'
-</script>
+import { FooterContent, HeaderTitle, MainContent, SideBar } from '@/components'</script>
