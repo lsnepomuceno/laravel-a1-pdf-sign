@@ -1,13 +1,15 @@
 import { ref } from 'vue'
+import { useRouter } from "vue-router"
 
 const currentDoc = ref<string | null>(null)
+const router = useRouter()
 
-const getDoc = async (docUrl?: string) => {
-    docUrl = docUrl || 'docs/0.x/installation.md'
+const getDoc = async (version?: string, page?: string) => {
+    const docUrl = `docs/${ version }/${ page }.md`
     currentDoc.value = await fetch(docUrl).then(res => res.text())
 }
 
-export default {
+export default () => ({
     getDoc,
     currentDoc
-}
+})

@@ -11,7 +11,7 @@
                         <span></span>
                     </button>
                     <div class="site-logo">
-                        <a class="navbar-brand" href="index.html">
+                        <a class="navbar-brand">
                             <span class="logo-text">
                                 Laravel
                                 <span class="text-alt ml-2">
