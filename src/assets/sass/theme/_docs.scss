@@ -132,7 +132,7 @@
 	z-index: 10;
 	top: 69px;
 	height: calc(100% - 69px);
-	background: #fff;
+	background-image: linear-gradient(to bottom,$smoky-white,#fff)!important;
 	overflow-y:auto;
 	/* Forefox scrollbar */
 	scrollbar-color: rgba(0, 0, 0, 0.2) $smoky-white;;

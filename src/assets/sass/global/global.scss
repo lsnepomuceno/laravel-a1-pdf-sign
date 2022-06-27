@@ -1,10 +1,10 @@
-$theme-color-primary: #28b76b;
+$theme-color-primary: #eb4432;
 
 $theme-text-color-primary: #252930;
 $theme-text-color-secondary: lighten($theme-text-color-primary, 25%);
 $theme-text-color-light: lighten($theme-text-color-primary, 40%);
 
-$theme-bg-light: #f4fcf6;
+$theme-bg-light: #fff5f4;
 $theme-bg-dark: $theme-color-primary;
 $theme-bg-color: $theme-color-primary;
 
@@ -16,7 +16,7 @@ $theme-divider: lighten($theme-text-color-primary, 75%);
 $theme-color-new: #5ab66e;
 $theme-error: #EC575B;
 
-$smoky-white: #f5f5f5;
+$smoky-white: #f5f5fa;
 $google-color: #d73d32;
 $facebook-color: #3b5998;
 $twitter-color: #1DA1F2;

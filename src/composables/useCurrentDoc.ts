@@ -11,7 +11,7 @@ const getDoc = async (version?: string, page?: string) => {
 const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: Router) => {
     watch(
         () => route.params.version,
-        (newValue, old) => {
+        (newValue) => {
             if (newValue) {
                 const { version, page } = route.params
                 getDoc(String(version), String(page))
@@ -22,7 +22,7 @@ const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: R
         }
     )
 
-    watch(() => route.name, async (newValue, old) => {
+    watch(() => route.name, async (newValue) => {
         if (newValue && !route.params.version) {
             await router.push({ name: 'docs-versioned', params: { version: '1.x', page: 'home' } })
         }

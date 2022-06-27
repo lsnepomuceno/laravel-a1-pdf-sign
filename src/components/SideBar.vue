@@ -3,7 +3,7 @@
             'sidebar-visible' : drawer,
             'sidebar-hidden' : !drawer
         }"
-         class="docs-sidebar">
+         class="docs-sidebar shadow-none">
         <div class="top-search-box d-lg-none p-3">
             <form class="search-form">
                 <input type="text"

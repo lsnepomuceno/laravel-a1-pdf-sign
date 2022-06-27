@@ -26,10 +26,10 @@ const router = createRouter({
     routes
 })
 
-router.beforeResolve((to, from) => {
+router.beforeResolve((to) => {
     const regex = 'laravel-a1-pdf-sign'
     if (process.env.NODE_ENV !== 'production' && (new RegExp(regex).test(location.href))) {
-        location.href = (`/#${to.fullPath}`)
+        location.href = (`/#${ to.fullPath }`)
     }
 })
 
