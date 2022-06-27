@@ -19,12 +19,18 @@ const route = useRoute()
 const router = useRouter()
 const { getDoc, currentDoc } = useCurrentDoc()
 
-watch(() => route.params.version, (newValue, old) => {
-    if (newValue) {
-        const { version, page } = route.params
-        getDoc(String(version), String(page))
+watch(
+    () => route.params.version,
+    (newValue, old) => {
+        if (newValue) {
+            const { version, page } = route.params
+            getDoc(String(version), String(page))
+        }
+    },
+    {
+        deep: true
     }
-})
+)
 
 watch(() => route.name, (newValue, old) => {
     if (newValue && !route.params.version) {
