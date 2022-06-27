@@ -20,36 +20,27 @@
 
         <nav id="docs-nav" class="docs-nav navbar">
             <ul class="section-items list-unstyled nav flex-column pb-3">
-                <li class="nav-item section-title">
-                    <a class="nav-link scrollto active"
-                       href="#section-1">
-                        <span class="theme-icon-holder me-2">
-                            <i class="fas fa-map-signs"></i>
-                        </span>
-                        Introduction
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link scrollto"
-                       href="#item-1-1">
-                        Section Item 1.1
-                    </a>
-                </li>
-                <li class="nav-item section-title mt-3">
-                    <a class="nav-link scrollto"
-                       href="#section-2">
-                        <span class="theme-icon-holder me-2">
-                            <i class="fas fa-arrow-down"></i>
-                        </span>
-                        Installation
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link scrollto"
-                       href="#item-2-1">
-                        Section Item 2.1
-                    </a>
-                </li>
+                <template v-for="(section, key) in version.sections" :key="key">
+                    <li class="nav-item section-title">
+                        <a class="nav-link scrollto active"
+                           :href="generateDocUrl(section)">
+                            <span class="theme-icon-holder me-2">
+                                <i :class="`fas ${section.icon}`"></i>
+                            </span>
+                            {{ section.title }}
+                        </a>
+                    </li>
+                    <template v-if="section.subSections?.length">
+                        <li class="nav-item"
+                            v-for="(subSection, subKey) in section.subSections"
+                            :key="subKey">
+                            <a class="nav-link scrollto"
+                               :href="generateDocUrl(subSection)">
+                                {{ subSection.title }}
+                            </a>
+                        </li>
+                    </template>
+                </template>
             </ul>
         </nav>
     </div>
@@ -57,6 +48,16 @@
 
 <script setup>
 import useLayout from "@/composables/useLayout";
+import useDoc from "@/composables/useDoc";
+import { computed } from "vue";
 
 const { drawer } = useLayout()
+const { docs } = useDoc()
+const version = computed(() => docs.find(doc => doc.version === '1.x'))
+const generateDocUrl = (sectionOrSubSection) => {
+    return `/laravel-a1-pdf-sign/#/docs/${ version.value.version }/${ sectionOrSubSection.url }`;
+}
+
+console.log(version.value)
+
 </script>

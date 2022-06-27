@@ -1,11 +1,15 @@
 import { ref, watch } from 'vue'
 import { RouteLocationNormalizedLoaded, Router } from "vue-router"
 
-const currentDoc = ref<string | null>(null)
+const currentDocMD = ref<string | null>(null)
+const currentDocVersion = ref<string | null>(null)
 
 const getDoc = async (version?: string, page?: string) => {
     const docUrl = `docs/${ version }/${ page }.md`
-    currentDoc.value = await fetch(docUrl).then(res => res.text())
+    if (version) {
+        currentDocVersion.value = version
+    }
+    currentDocMD.value = await fetch(docUrl).then(res => res.text())
 }
 
 const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: Router) => {
@@ -31,6 +35,6 @@ const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: R
 
 export default () => ({
     getDoc,
-    currentDoc,
+    currentDocMD,
     watchRouteChanges
 })

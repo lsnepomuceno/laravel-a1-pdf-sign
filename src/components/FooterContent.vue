@@ -1,5 +1,5 @@
 <template>
-    <footer class="footer">
+    <footer class="footer mt-auto">
         <div class="container text-center py-5">
             <ul class="social-list list-unstyled pt-4 mb-0">
                 <li class="list-inline-item" v-for="link in links" :key="link.icon">

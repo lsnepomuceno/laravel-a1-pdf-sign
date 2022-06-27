@@ -1,9 +1,10 @@
 <template>
     <div class="docs-content">
         <div class="container">
-            <Markdown v-if="currentDoc"
-                      :source="currentDoc"
+            <Markdown v-if="currentDocMD"
+                      :source="currentDocMD"
                       class="docs-article"/>
+            <hr/>
         </div>
     </div>
 </template>
@@ -16,7 +17,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const { watchRouteChanges, currentDoc } = useCurrentDoc()
+const { watchRouteChanges, currentDocMD } = useCurrentDoc()
 
 watchRouteChanges(route, router)
 </script>
