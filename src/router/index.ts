@@ -19,19 +19,18 @@ const routes: Array<RouteRecordRaw> = [
             template: '<p>Page Not Found</p>'
         }
     }
-    // {
-    //   path: '/about',
-    //   name: 'about',
-    //   // route level code-splitting
-    //   // this generates a separate chunk (about.[hash].js) for this route
-    //   // which is lazy-loaded when the route is visited.
-    //   component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-    // }
 ]
 
 const router = createRouter({
     history: createWebHashHistory(),
     routes
+})
+
+router.beforeResolve((to, from) => {
+    const regex = 'laravel-a1-pdf-sign'
+    if (process.env.NODE_ENV !== 'production' && (new RegExp(regex).test(location.href))) {
+        location.href = (`/#${to.fullPath}`)
+    }
 })
 
 export default router
