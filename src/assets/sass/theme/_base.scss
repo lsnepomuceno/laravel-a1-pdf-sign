@@ -73,7 +73,7 @@ a.theme-link {
 
 a.text-link {
 	text-decoration: none;
-	
+
 	&:hover {
 		text-decoration: underline;
 	}
@@ -118,6 +118,16 @@ a.text-link {
 	}
 }
 
+.cursor-pointer {
+	cursor: pointer;
+}
+
+.dropdown-toggle{
+	&.version:hover{
+		box-shadow: none!important;
+	}
+}
+
 
 .form-control {
 	padding-top: 0.875rem;
@@ -140,7 +150,7 @@ a.text-link {
 	font-size: 1rem;
 	text-align: center;
 	@include border-radius(50%);
-	
+
 	.svg-inline---fa {
 		color: $theme-color-primary;
 	}
@@ -173,7 +183,7 @@ a.text-link {
 	    @include skew(25,-10);
         @include transform-origin(top left);
 	}
-	
+
 	&:after {
 		content: "";
 		width: 150px;
@@ -207,7 +217,7 @@ a.text-link {
 	    @include skew(25,-12);
         @include transform-origin(top left);
 	}
-	
+
 	&:after {
 		content: "";
 		width: 150px;
@@ -249,7 +259,7 @@ a.text-link {
 	    font-size: 1.5rem;
 	    font-weight:bold;
     }
-    
+
     .text-alt {
 	    font-weight:300;
     }
@@ -291,7 +301,7 @@ a.text-link {
 				color: $theme-color-primary;
 			}
 		}
-		
+
 		&:not(:last-child) {
 			margin-right: 0.875rem;
 		}
@@ -318,8 +328,8 @@ a.text-link {
 	.copyright {
 		font-size: 0.875rem;
 	}
-	
-	
+
+
 }
 
 /* Page related */

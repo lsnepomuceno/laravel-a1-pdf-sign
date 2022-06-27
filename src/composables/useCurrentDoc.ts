@@ -1,15 +1,29 @@
-import { ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { RouteLocationNormalizedLoaded, Router } from "vue-router"
+import useDoc from "@/composables/useDoc";
 
 const currentDocMD = ref<string | null>(null)
-const currentDocVersion = ref<string | null>(null)
+const currentDocVersion = ref<string | null | undefined>(null)
+const currentDocObject = reactive({})
+const { docs } = useDoc()
 
 const getDoc = async (version?: string, page?: string) => {
     const docUrl = `docs/${ version }/${ page }.md`
-    if (version) {
-        currentDocVersion.value = version
-    }
+    currentDocVersion.value = version
+    filterVersionList(version)
     currentDocMD.value = await fetch(docUrl).then(res => res.text())
+}
+
+const changeCurrentVersion = async (version: string, router: Router) => {
+    await router.push({ name: 'docs-versioned', params: { version, page: 'home' } })
+}
+
+const filterVersionList = (version?: string) => {
+    Object.assign(currentDocObject, docs.find(doc => doc.version === version))
+}
+
+const generateDocUrl = (sectionUrl: string) => {
+    return `/laravel-a1-pdf-sign/#/docs/${ currentDocVersion.value }/${ sectionUrl }`;
 }
 
 const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: Router) => {
@@ -34,7 +48,12 @@ const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: R
 }
 
 export default () => ({
-    getDoc,
     currentDocMD,
-    watchRouteChanges
+    currentDocVersion,
+    currentDocObject,
+    getDoc,
+    watchRouteChanges,
+    filterVersionList,
+    generateDocUrl,
+    changeCurrentVersion
 })

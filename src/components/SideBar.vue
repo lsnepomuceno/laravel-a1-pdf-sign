@@ -20,10 +20,10 @@
 
         <nav id="docs-nav" class="docs-nav navbar">
             <ul class="section-items list-unstyled nav flex-column pb-3">
-                <template v-for="(section, key) in version.sections" :key="key">
+                <template v-for="(section, key) in currentDocObject.sections" :key="key">
                     <li class="nav-item section-title">
                         <a class="nav-link scrollto active"
-                           :href="generateDocUrl(section)">
+                           :href="generateDocUrl(section.url)">
                             <span class="theme-icon-holder me-2">
                                 <i :class="`fas ${section.icon}`"></i>
                             </span>
@@ -35,7 +35,7 @@
                             v-for="(subSection, subKey) in section.subSections"
                             :key="subKey">
                             <a class="nav-link scrollto"
-                               :href="generateDocUrl(subSection)">
+                               :href="generateDocUrl(subSection.url)">
                                 {{ subSection.title }}
                             </a>
                         </li>
@@ -49,15 +49,10 @@
 <script setup>
 import useLayout from "@/composables/useLayout";
 import useDoc from "@/composables/useDoc";
-import { computed } from "vue";
+import useCurrentDoc from "@/composables/useCurrentDoc";
 
+const { currentDocObject, generateDocUrl } = useCurrentDoc()
 const { drawer } = useLayout()
 const { docs } = useDoc()
-const version = computed(() => docs.find(doc => doc.version === '1.x'))
-const generateDocUrl = (sectionOrSubSection) => {
-    return `/laravel-a1-pdf-sign/#/docs/${ version.value.version }/${ sectionOrSubSection.url }`;
-}
-
-console.log(version.value)
 
 </script>
