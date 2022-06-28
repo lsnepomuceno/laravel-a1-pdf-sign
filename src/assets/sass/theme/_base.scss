@@ -122,8 +122,9 @@ a.text-link {
 	cursor: pointer;
 }
 
-.dropdown-toggle{
-	&.version:hover{
+.dropdown-toggle.version,
+.btn{
+	&:hover{
 		box-shadow: none!important;
 	}
 }

@@ -1,22 +1,42 @@
 import { reactive, ref, watch } from 'vue'
 import { RouteLocationNormalizedLoaded, Router } from "vue-router"
-import useDoc from "@/composables/useDoc";
+import useDoc, { Doc } from "@/composables/useDoc";
 
 const currentDocMD = ref<string | null>(null)
 const currentDocVersion = ref<string | null | undefined>(null)
-const currentDocObject = reactive({})
+const currentDocObject = reactive(<Doc>{})
+const currentPageObject = reactive({})
 const fetchErros = ref<string | null | undefined>(null)
 const { docs } = useDoc()
+
+const filterVersionList = (version?: string) => {
+    Object.assign(currentDocObject, docs.find(doc => doc.version === version))
+}
+
+const filterPageObject = (page?: string) => {
+    if (Object.keys(currentDocObject)) {
+        return currentDocObject
+            .sections
+            .find(
+                section => section.url === page
+                    || section.subSections?.find(sub => sub.url === page)
+            )
+    }
+
+    return {}
+}
 
 const getDoc = (version?: string, page?: string) => {
     const docUrl = `docs/${ version }/${ page }.md`
     currentDocVersion.value = version
     filterVersionList(version)
+    Object.assign(currentPageObject, filterPageObject(page))
+    fetchErros.value = null
+    currentDocMD.value = null
     fetch(docUrl)
         .then(async res => {
             if (res.statusText.toUpperCase() === 'OK') {
                 currentDocMD.value = await res.text()
-                fetchErros.value = null
             }
             if (res.status >= 400) {
                 fetchErros.value = 'The page you requested was not found.'
@@ -30,10 +50,6 @@ const getDoc = (version?: string, page?: string) => {
 
 const changeCurrentVersion = async (version: string, router: Router) => {
     await router.push({ name: 'docs-versioned', params: { version, page: 'home' } })
-}
-
-const filterVersionList = (version?: string) => {
-    Object.assign(currentDocObject, docs.find(doc => doc.version === version))
 }
 
 const generateDocUrl = (sectionUrl: string) => {
@@ -66,6 +82,8 @@ export default () => ({
     currentDocVersion,
     currentDocObject,
     fetchErros,
+    currentPageObject,
+    filterPageObject,
     getDoc,
     watchRouteChanges,
     filterVersionList,

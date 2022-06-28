@@ -1,11 +1,12 @@
 <template>
     <div class="docs-content">
         <div class="container">
-            <Markdown v-if="currentDocMD && !fetchErros"
+            <Markdown v-if="currentDocMD"
                       :source="currentDocMD"
                       class="docs-article"/>
             <ErrorsAlert v-else-if="fetchErros"/>
             <hr/>
+            <PreviousNextLinks/>
         </div>
     </div>
 </template>
@@ -14,12 +15,17 @@
 import Markdown from 'vue3-markdown-it'
 import '@/assets/sass/components/mainContent.sass'
 import useCurrentDoc from "@/composables/useCurrentDoc";
-import { ErrorsAlert } from '@/components'
+import { ErrorsAlert, PreviousNextLinks } from '@/components'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const { watchRouteChanges, currentDocMD, fetchErros } = useCurrentDoc()
+const {
+    watchRouteChanges,
+    currentDocMD,
+    fetchErros,
+} = useCurrentDoc()
+
 
 watchRouteChanges(route, router)
 </script>

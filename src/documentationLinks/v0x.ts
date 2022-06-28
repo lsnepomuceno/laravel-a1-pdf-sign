@@ -1,4 +1,6 @@
-export default {
+import { Doc } from '@/composables/useDoc'
+
+export default <Doc>{
     version: '0.x',
     sections: [
         {
@@ -55,13 +57,16 @@ export default {
                         nextLink: 'not-laravel-or-lumen'
                     }
                 }
-            ]
+            ],
+            footerActions: {
+                previousLink: 'installation',
+                nextLink: 'not-laravel-or-lumen'
+            }
         },
         {
             title: 'Not Laravel or Lumen app',
             url: 'not-laravel-or-lumen',
             icon: 'fa-exclamation',
-            subSections: [],
             footerActions: {
                 previousLink: 'helpers',
                 nextLink: 'tests'
