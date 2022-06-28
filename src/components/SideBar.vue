@@ -47,12 +47,10 @@
 </template>
 
 <script setup>
-import useLayout from "@/composables/useLayout";
-import useDoc from "@/composables/useDoc";
-import useCurrentDoc from "@/composables/useCurrentDoc";
+import useLayout from '@/composables/useLayout'
+import useCurrentDoc from '@/composables/useCurrentDoc'
 
 const { currentDocObject, generateDocUrl } = useCurrentDoc()
 const { drawer } = useLayout()
-const { docs } = useDoc()
 
 </script>

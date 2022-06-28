@@ -44,7 +44,6 @@ const getDoc = (version?: string, page?: string) => {
         })
         .catch(e => {
             fetchErros.value = 'An error occurred during the process.'
-            console.error(e)
         })
 }
 
