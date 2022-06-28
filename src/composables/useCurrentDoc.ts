@@ -52,7 +52,7 @@ const changeCurrentVersion = async (version: string, router: Router) => {
 }
 
 const generateDocUrl = (sectionUrl: string) => {
-    return `/laravel-a1-pdf-sign/#/docs/${ currentDocVersion.value }/${ sectionUrl }`;
+    return `/#/docs/${ currentDocVersion.value }/${ sectionUrl }`;
 }
 
 const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: Router) => {

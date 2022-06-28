@@ -26,11 +26,4 @@ const router = createRouter({
     routes
 })
 
-router.beforeResolve((to) => {
-    const regex = 'laravel-a1-pdf-sign'
-    if (process.env.NODE_ENV !== 'production' && (new RegExp(regex).test(location.href))) {
-        location.href = (`/#${ to.fullPath }`)
-    }
-})
-
 export default router

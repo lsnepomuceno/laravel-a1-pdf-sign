@@ -7,13 +7,13 @@
          v-if="Object.keys(currentPageObject || {}).length">
         <a class="btn btn-link text-decoration-none"
            v-if="previousLink?.url"
-           :href="`/laravel-a1-pdf-sign/#/docs/${currentDocVersion}/${previousLink.url}`">
+           :href="`/#/docs/${currentDocVersion}/${previousLink.url}`">
             <i class="fa-solid fa-arrow-left-long"></i>
             {{ previousLink.title }}
         </a>
         <a class="btn btn-link text-decoration-none"
            v-if="nextLink?.url"
-           :href="`/laravel-a1-pdf-sign/#/docs/${currentDocVersion}/${nextLink.url}`">
+           :href="`/#/docs/${currentDocVersion}/${nextLink.url}`">
             {{ nextLink.title }}
             <i class="fa-solid fa-arrow-right-long"></i>
         </a>
