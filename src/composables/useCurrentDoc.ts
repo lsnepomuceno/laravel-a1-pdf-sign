@@ -42,7 +42,7 @@ const getDoc = (version?: string, page?: string) => {
                 fetchErros.value = 'The page you requested was not found.'
             }
         })
-        .catch(e => {
+        .catch(() => {
             fetchErros.value = 'An error occurred during the process.'
         })
 }
