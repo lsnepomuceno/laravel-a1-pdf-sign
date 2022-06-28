@@ -1,7 +1,7 @@
 <template>
     <div class="docs-content">
         <div class="container">
-            <Markdown v-if="currentDocMD"
+            <Markdown v-if="currentDocMD && !fetchErros"
                       :source="currentDocMD"
                       class="docs-article"/>
             <ErrorsAlert v-else-if="fetchErros"/>

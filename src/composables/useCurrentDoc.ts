@@ -35,9 +35,7 @@ const getDoc = (version?: string, page?: string) => {
     currentDocMD.value = null
     fetch(docUrl)
         .then(async res => {
-            if (res.statusText.toUpperCase() === 'OK') {
-                currentDocMD.value = await res.text()
-            }
+            currentDocMD.value = await res.text()
             if (res.status >= 400) {
                 fetchErros.value = 'The page you requested was not found.'
             }
