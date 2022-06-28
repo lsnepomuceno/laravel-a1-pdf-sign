@@ -22,22 +22,24 @@
             <ul class="section-items list-unstyled nav flex-column pb-3">
                 <template v-for="(section, key) in currentDocObject.sections" :key="key">
                     <li class="nav-item section-title">
-                        <a class="nav-link scrollto active"
-                           :href="generateDocUrl(section.url)">
-                            <span class="theme-icon-holder me-2">
-                                <i :class="`fas ${section.icon}`"></i>
-                            </span>
-                            {{ section.title }}
-                        </a>
+                        <router-link :to="generateDocUrl(section.url)">
+                            <a class="nav-link scrollto active">
+                                <span class="theme-icon-holder me-2">
+                                    <i :class="`fas ${section.icon}`"></i>
+                                </span>
+                                {{ section.title }}
+                            </a>
+                        </router-link>
                     </li>
                     <template v-if="section.subSections?.length">
                         <li class="nav-item"
                             v-for="(subSection, subKey) in section.subSections"
                             :key="subKey">
-                            <a class="nav-link scrollto"
-                               :href="generateDocUrl(subSection.url)">
-                                {{ subSection.title }}
-                            </a>
+                            <router-link :to="generateDocUrl(subSection.url)">
+                                <a class="nav-link scrollto">
+                                    {{ subSection.title }}
+                                </a>
+                            </router-link>
                         </li>
                     </template>
                 </template>

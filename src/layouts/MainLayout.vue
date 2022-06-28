@@ -6,4 +6,5 @@
 </template>
 
 <script setup>
-import { FooterContent, HeaderTitle, MainContent, SideBar } from '@/components'</script>
+import { FooterContent, HeaderTitle, MainContent, SideBar } from '@/components'
+</script>

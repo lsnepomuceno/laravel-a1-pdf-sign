@@ -5,18 +5,22 @@
             'justify-content-around': !previousLink?.url || !nextLink?.url
          }"
          v-if="Object.keys(currentPageObject || {}).length">
-        <a class="btn btn-link text-decoration-none"
-           v-if="previousLink?.url"
-           :href="`/#/docs/${currentDocVersion}/${previousLink.url}`">
-            <i class="fa-solid fa-arrow-left-long"></i>
-            {{ previousLink.title }}
-        </a>
-        <a class="btn btn-link text-decoration-none"
-           v-if="nextLink?.url"
-           :href="`/#/docs/${currentDocVersion}/${nextLink.url}`">
-            {{ nextLink.title }}
-            <i class="fa-solid fa-arrow-right-long"></i>
-        </a>
+
+        <router-link v-if="previousLink?.url"
+                     :to="generateDocUrl(previousLink.url)">
+            <a class="btn btn-link text-decoration-none">
+                <i class="fa-solid fa-arrow-left-long"></i>
+                {{ previousLink.title }}
+            </a>
+        </router-link>
+
+        <router-link v-if="nextLink?.url"
+                     :to="generateDocUrl(nextLink.url)">
+            <a class="btn btn-link text-decoration-none">
+                {{ nextLink.title }}
+                <i class="fa-solid fa-arrow-right-long"></i>
+            </a>
+        </router-link>
     </div>
 </template>
 
@@ -27,7 +31,8 @@ import useCurrentDoc from '@/composables/useCurrentDoc'
 const {
     currentPageObject,
     currentDocVersion,
-    filterPageObject
+    filterPageObject,
+    generateDocUrl
 } = useCurrentDoc()
 
 const previousLink = computed(() => filterPageObject(currentPageObject?.footerActions?.previousLink))

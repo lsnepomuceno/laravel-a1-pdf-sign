@@ -27,13 +27,13 @@ const filterPageObject = (page?: string) => {
 }
 
 const getDoc = (version?: string, page?: string) => {
-    const docUrl = `docs/${ version }/${ page }.md`
+    const markdownUrl = `/docs/${ version }/${ page }.md`
     currentDocVersion.value = version
     filterVersionList(version)
     Object.assign(currentPageObject, filterPageObject(page))
     fetchErros.value = null
     currentDocMD.value = null
-    fetch(docUrl)
+    fetch(markdownUrl)
         .then(async res => {
             currentDocMD.value = await res.text()
             if (res.status >= 400) {
@@ -50,7 +50,7 @@ const changeCurrentVersion = async (version: string, router: Router) => {
 }
 
 const generateDocUrl = (sectionUrl: string) => {
-    return `/#/docs/${ currentDocVersion.value }/${ sectionUrl }`;
+    return `/docs/${ currentDocVersion.value }/${ sectionUrl }`;
 }
 
 const watchRouteChanges = async (route: RouteLocationNormalizedLoaded, router: Router) => {
