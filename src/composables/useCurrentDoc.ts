@@ -5,13 +5,27 @@ import useDoc from "@/composables/useDoc";
 const currentDocMD = ref<string | null>(null)
 const currentDocVersion = ref<string | null | undefined>(null)
 const currentDocObject = reactive({})
+const fetchErros = ref<string | null | undefined>(null)
 const { docs } = useDoc()
 
-const getDoc = async (version?: string, page?: string) => {
+const getDoc = (version?: string, page?: string) => {
     const docUrl = `docs/${ version }/${ page }.md`
     currentDocVersion.value = version
     filterVersionList(version)
-    currentDocMD.value = await fetch(docUrl).then(res => res.text())
+    fetch(docUrl)
+        .then(async res => {
+            if (res.statusText.toUpperCase() === 'OK') {
+                currentDocMD.value = await res.text()
+                fetchErros.value = null
+            }
+            if (res.status >= 400) {
+                fetchErros.value = 'The page you requested was not found.'
+            }
+        })
+        .catch(e => {
+            fetchErros.value = 'An error occurred during the process.'
+            console.error(e)
+        })
 }
 
 const changeCurrentVersion = async (version: string, router: Router) => {
@@ -51,6 +65,7 @@ export default () => ({
     currentDocMD,
     currentDocVersion,
     currentDocObject,
+    fetchErros,
     getDoc,
     watchRouteChanges,
     filterVersionList,
