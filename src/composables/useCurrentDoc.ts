@@ -6,6 +6,7 @@ const currentDocMD = ref<string | null>(null)
 const currentDocVersion = ref<string | null | undefined>(null)
 const currentDocObject = reactive(<Doc>{})
 const currentPageObject = reactive({})
+const loadingDoc = ref<boolean>(false)
 const fetchErros = ref<string | null | undefined>(null)
 const { docs } = useDoc()
 
@@ -15,12 +16,20 @@ const filterVersionList = (version?: string) => {
 
 const filterPageObject = (page?: string) => {
     if (Object.keys(currentDocObject)) {
-        return currentDocObject
+        const filterPage = currentDocObject
             .sections
             .find(
                 section => section.url === page
                     || section.subSections?.find(sub => sub.url === page)
             )
+
+        if (filterPage?.subSections?.length) {
+            return filterPage
+                    .subSections
+                    .find(section => section.url === page)
+                ?? filterPage
+        }
+        return filterPage
     }
 
     return {}
@@ -28,6 +37,7 @@ const filterPageObject = (page?: string) => {
 
 const getDoc = (version?: string, page?: string) => {
     const markdownUrl = `/docs/${ version }/${ page }.md`
+    loadingDoc.value = true
     currentDocVersion.value = version
     filterVersionList(version)
     Object.assign(currentPageObject, filterPageObject(page))
@@ -35,12 +45,15 @@ const getDoc = (version?: string, page?: string) => {
     currentDocMD.value = null
     fetch(markdownUrl)
         .then(async res => {
+            window.scrollTo(0,0)
             currentDocMD.value = await res.text()
+            loadingDoc.value = false
             if (res.status >= 400) {
                 fetchErros.value = 'The page you requested was not found.'
             }
         })
         .catch(() => {
+            loadingDoc.value = false
             fetchErros.value = 'An error occurred during the process.'
         })
 }
@@ -80,6 +93,7 @@ export default () => ({
     currentDocObject,
     fetchErros,
     currentPageObject,
+    loadingDoc,
     filterPageObject,
     getDoc,
     watchRouteChanges,

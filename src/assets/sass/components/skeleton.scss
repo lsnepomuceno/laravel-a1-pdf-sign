@@ -1,0 +1,42 @@
+%loading-skeleton {
+  color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #eee;
+  border-color: #eee;
+
+  &::placeholder {
+    color: transparent;
+  }
+}
+
+@keyframes loading-skeleton {
+  from {
+    opacity: .4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.loading-skeleton {
+  pointer-events: none;
+  animation: loading-skeleton 1s infinite alternate;
+
+  img {
+    filter: grayscale(100) contrast(0%) brightness(1.8);
+  }
+
+  .vh-15 {
+   height: 15vh;
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  p, li,
+  div.blur,
+  .btn,
+  label,
+  .form-control {
+    @extend %loading-skeleton;
+  }
+}
