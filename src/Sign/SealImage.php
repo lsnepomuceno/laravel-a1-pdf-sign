@@ -2,10 +2,10 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
-use Intervention\Image\ImageManager as IMG;
-use Illuminate\Support\Fluent;
 use Closure;
+use Illuminate\Support\Fluent;
+use Intervention\Image\ImageManager as IMG;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
 
 class SealImage
 {
@@ -50,7 +50,7 @@ class SealImage
             : null;
 
         $callback = function ($font) use ($fontSize) {
-            $font->file(__DIR__ . '/Resources/font/Roboto-Medium.ttf');
+            $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
 
             $size = match ($fontSize) {
                 self::FONT_SIZE_SMALL => 15,
@@ -67,21 +67,21 @@ class SealImage
         return $selfObj
             ->setImagePath()
             ->addTextField(
-                text: $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
-                textX: 160,
-                textY: 80,
+                text:     $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
+                textX:    160,
+                textY:    80,
                 callback: $callback
             )
             ->addTextField(
-                text: $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
-                textX: 160,
-                textY: 150,
+                text:     $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
+                textX:    160,
+                textY:    150,
                 callback: $callback
             )
             ->addTextField(
-                text: $certDueDate ?? '',
-                textX: 160,
-                textY: 250,
+                text:     $certDueDate ?? '',
+                textX:    160,
+                textY:    250,
                 callback: $callback)
             ->generateImage();
     }
@@ -121,7 +121,7 @@ class SealImage
 
     public function setImagePath(string $imagePathOrContent = null): self
     {
-        $this->imagePathOrContent = $imagePathOrContent ?? __DIR__ . '/Resources/img/sign-seal.png';
+        $this->imagePathOrContent = $imagePathOrContent ?? dirname(__DIR__) . '/Resources/img/sign-seal.png';
 
         return $this;
     }
@@ -156,7 +156,7 @@ class SealImage
         $image = $image->make($this->imagePathOrContent);
 
         foreach ($this->textFieldsDefinitions as $text) {
-            ['x' => $x, 'y' => $y, '$callback' => $callback] = $text;
+            ['text' => $text, 'x' => $x, 'y' => $y, 'callback' => $callback] = $text;
             $image->text($text, $x, $y, $callback);
         }
 
