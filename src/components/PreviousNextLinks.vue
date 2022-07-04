@@ -30,7 +30,6 @@ import useCurrentDoc from '@/composables/useCurrentDoc'
 
 const {
     currentPageObject,
-    currentDocVersion,
     filterPageObject,
     generateDocUrl
 } = useCurrentDoc()
