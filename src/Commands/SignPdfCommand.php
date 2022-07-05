@@ -9,11 +9,11 @@ use Illuminate\Support\Str;
 class SignPdfCommand extends Command
 {
     protected
-        $signature = 'sign:pdf
-                           {--pdfPath : The path to the PDF file}
-                           {--pfxPath : The path to the certificate file}
-                           {--password : The certificate password}
-                           {--fileName? : The signed file name}
+        $signature = 'pdf:sign
+                           {pdfPath : The path to the PDF file}
+                           {pfxPath : The path to the certificate file}
+                           {password : The certificate password}
+                           {fileName? : The signed file name}
         ',
         $description = 'Sign a pdf file';
 

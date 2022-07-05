@@ -7,8 +7,8 @@ use Illuminate\Console\Command;
 class ValidatePdfSignatureCommand extends Command
 {
     protected
-        $signature = 'validate:pdf-sign
-                                {--pdfPath : The path to the PDF file}
+        $signature = 'pdf:validate-signature
+                                {pdfPath : The path to the PDF file}
         ',
         $description = 'Validates whether the signature of the PDF file is valid';
 
@@ -22,10 +22,9 @@ class ValidatePdfSignatureCommand extends Command
             $validationText = $validated->isValidated ? 'VALID' : 'INVALID';
 
             $this->line("Your PDF document is {$validationText}", 'info');
-
-            return self::SUCCESS;
+            return $validated->isValidated ? self::SUCCESS : self::INVALID;
         } catch (\Throwable $th) {
-            $this->line("Could not sign your file, error occurred: {$th->getMessage()}", 'error');
+            $this->line("Unable to validate your file signature, an error occurred: {$th->getMessage()}", 'error');
             return self::FAILURE;
         }
     }
