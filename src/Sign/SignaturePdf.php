@@ -90,7 +90,7 @@ class SignaturePdf
         try {
             $this->cert->validate();
         } catch (Throwable $th) {
-            throw $th;
+            throw new $th;
         }
 
         $this->setFileName($fileName)

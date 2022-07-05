@@ -127,7 +127,7 @@ class HelpersTest extends TestCase
         $this->assertTrue($fileExists);
 
         $validation = validatePdfSignature($pdfPath);
-        $this->assertTrue($validation->validated);
+        $this->assertTrue($validation->isValidated);
 
         File::delete([$pfxPath, $pdfPath]);
     }

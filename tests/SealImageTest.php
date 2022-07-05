@@ -76,7 +76,7 @@ class SealImageTest extends TestCase
         $this->assertTrue(File::exists($pdfPath));
 
         $validation = validatePdfSignature($pdfPath);
-        $this->assertTrue($validation->validated);
+        $this->assertTrue($validation->isValidated);
 
         File::delete([$imagePath, $pdfPath]);
     }

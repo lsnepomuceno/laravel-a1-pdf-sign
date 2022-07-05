@@ -2,12 +2,12 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
-use Illuminate\Http\UploadedFile;
-use Illuminate\Encryption\Encrypter;
-use Illuminate\Support\{Fluent, Str, Facades\File};
 use Illuminate\Contracts\Encryption\{DecryptException, EncryptException};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
-    CertificateOutputNotFoundException,
+use Illuminate\Encryption\Encrypter;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\{Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
     FileNotFoundException,
     InvalidCertificateContentException,
     InvalidPFXException,
@@ -141,14 +141,14 @@ class ManageCert
         $this->password = '';
     }
 
-    public function getCert(): Fluent
+    public function getCert(): CertificateProcessed
     {
-        return new Fluent([
-            'original' => $this->originalCertContent,
-            'openssl' => $this->certContent,
-            'data' => $this->parsedData,
-            'password' => $this->password
-        ]);
+        return new CertificateProcessed(
+            original: $this->originalCertContent,
+            openssl:  $this->certContent,
+            data:     $this->parsedData,
+            password: $this->password
+        );
     }
 
     public function getTempDir(): string

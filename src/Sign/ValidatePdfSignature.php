@@ -2,9 +2,9 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
-use Illuminate\Support\{Str, Fluent, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
-    FileNotFoundException,
+use Illuminate\Support\{Arr, Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Entities\ValidatedSignedPDF;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException,
     HasNoSignatureOrInvalidPkcs7Exception,
     InvalidPdfFileException,
     ProcessRunTimeException
@@ -18,12 +18,12 @@ class ValidatePdfSignature
     /**
      * @throws Throwable
      */
-    public static function from(string $pdfPath): Fluent
+    public static function from(string $pdfPath): ValidatedSignedPDF
     {
         return (new static)->setPdfPath($pdfPath)
-            ->extractSignatureData()
-            ->convertSignatureDataToPlainText()
-            ->convertPlainTextToObject();
+                           ->extractSignatureData()
+                           ->convertSignatureDataToPlainText()
+                           ->convertPlainTextToObject();
     }
 
     /**
@@ -100,7 +100,7 @@ class ValidatePdfSignature
         return $this;
     }
 
-    private function convertPlainTextToObject(): Fluent
+    private function convertPlainTextToObject(): ValidatedSignedPDF
     {
         $finalContent = [];
         $delimiter = '|CROP|';
@@ -118,8 +118,7 @@ class ValidatePdfSignature
         }
 
         $finalContent['validated'] = !!count(array_intersect_key(array_flip(['OU', 'CN']), $finalContent));
-
-        return new Fluent($finalContent);
+        return new ValidatedSignedPDF($finalContent['validated'], Arr::except($finalContent, 'validated'));
     }
 
     private function processDataToInfo(string $data): array

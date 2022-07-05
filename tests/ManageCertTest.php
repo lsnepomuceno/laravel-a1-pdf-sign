@@ -4,9 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Tests;
 
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Fluent;
-use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use OpenSSLCertificate;
+use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
     FileNotFoundException,
     InvalidCertificateContentException,
@@ -14,6 +12,8 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException
     Invalidx509PrivateKeyException,
     ProcessRunTimeException
 };
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
+use OpenSSLCertificate;
 
 class ManageCertTest extends TestCase
 {
@@ -30,7 +30,7 @@ class ManageCertTest extends TestCase
         $cert = new ManageCert;
         $cert->makeDebugCertificate();
 
-        $this->assertInstanceOf(Fluent::class, $cert->getCert());
+        $this->assertInstanceOf(CertificateProcessed::class, $cert->getCert());
 
         foreach (['original', 'openssl', 'data', 'password'] as $key) {
             $this->assertArrayHasKey($key, $cert->getCert()->toArray());

@@ -1,9 +1,11 @@
 <?php
 
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
-use \LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SignaturePdf, ValidatePdfSignature};
-use Illuminate\Support\{Str, Facades\File, Fluent};
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\{Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Entities\EncryptedCertificate;
+use LSNepomuceno\LaravelA1PdfSign\Entities\ValidatedSignedPDF;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SignaturePdf, ValidatePdfSignature};
 use Symfony\Component\Process\Process;
 
 if (!function_exists('signPdf')) {
@@ -38,7 +40,7 @@ if (!function_exists('encryptCertData')) {
     /**
      * @throws Throwable
      */
-    function encryptCertData($uploadedOrPfxPath, string $password): Fluent
+    function encryptCertData($uploadedOrPfxPath, string $password): EncryptedCertificate
     {
         $cert = new ManageCert;
 
@@ -48,11 +50,11 @@ if (!function_exists('encryptCertData')) {
             $cert->fromPfx($uploadedOrPfxPath, $password);
         }
 
-        return new Fluent([
-            'certificate' => $cert->getEncrypter()->encryptString($cert->getCert()->original),
-            'password' => $cert->getEncrypter()->encryptString($password),
-            'hash' => $cert->getHashKey(), // IMPORTANT, USE ON DECRYPT HELPER
-        ]);
+        return new EncryptedCertificate(
+            certificate: $cert->getEncrypter()->encryptString($cert->getCert()->original),
+            password:    $cert->getEncrypter()->encryptString($password),
+            hash:        $cert->getHashKey() // IMPORTANT, USE ON DECRYPT HELPER
+        );
     }
 }
 
@@ -91,7 +93,7 @@ if (!function_exists('validatePdfSignature')) {
     /**
      * @throws Throwable
      */
-    function validatePdfSignature(string $pdfPath): Fluent
+    function validatePdfSignature(string $pdfPath): ValidatedSignedPDF
     {
         return ValidatePdfSignature::from($pdfPath);
     }

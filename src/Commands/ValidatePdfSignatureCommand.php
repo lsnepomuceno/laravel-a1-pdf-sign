@@ -17,9 +17,9 @@ class ValidatePdfSignatureCommand extends Command
         $this->line('Your PDF document is being validated.', 'info');
         try {
             $pdfPath = $this->argument(key: 'pdfPath');
-            
+
             $validated = validatePdfSignature($pdfPath);
-            $validationText =  $validated->validated ? 'VALID' : 'INVALID';
+            $validationText = $validated->isValidated ? 'VALID' : 'INVALID';
 
             $this->line("Your PDF document is {$validationText}", 'info');
 
