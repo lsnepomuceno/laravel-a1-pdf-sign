@@ -4,7 +4,7 @@
             'sidebar-hidden' : !drawer
         }"
          class="docs-sidebar shadow-none">
-        <div class="top-search-box d-lg-none p-3">
+        <div class="top-search-box d-lg-none p-3 d-none">
             <form class="search-form">
                 <input type="text"
                        placeholder="Search the docs..."

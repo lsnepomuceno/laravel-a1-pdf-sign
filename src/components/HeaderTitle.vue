@@ -22,7 +22,7 @@
                     </div>
                 </div>
                 <div class="docs-top-utilities d-flex justify-content-end align-items-center">
-                    <div class="top-search-box d-none d-lg-flex">
+                    <div class="top-search-box d-none">
                         <form class="search-form">
                             <input type="text" placeholder="Search the docs..." name="search"
                                    class="form-control search-input">
