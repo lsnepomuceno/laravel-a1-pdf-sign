@@ -8,9 +8,9 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 
 use Exception;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\ToString;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\Stringable;
 
-class FileNotFoundException extends Exception implements ToString
+class FileNotFoundException extends Exception implements Stringable
 {
   public function __construct(string $currentFile, int $code = 0, Exception $previous = null)
   {

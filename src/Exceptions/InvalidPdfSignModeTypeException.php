@@ -3,9 +3,9 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 
 use Exception;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\ToString;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\Stringable;
 
-class InvalidPdfSignModeTypeException extends Exception implements ToString
+class InvalidPdfSignModeTypeException extends Exception implements Stringable
 {
     public function __construct(string $mode, int $code = 0, Exception $previous = null)
     {

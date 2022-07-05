@@ -3,9 +3,9 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 
 use Exception;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\ToString;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\Stringable;
 
-class InvalidImageDriverException extends Exception implements ToString
+class InvalidImageDriverException extends Exception implements Stringable
 {
     public function __construct(string $driver, int $code = 0, Exception $previous = null)
     {

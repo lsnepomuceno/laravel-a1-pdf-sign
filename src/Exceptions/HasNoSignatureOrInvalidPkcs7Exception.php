@@ -3,9 +3,9 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 
 use Exception;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\ToString;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\Stringable;
 
-class HasNoSignatureOrInvalidPkcs7Exception extends Exception implements ToString
+class HasNoSignatureOrInvalidPkcs7Exception extends Exception implements Stringable
 {
     public string $currentFile;
 
