@@ -7,7 +7,8 @@ on:
     branches: [ main, dev, v1.x-dev ]
 
 jobs:
-  php-unit:
+  composer-and-tests:
+    name: Composer and Automated Tests
     runs-on: ubuntu-latest
 
     steps:
