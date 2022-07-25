@@ -2,6 +2,7 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Tests;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
@@ -11,7 +12,6 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use Illuminate\Http\UploadedFile;
 use Throwable;
 
 class HelpersTest extends TestCase
@@ -25,7 +25,7 @@ class HelpersTest extends TestCase
      * @throws InvalidPFXException
      * @throws CertificateOutputNotFoundException
      */
-    public function testValidateSignPdfFromFileHelper()
+    public function testWhenAFileIsSignedByTheSignPdfFromFileHelper()
     {
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -49,7 +49,7 @@ class HelpersTest extends TestCase
      * @throws CertificateOutputNotFoundException
      * @throws InvalidPFXException
      */
-    public function testValidateSignPdfFromUploadHelper()
+    public function testWhenAFileIsSignedByTheSignPdfFromUploadHelper()
     {
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -74,7 +74,7 @@ class HelpersTest extends TestCase
      * @throws CertificateOutputNotFoundException
      * @throws InvalidPFXException
      */
-    public function testValidateEncryptCertDataHelper()
+    public function testWhenCertificateDataIsEncrypted()
     {
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
@@ -84,9 +84,11 @@ class HelpersTest extends TestCase
         foreach (['certificate', 'password', 'hash'] as $key) {
             $this->assertArrayHasKey($key, $encryptedData->toArray());
         }
+
+        File::delete([$pfxPath]);
     }
 
-    public function testValidateA1TempDirHelper()
+    public function testWhenTheA1TempDirHelperCreatesTheFilesCorrectly()
     {
         $this->assertTrue(
             File::isDirectory(a1TempDir())
@@ -113,7 +115,7 @@ class HelpersTest extends TestCase
      * @throws CertificateOutputNotFoundException
      * @throws InvalidPFXException
      */
-    public function testValidatePdfSignatureHelper()
+    public function testWhenASignedPdfFileIsCorrectlyValidatedByTheValidatePdfSignatureHelper()
     {
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
