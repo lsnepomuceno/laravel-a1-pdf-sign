@@ -28,7 +28,7 @@
 		"illuminate/encryption": "^8.0",
 		"illuminate/http": "^8.0",
 		"tecnickcom/tc-lib-pdf": "^8.0",
-		"tecnickcom/tcpdf": "6.4.*",
+		"tecnickcom/tcpdf": "6.4.* || 6.5.*",
 		"setasign/fpdi": "^2.0",
 		"symfony/process": "^5.0",
 		"intervention/image": "^2.6"
