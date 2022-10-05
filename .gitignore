@@ -1,6 +1,9 @@
-.DS_Store
 node_modules
-/dist
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
 /.settings
 /.project
 /.buildpath
@@ -9,7 +12,6 @@ node_modules
 /nbproject
 .vagrant
 Vagrantfile
-.idea
 .php_cs.cache
 composer.lock
 .phpunit.result.cache
@@ -22,6 +24,8 @@ Temp
 
 /tests/e2e/videos/
 /tests/e2e/screenshots/
+/cypress/videos/
+/cypress/screenshots/
 
 
 # local env files
@@ -29,14 +33,18 @@ Temp
 .env.*.local
 
 # Log files
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
 # Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
