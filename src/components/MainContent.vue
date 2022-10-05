@@ -8,6 +8,8 @@
         <Markdown
           v-if="currentDocMD && !fetchErros"
           :source="currentDocMD"
+          :html="true"
+          :xhtmlOut="true"
           class="docs-article"
         />
         <ErrorsAlert v-else-if="fetchErros" />
