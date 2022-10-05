@@ -1,10 +1,14 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign;
+namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use setasign\Fpdi\Tcpdf\Fpdi;
 use Illuminate\Support\{Str, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exception\{
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
+    Invalidx509PrivateKeyException,
+    InvalidCertificateContentException
+};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
     FileNotFoundException,
     InvalidPdfSignModeTypeException
 };
@@ -57,8 +61,8 @@ class SignaturePdf
      * @param string $mode self::MODE_RESOURCE
      * @param string $fileName null
      * @param bool $hasSignedSuffix false
-     * @throws Exception\InvalidCertificateContentException
-     * @throws Exception\Invalidx509PrivateKeyException
+     * @throws InvalidCertificateContentException
+     * @throws Invalidx509PrivateKeyException
      * @throws FileNotFoundException
      * @throws InvalidPdfSignModeTypeException
      * @throws Throwable
@@ -86,7 +90,7 @@ class SignaturePdf
         try {
             $this->cert->validate();
         } catch (Throwable $th) {
-            throw $th;
+            throw new $th;
         }
 
         $this->setFileName($fileName)
@@ -221,7 +225,7 @@ class SignaturePdf
 
     /**
      * implementSignatureImage - Apply image to document
-     * 
+     *
      * @param int|null $currentPage
      * @return void
      */
@@ -263,7 +267,7 @@ class SignaturePdf
             $this->pdf->AddPage($width > $height ? 'L' : 'P', [$width, $height]);
             $this->pdf->useTemplate($pageIndex);
 
-            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage((int) $pageIndex);
+            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage((int)$pageIndex);
         }
 
         $certificate = $this->cert->getCert()->original;
