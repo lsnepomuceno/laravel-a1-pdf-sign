@@ -17,8 +17,8 @@
   <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md">
     <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
   </a>
-  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml">
-    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/action_pr_main.yml/badge.svg" alt="Tests">
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml">
+    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml/badge.svg?branch=main" alt="Tests">
   </a>
 </p>
 
@@ -39,7 +39,7 @@
     <td>^8~8.54</td>
     <td rowspan="2">^7.4</td>
     <td>^0~0.0.11</td>
-    <td rowspan="2"><a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/wiki">ON WIKI</a></td>
+    <td rowspan="2"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home">Official Doc</a></td>
   </tr>
   
   <tr>
@@ -51,7 +51,7 @@
     <td>^9</td>
     <td>^8.1</td>
     <td>^1</td>
-    <td>SOON</td>
+    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
   </tr>
   
 </table>
