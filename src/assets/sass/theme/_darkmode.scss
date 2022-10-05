@@ -1,0 +1,45 @@
+.darkmode--activated {
+  hr {
+    border: white 1px solid;
+  }
+
+  .header {
+    background-color: #22272e;
+
+    .site-logo {
+      .logo-text {
+        color: white !important
+      }
+    }
+
+    .dropdown-toggle,
+    .dropdown-menu {
+      background-color: #22272e !important;
+    }
+
+    .dropdown-menu .dropdown-item {
+      color: white !important;
+
+      &:hover {
+        background-color: #667187;
+        color: #22272e !important;
+      }
+    }
+
+    .docs-sidebar-toggler {
+      span {
+        background-color: white;
+      }
+    }
+  }
+
+  .docs-nav {
+    .nav-link {
+      color: #ccc;
+    }
+  }
+
+  .docs-sidebar {
+    background-image: linear-gradient(to bottom, #22272e, #22272e) !important;
+  }
+}
