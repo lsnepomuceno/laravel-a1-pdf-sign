@@ -35,7 +35,7 @@
         "illuminate/encryption": "^9",
         "illuminate/http": "^9",
         "tecnickcom/tc-lib-pdf": "^8",
-        "tecnickcom/tcpdf": "6.4.*",
+        "tecnickcom/tcpdf": "6.4.* || 6.6.*",
         "setasign/fpdi": "^2.3",
         "symfony/process": "^6",
         "intervention/image": "^2.7"
