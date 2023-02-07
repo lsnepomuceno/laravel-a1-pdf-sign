@@ -12,16 +12,21 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException
     InvalidCertificateContentException,
     InvalidPFXException,
     Invalidx509PrivateKeyException,
-    ProcessRunTimeException
-};
+    ProcessRunTimeException};
+use OpenSSLCertificate;
 
 class ManageCert
 {
     private string $tempDir, $originalCertContent, $password, $hashKey;
+
     private bool $preservePfx = false;
+
     private array $parsedData;
-    private \OpenSSLCertificate|bool $certContent;
+
+    private OpenSSLCertificate|bool $certContent;
+
     const CIPHER = 'aes-128-cbc';
+
     private Encrypter $encrypter;
 
     public function __construct()
@@ -59,7 +64,7 @@ class ManageCert
         }
 
         $this->password = $password;
-        $output = a1TempDir(true, '.crt');
+        $output         = a1TempDir(true, '.crt');
         $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
 
         runCliCommandProcesses($openSslCommand);
@@ -82,7 +87,9 @@ class ManageCert
     /**
      * @throws CertificateOutputNotFoundException
      * @throws FileNotFoundException
+     * @throws InvalidCertificateContentException
      * @throws InvalidPFXException
+     * @throws Invalidx509PrivateKeyException
      * @throws ProcessRunTimeException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
@@ -110,8 +117,8 @@ class ManageCert
     public function setCertContent(string $certContent): self
     {
         $this->originalCertContent = $certContent;
-        $this->certContent = openssl_x509_read(certificate: $certContent);
-        $this->parsedData = openssl_x509_parse(certificate: $this->certContent, short_names: false);
+        $this->certContent         = openssl_x509_read(certificate: $certContent);
+        $this->parsedData          = openssl_x509_parse(certificate: $this->certContent, short_names: false);
         $this->validate();
         return $this;
     }
@@ -136,17 +143,17 @@ class ManageCert
     private function invalidate(): void
     {
         $this->originalCertContent = '';
-        $this->certContent = false;
-        $this->parsedData = [];
-        $this->password = '';
+        $this->certContent         = false;
+        $this->parsedData          = [];
+        $this->password            = '';
     }
 
     public function getCert(): CertificateProcessed
     {
         return new CertificateProcessed(
             original: $this->originalCertContent,
-            openssl:  $this->certContent,
-            data:     $this->parsedData,
+            openssl : $this->certContent,
+            data    : $this->parsedData,
             password: $this->password
         );
     }

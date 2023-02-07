@@ -10,7 +10,9 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
 class SealImage
 {
     private string $imagePathOrContent, $imageDriver;
+
     private array $textFieldsDefinitions = [];
+
     private bool $previousTextBreakLine = false;
 
     const
@@ -37,9 +39,9 @@ class SealImage
         string     $dueDateFormat = 'd/m/Y H:i:s'
     ): string
     {
-        $subject = new Fluent($cert->getCert()->data['subject']);
-        $firstLine = $subject->commonName ?? $subject->organizationName;
-        $issuer = new Fluent($cert->getCert()->data['issuer']);
+        $subject    = new Fluent($cert->getCert()->data['subject']);
+        $firstLine  = $subject->commonName ?? $subject->organizationName;
+        $issuer     = new Fluent($cert->getCert()->data['issuer']);
         $secondLine = $issuer->organizationalUnitName ?? $issuer->commonName ?? $issuer->organizationName;
 
         $certDueDate = $showDueDate
@@ -53,9 +55,9 @@ class SealImage
             $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
 
             $size = match ($fontSize) {
-                self::FONT_SIZE_SMALL => 15,
+                self::FONT_SIZE_SMALL  => 15,
                 self::FONT_SIZE_MEDIUM => 20,
-                default => 28
+                default                => 28
             };
 
             $font->size($size);
@@ -67,21 +69,21 @@ class SealImage
         return $selfObj
             ->setImagePath()
             ->addTextField(
-                text:     $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
-                textX:    160,
-                textY:    80,
+                text    : $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
+                textX   : 160,
+                textY   : 80,
                 callback: $callback
             )
             ->addTextField(
-                text:     $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
-                textX:    160,
-                textY:    150,
+                text    : $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
+                textX   : 160,
+                textY   : 150,
                 callback: $callback
             )
             ->addTextField(
-                text:     $certDueDate ?? '',
-                textX:    160,
-                textY:    250,
+                text    : $certDueDate ?? '',
+                textX   : 160,
+                textY   : 250,
                 callback: $callback)
             ->generateImage();
     }
@@ -89,9 +91,9 @@ class SealImage
     private function breakText(string $text, string $fontSize = self::FONT_SIZE_LARGE): string
     {
         $cropSize = match ($fontSize) {
-            self::FONT_SIZE_SMALL => 60,
+            self::FONT_SIZE_SMALL  => 60,
             self::FONT_SIZE_MEDIUM => 48,
-            default => 35
+            default                => 35
         };
 
         $this->previousTextBreakLine = strlen($text) >= $cropSize;
@@ -99,7 +101,7 @@ class SealImage
         if ($this->previousTextBreakLine) {
             $textSplit = str_split(string: $text, length: ($cropSize - 3));
             $textSplit = array_map(callback: 'trim', array: $textSplit);
-            $text = join(separator: PHP_EOL, array: $textSplit);
+            $text      = join(separator: PHP_EOL, array: $textSplit);
         }
 
         return $text;
@@ -137,11 +139,12 @@ class SealImage
     ): self
     {
         $newText = [
-            'text' => $text,
-            'x' => $textX,
-            'y' => $textY,
+            'text'     => $text,
+            'x'        => $textX,
+            'y'        => $textY,
             'callback' => $callback ?? fn() => null
         ];
+
         $this->textFieldsDefinitions[] = $newText;
 
         return $this;

@@ -3,7 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 
 use Exception;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\Stringable;
+use Stringable;
 
 class InvalidX509PrivateKeyException extends Exception implements Stringable
 {

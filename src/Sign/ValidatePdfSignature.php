@@ -51,8 +51,8 @@ class ValidatePdfSignature
     private function extractSignatureData(): self
     {
         $content = File::get($this->pdfPath);
-        $regexp = '#ByteRange\[\s*(\d+) (\d+) (\d+)#'; // subexpressions are used to extract b and c
-        $result = [];
+        $regexp  = '#ByteRange\[\s*(\d+) (\d+) (\d+)#'; // subexpressions are used to extract b and c
+        $result  = [];
         preg_match_all($regexp, $content, $result);
 
         // $result[2][0] and $result[3][0] are b and c
@@ -61,7 +61,7 @@ class ValidatePdfSignature
         }
 
         $start = $result[2][0];
-        $end = $result[3][0];
+        $end   = $result[3][0];
 
         if ($stream = fopen($this->pdfPath, 'rb')) {
             $signature = stream_get_contents($stream, $end - $start - 2, $start + 1); // because we need to exclude < and > from start and end
@@ -84,7 +84,7 @@ class ValidatePdfSignature
             throw new HasNoSignatureOrInvalidPkcs7Exception($this->pdfPath);
         }
 
-        $output = a1TempDir(tempFile: true, fileExt: '.txt');
+        $output         = a1TempDir(tempFile: true, fileExt: '.txt');
         $openSslCommand = "openssl pkcs7 -in {$this->pkcs7Path} -inform DER -print_certs > {$output}";
 
         runCliCommandProcesses($openSslCommand);
@@ -103,12 +103,12 @@ class ValidatePdfSignature
     private function convertPlainTextToObject(): ValidatedSignedPDF
     {
         $finalContent = [];
-        $delimiter = '|CROP|';
-        $content = $this->plainTextContent;
-        $content = preg_replace('/(-----BEGIN .+?-----(?s).+?-----END .+?-----)/mi', $delimiter, $content);
-        $content = preg_replace('/(\s\s+|\\n|\\r)/', ' ', $content);
-        $content = array_filter(explode($delimiter, $content), 'trim');
-        $content = (array)array_map(fn($data) => $this->processDataToInfo($data), $content)[0];
+        $delimiter    = '|CROP|';
+        $content      = $this->plainTextContent;
+        $content      = preg_replace('/(-----BEGIN .+?-----(?s).+?-----END .+?-----)/mi', $delimiter, $content);
+        $content      = preg_replace('/(\s\s+|\\n|\\r)/', ' ', $content);
+        $content      = array_filter(explode($delimiter, $content), 'trim');
+        $content      = (array)array_map(fn($data) => $this->processDataToInfo($data), $content)[0];
 
         foreach ($content as $value) {
             $val = $value[key($value)];
