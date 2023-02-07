@@ -2,70 +2,42 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
+use Illuminate\Support\{Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidCertificateContentException, Invalidx509PrivateKeyException};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException, InvalidPdfSignModeTypeException};
+use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
+use setasign\Fpdi\PdfParser\Filter\FilterException;
+use setasign\Fpdi\PdfParser\PdfParserException;
+use setasign\Fpdi\PdfParser\Type\PdfTypeException;
+use setasign\Fpdi\PdfReader\PdfReaderException;
 use setasign\Fpdi\Tcpdf\Fpdi;
-use Illuminate\Support\{Str, Facades\File};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
-    Invalidx509PrivateKeyException,
-    InvalidCertificateContentException
-};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{
-    FileNotFoundException,
-    InvalidPdfSignModeTypeException
-};
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class SignaturePdf
 {
-    /**
-     * @var string
-     */
     const
         MODE_DOWNLOAD = 'MODE_DOWNLOAD',
         MODE_RESOURCE = 'MODE_RESOURCE';
 
-    /**
-     * @var Fpdi
-     */
     private Fpdi $pdf;
 
-    /**
-     * @var ManageCert
-     */
     private ManageCert $cert;
 
-    /**
-     * @var string
-     */
     private string $pdfPath, $mode, $fileName;
 
-    /**
-     * @var array|null
-     */
     private ?array $image = null;
 
-    /**
-     * @var array
-     */
     private array $info = [];
 
-    /**
-     * @var boolean
-     */
     private bool $hasSignedSuffix, $hasSealImgOnEveryPages;
 
     /**
-     * __construct
-     *
-     * @param string $pdfPath
-     * @param ManageCert $cert
-     * @param string $mode self::MODE_RESOURCE
-     * @param string $fileName null
-     * @param bool $hasSignedSuffix false
-     * @throws InvalidCertificateContentException
-     * @throws Invalidx509PrivateKeyException
-     * @throws FileNotFoundException
      * @throws InvalidPdfSignModeTypeException
+     * @throws FileNotFoundException
+     * @throws InvalidCertificateContentException
      * @throws Throwable
+     * @throws Invalidx509PrivateKeyException
      */
     public function __construct(
         string     $pdfPath,
@@ -94,24 +66,14 @@ class SignaturePdf
         }
 
         $this->setFileName($fileName)
-            ->setHasSignedSuffix($hasSignedSuffix)
-            ->setSealImgOnEveryPages(false);
+             ->setHasSignedSuffix($hasSignedSuffix)
+             ->setSealImgOnEveryPages(false);
 
-        $this->mode = $mode;
+        $this->mode    = $mode;
         $this->pdfPath = $pdfPath;
         $this->setPdf();
     }
 
-    /**
-     * setInfo - Set signature info
-     *
-     * @param string|null $name
-     * @param string|null $location
-     * @param string|null $reason
-     * @param string|null $contactInfo
-     *
-     * @return SignaturePdf
-     */
     public function setInfo(
         ?string $name = null,
         ?string $location = null,
@@ -128,27 +90,11 @@ class SignaturePdf
         return $this;
     }
 
-    /**
-     * getPdfInstance - Return current Fdpi object instance
-     *
-     * @return Fpdi
-     */
     public function getPdfInstance(): Fpdi
     {
         return $this->pdf;
     }
 
-    /**
-     * setPdf - Set PDF settings
-     *
-     * @param string $orientation PDF_PAGE_ORIENTATION,
-     * @param string $unit PDF_UNIT,
-     * @param string $pageFormat PDF_PAGE_FORMAT,
-     * @param bool $unicode true,
-     * @param string $encoding 'UTF-8'
-     *
-     * @return SignaturePdf
-     */
     public function setPdf(
         string $orientation = 'P',
         string $unit = 'mm',
@@ -161,17 +107,6 @@ class SignaturePdf
         return $this;
     }
 
-    /**
-     * setImage - Defines an image as a signature identifier
-     *
-     * @param string $imagePath - Support only for PNG images
-     * @param float $pageX
-     * @param float $pageY
-     * @param float $imageW
-     * @param float $imageH
-     * @param int $page
-     * @return SignaturePdf
-     */
     public function setImage(
         string $imagePath,
         float  $pageX = 155,
@@ -185,50 +120,26 @@ class SignaturePdf
         return $this;
     }
 
-    /**
-     * setSealImgOnEveryPages - Set whether the signature image will be on all pages
-     *
-     * @param bool $hasSealImgOnEveryPages
-     * @return SignaturePdf
-     */
     public function setSealImgOnEveryPages(bool $hasSealImgOnEveryPages = true): SignaturePdf
     {
         $this->hasSealImgOnEveryPages = $hasSealImgOnEveryPages;
         return $this;
     }
 
-    /**
-     * setFileName - Set output file name
-     *
-     * @param string $fileName
-     * @return SignaturePdf
-     */
     public function setFileName(string $fileName): SignaturePdf
     {
-        $ext = explode('.', $fileName);
-        $ext = end($ext);
+        $ext            = explode('.', $fileName);
+        $ext            = end($ext);
         $this->fileName = str_replace(".{$ext}", '', $fileName);
         return $this;
     }
 
-    /**
-     * setHasSignedSuffix - Set if the output file has a "signed" suffix
-     *
-     * @param bool $hasSignedSuffix
-     * @return SignaturePdf
-     */
     public function setHasSignedSuffix(bool $hasSignedSuffix): SignaturePdf
     {
         $this->hasSignedSuffix = $hasSignedSuffix;
         return $this;
     }
 
-    /**
-     * implementSignatureImage - Apply image to document
-     *
-     * @param int|null $currentPage
-     * @return void
-     */
     private function implementSignatureImage(?int $currentPage = null): void
     {
         if ($this->image) {
@@ -248,11 +159,13 @@ class SignaturePdf
     }
 
     /**
-     * signature - Sign a PDF file
-     *
-     * @return mixed
+     * @throws CrossReferenceException
+     * @throws FilterException
+     * @throws PdfParserException
+     * @throws PdfTypeException
+     * @throws PdfReaderException
      */
-    public function signature()
+    public function signature(): string|BinaryFileResponse
     {
         $pageCount = $this->pdf->setSourceFile($this->pdfPath);
 
@@ -271,7 +184,7 @@ class SignaturePdf
         }
 
         $certificate = $this->cert->getCert()->original;
-        $password = $this->cert->getCert()->password;
+        $password    = $this->cert->getCert()->password;
 
         $this->pdf->setSignature(
             $certificate,
