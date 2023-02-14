@@ -4,7 +4,7 @@
 
 use Illuminate\Http\Request;
 use App\Models\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\ValidatePdfSignature;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature;
 
 class ExampleController() {
     public function dummyFunction(Request $request){
