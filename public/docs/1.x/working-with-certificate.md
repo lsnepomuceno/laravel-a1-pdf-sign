@@ -2,7 +2,7 @@
 ```PHP
 <?php
 
-use LSNepomuceno\LaravelA1PdfSign\ManageCert;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
 class ExampleController() {
     public function dummyFunction(){
@@ -24,7 +24,7 @@ class ExampleController() {
 <?php
 
 use Illuminate\Http\Request;
-use LSNepomuceno\LaravelA1PdfSign\ManageCert;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
 class ExampleController() {
     public function dummyFunction(Request $request){
@@ -51,7 +51,7 @@ class ExampleController() {
 <?php
 
 use App\Models\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\ManageCert;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
 class ExampleController() {
     public function dummyFunction(){
@@ -86,7 +86,7 @@ class ExampleController() {
 #### 5 - Reading certificate from database (model based).
 ```PHP
 <?php
-use LSNepomuceno\LaravelA1PdfSign\ManageCert;
+use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
 class CertificateModel() {
     public function parse(): ?ManageCert {
