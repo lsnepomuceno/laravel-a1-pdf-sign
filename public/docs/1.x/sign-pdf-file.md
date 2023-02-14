@@ -3,7 +3,7 @@
 <?php
 
 use Illuminate\Http\Request;
-use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SignaturePdf};
+use LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SignaturePdf};
 
 class ExampleController() {
     public function dummyFunction(Request $request){
@@ -61,7 +61,7 @@ class ExampleController() {
 
 use Illuminate\Http\Request;
 use App\Models\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SignaturePdf};
+use LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SignaturePdf};
 
 class ExampleController() {
     public function dummyFunction(Request $request){
@@ -96,7 +96,7 @@ class ExampleController() {
 use Illuminate\Http\Request;
 use App\Models\Certificate;
 use Illuminate\Support\Facades\File;
-use LSNepomuceno\LaravelA1PdfSign\{ManageCert, SealImage, SignaturePdf};
+use LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SealImage, SignaturePdf};
 
 class ExampleController() {
     public function dummyFunction(Request $request){
