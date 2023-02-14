@@ -31,9 +31,9 @@
         "ext-fileinfo": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
-        "illuminate/support": "^9",
-        "illuminate/encryption": "^9",
-        "illuminate/http": "^9",
+        "illuminate/support": "^9 || ^10",
+        "illuminate/encryption": "^9 || ^10",
+        "illuminate/http": "^9 || ^10",
         "tecnickcom/tc-lib-pdf": "^8",
         "tecnickcom/tcpdf": "6.4.* || 6.6.*",
         "setasign/fpdi": "^2.3",
@@ -68,8 +68,8 @@
         "ext-imagick": "To use Imagick based image processing."
     },
     "require-dev": {
-        "orchestra/testbench": "^7",
-        "nunomaduro/collision": "^6",
+        "orchestra/testbench": "^7 || ^8",
+        "nunomaduro/collision": "^6 || ^7",
         "phpmd/phpmd": "^2.11"
     }
 }
