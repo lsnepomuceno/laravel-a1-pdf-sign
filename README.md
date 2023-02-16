@@ -49,9 +49,12 @@
   
   <tr>
     <td>^9</td>
-    <td>^8.1</td>
-    <td>^1</td>
-    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+    <td rowspan="2">^8.1 or ^8.2</td>
+    <td rowspan="2">^1</td>
+    <td rowspan="2"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+  </tr>
+  <tr>
+    <td>^10</td>
   </tr>
   
 </table>
