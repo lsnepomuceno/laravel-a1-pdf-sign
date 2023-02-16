@@ -19,7 +19,7 @@ jobs:
         operating-system: [ ubuntu-22.04, ubuntu-latest ]
         php-versions: [ '8.1', '8.2' ]
     env:
-      extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole
+      extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
       key: cache-v5
     steps:
       - name: Checkout
@@ -57,7 +57,7 @@ jobs:
           composer -V
           php -r "if(strpos(@exec('composer -V'), 'Composer version') === false) {throw new Exception('Composer not found');}"
 
-      - name: Validate composer.json e composer.lock
+      - name: Validate composer.json and composer.lock
         run: |
           composer validate
 
@@ -67,4 +67,4 @@ jobs:
 
       - name: Execute tests
         run: |
-          vendor/bin/phpunit
+          vendor/bin/testbench package:test
