@@ -1,4 +1,4 @@
-name: A1 Pdf Sign
+name: A1 Pdf Sign Tests
 
 on:
   push:
@@ -6,27 +6,65 @@ on:
   pull_request:
     branches: [ main, dev, v1.x-dev ]
 
-jobs:
-  composer-and-tests:
-    name: Composer and Automated Tests
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  run:
+    name: Run
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [ ubuntu-22.04, ubuntu-latest ]
+        php-versions: [ '8.1', '8.2' ]
+    env:
+      extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
+      key: cache-v5
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Setup PHP, with composer and extensions
+      - name: Setup cache environment
+        id: cache-env
+        uses: shivammathur/cache-extensions@develop
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: ${{ env.extensions }}
+          key: ${{ env.key }}
+
+      - name: Cache extensions
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.cache-env.outputs.dir }}
+          key: ${{ steps.cache-env.outputs.key }}
+          restore-keys: ${{ steps.cache-env.outputs.key }}
+
+      - name: Setup PHP with latest versions
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
-          tools: composer:v2, phpunit
-          extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole
+          php-version: ${{ matrix.php-versions }}
+        env:
+          update: true
 
-      - name: Validate composer.json e composer.lock
-        run: composer validate
+      - name: Testing PHP version
+        run: |
+          php -v
+          php -r "if(strpos(phpversion(), '${{ matrix.php-versions }}') === false) {throw new Exception('Wrong PHP version Installed');}"
 
-      - name: Install dependencys
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Testing Composer version
+        run: |
+          composer -V
+          php -r "if(strpos(@exec('composer -V'), 'Composer version') === false) {throw new Exception('Composer not found');}"
+
+      - name: Validate composer.json and composer.lock
+        run: |
+          composer validate
+
+      - name: Install dependencies
+        run: |
+          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
       - name: Execute tests
-        run: vendor/bin/phpunit
+        run: |
+          vendor/bin/testbench package:test

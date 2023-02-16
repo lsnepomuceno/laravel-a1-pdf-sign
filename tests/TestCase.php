@@ -13,9 +13,4 @@ class TestCase extends Orchestra
             LaravelA1PdfSignServiceProvider::class,
         ];
     }
-
-    protected function getEnvironmentSetUp($app)
-    {
-        //
-    }
 }
