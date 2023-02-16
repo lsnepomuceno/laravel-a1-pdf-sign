@@ -15,6 +15,7 @@ Vagrantfile
 .php_cs.cache
 composer.lock
 .phpunit.result.cache
+.phpunit.cache
 *.bak
 demo.php
 *Zone.Identifier
