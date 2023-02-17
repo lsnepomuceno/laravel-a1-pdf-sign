@@ -67,3 +67,10 @@
     <img src="https://user-images.githubusercontent.com/14093492/195155296-55db9dcb-feca-4f2b-a9d4-205fadc580b7.svg" width="100" alt="JetBrains Logo">
   </a>
 </p>
+
+<h1 align="center">Do you want to support this project?</h1>
+<p align="center">
+  <a href="https://www.buymeacoffee.com/lucasnepomuceno" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 200px !important;" >
+  </a>
+</p>
