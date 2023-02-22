@@ -65,7 +65,8 @@
   },
   "suggest": {
     "ext-gd": "To use GD library based image processing.",
-    "ext-imagick": "To use Imagick based image processing."
+    "ext-imagick": "To use Imagick based image processing.",
+    "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
   },
   "require-dev": {
     "orchestra/testbench": "^8",
