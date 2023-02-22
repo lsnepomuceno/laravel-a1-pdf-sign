@@ -34,19 +34,19 @@
     <td>Package version</td>
     <td>Docs</td>
   </tr>
-  
+
   <tr>
     <td>^8~8.54</td>
     <td rowspan="2">^7.4</td>
     <td>^0~0.0.11</td>
     <td rowspan="2"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home">Official Doc</a></td>
   </tr>
-  
+
   <tr>
     <td>^8.56+</td>
     <td>^0.0.12</td>
   </tr>
-  
+
   <tr>
     <td>^9</td>
     <td rowspan="2">^8.1 or ^8.2</td>
@@ -56,7 +56,7 @@
   <tr>
     <td>^10</td>
   </tr>
-  
+
 </table>
 
 
@@ -71,6 +71,6 @@
 <h1 align="center">Do you want to support this project?</h1>
 <p align="center">
   <a href="https://www.buymeacoffee.com/lucasnepomuceno" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 200px !important;" >
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="60" width="200" >
   </a>
 </p>
