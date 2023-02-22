@@ -180,7 +180,10 @@ class SignaturePdf
             $this->pdf->AddPage($width > $height ? 'L' : 'P', [$width, $height]);
             $this->pdf->useTemplate($pageIndex);
 
-            if ($this->hasSealImgOnEveryPages) $this->implementSignatureImage((int)$pageIndex);
+            if ($this->hasSealImgOnEveryPages ||
+                $i === ($this->image['page'] ?? 0)) {
+                $this->implementSignatureImage($i);
+            }
         }
 
         $certificate = $this->cert->getCert()->original;
@@ -196,7 +199,6 @@ class SignaturePdf
             'A' // Authorize certificate
         );
 
-        if (!$this->hasSealImgOnEveryPages) $this->implementSignatureImage();
         if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
         if ($this->hasSignedSuffix) $this->fileName .= '_signed';
 
