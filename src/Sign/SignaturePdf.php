@@ -180,8 +180,11 @@ class SignaturePdf
             $this->pdf->AddPage($width > $height ? 'L' : 'P', [$width, $height]);
             $this->pdf->useTemplate($pageIndex);
 
+            $insertImageOnLastPage = !empty($this->image['page']) && $this->image['page'] === -1 && $i === $pageCount;
             if ($this->hasSealImgOnEveryPages ||
-                $i === ($this->image['page'] ?? 0)) {
+                $i === ($this->image['page'] ?? 0) ||
+                $insertImageOnLastPage
+            ) {
                 $this->implementSignatureImage($i);
             }
         }
