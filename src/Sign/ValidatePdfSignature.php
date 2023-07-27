@@ -123,7 +123,8 @@ class ValidatePdfSignature
 
     private function processDataToInfo(string $data): array
     {
-        $data = explode(', ', trim($data));
+        /** it allows to split  by "," except when "," inside of quoutes */
+        $data = preg_split('/\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/', trim($data));
 
         $finalData = [];
 
