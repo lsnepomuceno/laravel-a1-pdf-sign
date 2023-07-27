@@ -1,0 +1,20 @@
+[
+  { "subject=CN": "NAME" },
+  { "name": "NAME" },
+  { "O": "NAME" },
+  { "x500UniqueIdentifier": "AAA010101AAA" },
+  { "serialNumber": "AAA010101AAAA123" },
+  { "OU": "A NAME issuer=CN" },
+  { "O": "SERVICIO DE ADMINISTRACION TRIBUTARIA" },
+  { "OU": "SAT-IES Authority" },
+  { "emailAddress": "contacto.tecnico@example.com" },
+  { "street": "\"AV. HIDALGO 77, COL. GUERRERO\"" },
+  { "postalCode": "06300" },
+  { "C": "MX" },
+  { "ST": "CIUDAD DE MEXICO" },
+  { "L": "CUAUHTEMOC" },
+  { "x500UniqueIdentifier": "XXX010101XXX" },
+  {
+    "unstructuredName": "responsable: ADMINISTRACION CENTRAL DE SERVICIOS TRIBUTARIOS AL CONTRIBUYENTE"
+  }
+]
