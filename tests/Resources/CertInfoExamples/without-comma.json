@@ -1,0 +1,18 @@
+[
+  { "subject=CN": "ESCUELA KEMPER URGATE SA DE CV" },
+  { "name": "ESCUELA KEMPER URGATE SA DE CV" },
+  { "O": "ESCUELA KEMPER URGATE SA DE CV" },
+  { "x500UniqueIdentifier": "EKU9003173C9 / VADA800927DJ3" },
+  { "serialNumber": "\" / VADA800927HSRSRL05\"" },
+  { "OU": "Sucursal 1 issuer=CN" },
+  { "O": "SERVICIO DE ADMINISTRACION TRIBUTARIA" },
+  { "OU": "SAT-IES Authority" },
+  { "emailAddress": "oscar.martinez@sat.gob.mx" },
+  { "street": "3ra cerrada de caliz" },
+  { "postalCode": "06370" },
+  { "C": "MX" },
+  { "ST": "CIUDAD DE MEXICO" },
+  { "L": "COYOACAN" },
+  { "x500UniqueIdentifier": "2.5.4.45" },
+  { "unstructuredName": "responsable: ACDMA-SAT" }
+]
