@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        operating-system: [ ubuntu-22.04, ubuntu-latest ]
+        operating-system: [ 'ubuntu-latest', 'windows-latest', 'macos-latest' ]
         php-versions: [ '8.1', '8.2' ]
     env:
       extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
@@ -67,4 +67,4 @@ jobs:
 
       - name: Execute tests
         run: |
-          vendor/bin/testbench package:test
+          composer run test
