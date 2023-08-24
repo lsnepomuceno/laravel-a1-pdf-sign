@@ -1,132 +1,70 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign\Tests;
-
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
-    FileNotFoundException,
-    InvalidCertificateContentException,
-    InvalidPFXException,
-    Invalidx509PrivateKeyException,
-    ProcessRunTimeException
-};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use OpenSSLCertificate;
 
-class ManageCertTest extends TestCase
-{
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testValidateCertificateStructureFromPfxFile()
-    {
-        $cert = new ManageCert;
-        $cert->makeDebugCertificate();
+test('validate certificate structure from pfx file', function () {
+    $cert = new ManageCert;
+    $cert->makeDebugCertificate();
 
-        $this->assertInstanceOf(CertificateProcessed::class, $cert->getCert());
+    expect($cert->getCert())->toBeInstanceOf(CertificateProcessed::class);
 
-        foreach (['original', 'openssl', 'data', 'password'] as $key) {
-            $this->assertArrayHasKey($key, $cert->getCert()->toArray());
-        }
-
-        $this->assertStringContainsStringIgnoringCase('BEGIN CERTIFICATE', $cert->getCert()->original);
-
-        is_object($cert->getCert()->openssl)
-            ? $this->assertInstanceOf(OpenSSLCertificate::class, $cert->getCert()->openssl)
-            : $this->assertIsResource($cert->getCert()->openssl);
-
-        $this->assertIsArray($cert->getCert()->data);
-        $this->assertArrayHasKey('validTo_time_t', $cert->getCert()->data); //important field
-        $this->assertNotNull($cert->getCert()->password);
+    foreach (['original', 'openssl', 'data', 'password'] as $key) {
+        expect($cert->getCert()->toArray())->toHaveKey($key);
     }
 
-    /**
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws CertificateOutputNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testValidateNotFoundPfxFileException()
-    {
-        $this->expectException(FileNotFoundException::class);
+    $this->assertStringContainsStringIgnoringCase('BEGIN CERTIFICATE', $cert->getCert()->original);
 
-        $cert = new ManageCert;
-        $cert->fromPfx('imaginary/path/to/file.pfx', '12345');
-    }
+    is_object($cert->getCert()->openssl)
+        ? expect($cert->getCert()->openssl)->toBeInstanceOf(OpenSSLCertificate::class)
+        : expect($cert->getCert()->openssl)->toBeResource();
 
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testValidatePfxFileExtensionException()
-    {
-        $this->expectException(InvalidPFXException::class);
+    expect($cert->getCert()->data)->toBeArray();
+    expect($cert->getCert()->data)->toHaveKey('validTo_time_t');
+    //important field
+    expect($cert->getCert()->password)->not->toBeNull();
+});
 
-        $cert = new ManageCert;
-        $cert->fromPfx('imaginary/path/to/file.pfz', '12345');
-    }
+test('validate not found pfx file exception', function () {
+    $this->expectException(FileNotFoundException::class);
 
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testValidateEncryperInstanceAndResources()
-    {
-        $cert = new ManageCert;
-        $cert->makeDebugCertificate();
+    $cert = new ManageCert;
+    $cert->fromPfx('imaginary/path/to/file.pfx', '12345');
+});
 
-        $this->assertInstanceOf(Encrypter::class, $cert->getEncrypter());
-        $this->assertTrue(
-            $cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER)
-        );
-    }
+test('validate pfx file extension exception', function () {
+    $this->expectException(InvalidPFXException::class);
 
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws CertificateOutputNotFoundException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testValidateProcessRunTimeException()
-    {
-        $this->expectException(ProcessRunTimeException::class);
+    $cert = new ManageCert;
+    $cert->fromPfx('imaginary/path/to/file.pfz', '12345');
+});
 
-        $cert = new ManageCert;
-        $cert->makeDebugCertificate(false, true);
-    }
+test('validate encryper instance and resources', function () {
+    $cert = new ManageCert;
+    $cert->makeDebugCertificate();
 
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws CertificateOutputNotFoundException
-     */
-    public function testValidatesIfThePfxFileWillBeDeletedAfterBeingPreserved()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    expect($cert->getEncrypter())->toBeInstanceOf(Encrypter::class);
+    expect($cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER))->toBeTrue();
+});
 
-        $cert->setPreservePfx()->fromPfx($pfxPath, $pass);
+test('validate process run time exception', function () {
+    $this->expectException(ProcessRunTimeException::class);
 
-        $this->assertTrue(File::exists($pfxPath));
-        $this->assertTrue(File::delete($pfxPath));
-    }
-}
+    $cert = new ManageCert;
+    $cert->makeDebugCertificate(false, true);
+});
+
+test('validates if the pfx file will be deleted after being preserved', function () {
+    $cert             = new ManageCert;
+    [$pfxPath, $pass] = $cert->makeDebugCertificate(true);
+
+    $cert->setPreservePfx()->fromPfx($pfxPath, $pass);
+
+    expect(File::exists($pfxPath))->toBeTrue();
+    expect(File::delete($pfxPath))->toBeTrue();
+});

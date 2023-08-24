@@ -3,8 +3,10 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\{Facades\File, Str};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidCertificateContentException, Invalidx509PrivateKeyException};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException, InvalidPdfSignModeTypeException};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfSignModeTypeException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
 use setasign\Fpdi\PdfParser\Filter\FilterException;
 use setasign\Fpdi\PdfParser\PdfParserException;
@@ -37,7 +39,7 @@ class SignaturePdf
      * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
      * @throws Throwable
-     * @throws Invalidx509PrivateKeyException
+     * @throws InvalidX509PrivateKeyException
      */
     public function __construct(
         string     $pdfPath,
@@ -66,10 +68,10 @@ class SignaturePdf
         }
 
         $this->setFileName($fileName)
-             ->setHasSignedSuffix($hasSignedSuffix)
-             ->setSealImgOnEveryPages(false);
+            ->setHasSignedSuffix($hasSignedSuffix)
+            ->setSealImgOnEveryPages(false);
 
-        $this->mode    = $mode;
+        $this->mode = $mode;
         $this->pdfPath = $pdfPath;
         $this->setPdf();
     }
@@ -128,8 +130,8 @@ class SignaturePdf
 
     public function setFileName(string $fileName): SignaturePdf
     {
-        $ext            = explode('.', $fileName);
-        $ext            = end($ext);
+        $ext = explode('.', $fileName);
+        $ext = end($ext);
         $this->fileName = str_replace(".{$ext}", '', $fileName);
         return $this;
     }
@@ -143,18 +145,22 @@ class SignaturePdf
     private function implementSignatureImage(?int $currentPage = null): void
     {
         if ($this->image) {
-            /**
-             * @var string $imagePath
-             * @var float|null $pageX
-             * @var float|null $pageY
-             * @var float $imageW
-             * @var float $imageH
-             * @var int $page
-             * @see setImage()
-             */
             extract($this->image);
-            $this->pdf->Image($imagePath, $pageX, $pageY, $imageW, $imageH, 'PNG');
-            $this->pdf->setSignatureAppearance($pageX, $pageY, $imageW, $imageH, $currentPage ?? $page);
+            $this->pdf->Image(
+                $this->image['imagePath'],
+                $this->image['pageX'],
+                $this->image['pageY'],
+                $this->image['imageW'],
+                $this->image['imageH'],
+                'PNG'
+            );
+            $this->pdf->setSignatureAppearance(
+                $this->image['pageX'],
+                $this->image['pageY'],
+                $this->image['imageW'],
+                $this->image['imageH'],
+                $currentPage ?? $this->image['page']
+            );
         }
     }
 
@@ -190,7 +196,7 @@ class SignaturePdf
         }
 
         $certificate = $this->cert->getCert()->original;
-        $password    = $this->cert->getCert()->password;
+        $password = $this->cert->getCert()->password;
 
         $this->pdf->setSignature(
             $certificate,

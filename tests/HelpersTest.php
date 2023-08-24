@@ -1,136 +1,74 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign\Tests;
-
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use Throwable;
 
-class HelpersTest extends TestCase
-{
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws Throwable
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws CertificateOutputNotFoundException
-     */
-    public function testWhenAFileIsSignedByTheSignPdfFromFileHelper()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+test('when a file is signed by the sign pdf from file helper', function () {
+    $cert             = new ManageCert;
+    [$pfxPath, $pass] = $cert->makeDebugCertificate(true);
 
-        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-        $pdfPath = a1TempDir(true, '.pdf');
+    $signed  = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+    $pdfPath = a1TempDir(true, '.pdf');
 
-        File::put($pdfPath, $signed);
-        $fileExists = File::exists($pdfPath);
+    File::put($pdfPath, $signed);
+    $fileExists = File::exists($pdfPath);
 
-        $this->assertTrue($fileExists);
-        File::delete([$pfxPath, $pdfPath]);
+    expect($fileExists)->toBeTrue();
+    File::delete([$pfxPath, $pdfPath]);
+});
+
+test('when a file is signed by the sign pdf from upload helper', function () {
+    $cert             = new ManageCert;
+    [$pfxPath, $pass] = $cert->makeDebugCertificate(true);
+
+    $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
+    $signed       = signPdfFromUpload($uploadedFile, $pass, __DIR__ . '/Resources/test.pdf');
+    $pdfPath      = a1TempDir(true, '.pdf');
+
+    File::put($pdfPath, $signed);
+    $fileExists = File::exists($pdfPath);
+
+    expect($fileExists)->toBeTrue();
+    File::delete([$pfxPath, $pdfPath]);
+});
+
+test('when certificate data is encrypted', function () {
+    $cert             = new ManageCert;
+    [$pfxPath, $pass] = $cert->makeDebugCertificate(true);
+
+    $encryptedData = encryptCertData($pfxPath, $pass);
+
+    foreach (['certificate', 'password', 'hash'] as $key) {
+        expect($encryptedData->toArray())->toHaveKey($key);
     }
 
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws Throwable
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     */
-    public function testWhenAFileIsSignedByTheSignPdfFromUploadHelper()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    File::delete([$pfxPath]);
+});
 
-        $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
-        $signed = signPdfFromUpload($uploadedFile, $pass, __DIR__ . '/Resources/test.pdf');
-        $pdfPath = a1TempDir(true, '.pdf');
+test('when the a1 temp dir helper creates the files correctly', function () {
+    expect(File::isDirectory(a1TempDir()))->toBeTrue();
 
-        File::put($pdfPath, $signed);
-        $fileExists = File::exists($pdfPath);
+    expect(Str::endsWith(a1TempDir(true), '.pfx'))->toBeTrue();
 
-        $this->assertTrue($fileExists);
-        File::delete([$pfxPath, $pdfPath]);
-    }
+    expect(Str::endsWith(a1TempDir(true, '.pdf'), '.pdf'))->toBeTrue();
+});
 
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws Throwable
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     */
-    public function testWhenCertificateDataIsEncrypted()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+test('when a signed pdf file is correctly validated by the validate pdf signature helper', function () {
+    $cert             = new ManageCert;
+    [$pfxPath, $pass] = $cert->makeDebugCertificate(true);
 
-        $encryptedData = encryptCertData($pfxPath, $pass);
+    $signed  = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+    $pdfPath = a1TempDir(true, '.pdf');
 
-        foreach (['certificate', 'password', 'hash'] as $key) {
-            $this->assertArrayHasKey($key, $encryptedData->toArray());
-        }
+    File::put($pdfPath, $signed);
+    $fileExists = File::exists($pdfPath);
 
-        File::delete([$pfxPath]);
-    }
+    expect($fileExists)->toBeTrue();
 
-    public function testWhenTheA1TempDirHelperCreatesTheFilesCorrectly()
-    {
-        $this->assertTrue(
-            File::isDirectory(a1TempDir())
-        );
+    $validation = validatePdfSignature($pdfPath);
+    expect($validation->isValidated)->toBeTrue();
 
-        $this->assertTrue(
-            Str::endsWith(a1TempDir(true), '.pfx')
-        );
-
-        $this->assertTrue(
-            Str::endsWith(
-                a1TempDir(true, '.pdf'),
-                '.pdf'
-            )
-        );
-    }
-
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws InvalidCertificateContentException
-     * @throws Throwable
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     */
-    public function testWhenASignedPdfFileIsCorrectlyValidatedByTheValidatePdfSignatureHelper()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
-
-        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-        $pdfPath = a1TempDir(true, '.pdf');
-
-        File::put($pdfPath, $signed);
-        $fileExists = File::exists($pdfPath);
-
-        $this->assertTrue($fileExists);
-
-        $validation = validatePdfSignature($pdfPath);
-        $this->assertTrue($validation->isValidated);
-
-        File::delete([$pfxPath, $pdfPath]);
-    }
-}
+    File::delete([$pfxPath, $pdfPath]);
+});

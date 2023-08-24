@@ -7,12 +7,12 @@ use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\{Facades\File, Str};
 use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
-    FileNotFoundException,
-    InvalidCertificateContentException,
-    InvalidPFXException,
-    Invalidx509PrivateKeyException,
-    ProcessRunTimeException};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use OpenSSLCertificate;
 
 class ManageCert
@@ -64,7 +64,7 @@ class ManageCert
         }
 
         $this->password = $password;
-        $output         = a1TempDir(true, '.crt');
+        $output = a1TempDir(true, '.crt');
         $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
 
         runCliCommandProcesses($openSslCommand);
@@ -112,13 +112,13 @@ class ManageCert
 
     /**
      * @throws InvalidCertificateContentException
-     * @throws Invalidx509PrivateKeyException
+     * @throws InvalidX509PrivateKeyException
      */
     public function setCertContent(string $certContent): self
     {
         $this->originalCertContent = $certContent;
-        $this->certContent         = openssl_x509_read(certificate: $certContent);
-        $this->parsedData          = openssl_x509_parse(certificate: $this->certContent, short_names: false);
+        $this->certContent = openssl_x509_read(certificate: $certContent);
+        $this->parsedData = openssl_x509_parse(certificate: $this->certContent, short_names: false);
         $this->validate();
         return $this;
     }
@@ -143,17 +143,17 @@ class ManageCert
     private function invalidate(): void
     {
         $this->originalCertContent = '';
-        $this->certContent         = false;
-        $this->parsedData          = [];
-        $this->password            = '';
+        $this->certContent = false;
+        $this->parsedData = [];
+        $this->password = '';
     }
 
     public function getCert(): CertificateProcessed
     {
         return new CertificateProcessed(
             original: $this->originalCertContent,
-            openssl : $this->certContent,
-            data    : $this->parsedData,
+            openssl: $this->certContent,
+            data: $this->parsedData,
             password: $this->password
         );
     }

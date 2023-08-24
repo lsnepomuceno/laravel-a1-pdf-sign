@@ -54,7 +54,7 @@
     }
   },
   "scripts": {
-    "test": "vendor/bin/testbench package:test"
+    "test": "vendor/bin/pest"
   },
   "extra": {
     "laravel": {
@@ -70,6 +70,12 @@
   },
   "require-dev": {
     "orchestra/testbench": "^8",
-    "nunomaduro/collision": "^7"
+    "pestphp/pest": "^2.16",
+    "phpstan/phpstan": "^1.10"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   }
 }
