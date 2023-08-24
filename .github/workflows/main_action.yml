@@ -61,9 +61,9 @@ jobs:
         run: |
           composer validate
 
-      - name: Install dependencies
+      - name: Update dependencies
         run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
       - name: Execute tests
         run: |
