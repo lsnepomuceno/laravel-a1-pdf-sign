@@ -65,7 +65,7 @@ class ManageCert
 
         $this->password = $password;
         $output         = a1TempDir(true, '.crt');
-        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password}";
+        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:'{$this->password}'";
 
         runCliCommandProcesses($openSslCommand);
 
