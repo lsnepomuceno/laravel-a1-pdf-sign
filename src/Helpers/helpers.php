@@ -84,7 +84,7 @@ if (!function_exists('a1TempDir')) {
         $tempDir = dirname(__DIR__) . '/Temp/';
 
         if (!is_writable($tempDir)) {
-            $tempDir = sys_get_temp_dir();
+            $tempDir = sys_get_temp_dir() . '/';
         }
 
         if ($tempFile) {
