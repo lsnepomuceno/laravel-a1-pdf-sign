@@ -71,5 +71,10 @@
   "require-dev": {
     "orchestra/testbench": "^8 || ^9",
     "nunomaduro/collision": "^7 || ^8"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   }
 }
