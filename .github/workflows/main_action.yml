@@ -1,70 +1,64 @@
-name: A1 Pdf Sign Tests
-
+name: Template - Laravel package
 on:
   push:
-    branches: [ main, dev, v1.x-dev ]
-  pull_request:
-    branches: [ main, dev, v1.x-dev ]
-
-permissions:
-  contents: read
+    branches:
+      - main
+      - dev
+      - features/**
 
 jobs:
-  run:
-    name: Run
-    runs-on: ${{ matrix.operating-system }}
+  laravel-tests:
+    runs-on: ubuntu-latest
+
     strategy:
-      fail-fast: false
       matrix:
         operating-system: [ ubuntu-latest ]
-        php-versions: [ '8.1', '8.2', '8.3' ]
+        php-versions: [ '8.3','8.2','8.1' ]
+        dependency-stability: [ 'prefer-none' ]
+
+        laravel: [ '11.*','10.*','9.*' ]
+        include:
+          - laravel: 11.*
+            testbench: 9.*
+          - laravel: 10.*
+            testbench: 8.*
+          - laravel: 9.*
+            testbench: 7.*
     env:
       extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
-      key: cache-v5
+
+    name: P${{ matrix.php-versions }} - L${{ matrix.laravel }} - ${{ matrix.dependency-stability }} - ${{ matrix.operating-system}}
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup cache environment
-        id: cache-env
-        uses: shivammathur/cache-extensions@develop
-        with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: ${{ env.extensions }}
-          key: ${{ env.key }}
-
-      - name: Cache extensions
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.cache-env.outputs.dir }}
-          key: ${{ steps.cache-env.outputs.key }}
-          restore-keys: ${{ steps.cache-env.outputs.key }}
-
-      - name: Setup PHP with latest versions
+      - uses: actions/checkout@v4
+      - name: Install PHP versions
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-        env:
-          update: true
-
-      - name: Testing PHP version
-        run: |
-          php -v
-          php -r "if(strpos(phpversion(), '${{ matrix.php-versions }}') === false) {throw new Exception('Wrong PHP version Installed');}"
 
       - name: Testing Composer version
         run: |
           composer -V
           php -r "if(strpos(@exec('composer -V'), 'Composer version') === false) {throw new Exception('Composer not found');}"
 
-      - name: Validate composer.json and composer.lock
+      - name: Install Laravel Dependencies
         run: |
-          composer validate
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --${{ matrix.dependency-stability }} --prefer-dist --no-interaction --no-suggest
 
-      - name: Install dependencies
-        run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Update Dependencies with latest stable
+        if: matrix.dependency-stability == 'prefer-stable'
+        run: composer update --prefer-stable
+      - name: Update Dependencies with lowest stable
+        if: matrix.dependency-stability == 'prefer-lowest'
+        run: composer update --prefer-stable --prefer-lowest
 
-      - name: Execute tests
+      - name: Show dir
+        run: pwd
+      - name: PHP Version
+        run: php --version
+
+      # Code quality
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
         run: |
           vendor/bin/testbench package:test
