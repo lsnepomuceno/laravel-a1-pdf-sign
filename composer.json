@@ -25,19 +25,19 @@
     }
   ],
   "require": {
-    "php": "^8.1",
+    "php": "^8.1 || ^8.2 || ^8.3",
     "ext-gd": "*",
     "ext-json": "*",
     "ext-fileinfo": "*",
     "ext-mbstring": "*",
     "ext-openssl": "*",
-    "illuminate/support": "^9 || ^10",
-    "illuminate/encryption": "^9 || ^10",
-    "illuminate/http": "^9 || ^10",
+    "illuminate/support": "^9 || ^11",
+    "illuminate/encryption": "^9 || ^10 || ^11",
+    "illuminate/http": "^9 || ^10 || ^11",
     "tecnickcom/tc-lib-pdf": "^8",
-    "tecnickcom/tcpdf": "6.4.* || 6.6.*",
+    "tecnickcom/tcpdf": "^6.4 || ^6.6",
     "setasign/fpdi": "^2.3",
-    "symfony/process": "^6",
+    "symfony/process": "^6 || ^7",
     "intervention/image": "^2.7"
   },
   "autoload": {
@@ -69,7 +69,12 @@
     "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
   },
   "require-dev": {
-    "orchestra/testbench": "^8",
-    "nunomaduro/collision": "^7"
+    "orchestra/testbench": "^7 || ^8 || ^9",
+    "nunomaduro/collision": "^6 || ^7 || ^8"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   }
 }
