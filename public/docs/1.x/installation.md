@@ -1,7 +1,7 @@
 # Minimum requirements
 
-* PHP: ^8.1 or ^8.2
-* Laravel: 9 or 10
+* PHP: ^8.1, ^8.2 or ^8.3
+* Laravel: ^9, ^10 or ^11
 * PHP Extensions: openssl, mbstring, json
 
 # Install
