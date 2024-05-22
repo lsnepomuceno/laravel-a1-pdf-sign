@@ -17,15 +17,20 @@ use OpenSSLCertificate;
 
 class ManageCert
 {
-    private string $tempDir, $originalCertContent, $password, $hashKey;
+    private string $tempDir;
+    private string $originalCertContent;
+    private string $password;
+    private string $hashKey;
 
     private bool $preservePfx = false;
+    private bool $isLegacy = false;
 
     private array $parsedData;
 
     private OpenSSLCertificate|bool $certContent;
 
     const CIPHER = 'aes-128-cbc';
+    const LEGACY_FLAG = '-legacy';
 
     private Encrypter $encrypter;
 
@@ -42,6 +47,12 @@ class ManageCert
     public function setPreservePfx(bool $preservePfx = true): self
     {
         $this->preservePfx = $preservePfx;
+        return $this;
+    }
+
+    public function setIsLegacy(bool $isLegacy = true): self
+    {
+        $this->isLegacy = $isLegacy;
         return $this;
     }
 
@@ -64,8 +75,9 @@ class ManageCert
         }
 
         $this->password = $password;
-        $output         = a1TempDir(true, '.crt');
-        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:'{$this->password}'";
+        $output = a1TempDir(true, '.crt');
+        $legacyFlag = $this->isLegacy ? self::LEGACY_FLAG : '';
+        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:'{$this->password}' {$legacyFlag}";
 
         runCliCommandProcesses($openSslCommand);
 
