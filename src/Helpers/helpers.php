@@ -111,7 +111,10 @@ if (!function_exists('runCliCommandProcesses')) {
      */
     function runCliCommandProcesses(string $command): void
     {
-        $process = Process::fromShellCommandline($command);
+        $process = Process::fromShellCommandline($command,null, [
+            'PATH' => getenv("PATH")
+        ]);
+        
         $process->run();
         while ($process->isRunning()) continue;
 

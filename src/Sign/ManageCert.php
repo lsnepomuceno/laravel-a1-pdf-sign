@@ -77,7 +77,7 @@ class ManageCert
         $this->password = $password;
         $output = a1TempDir(true, '.crt');
         $legacyFlag = $this->isLegacy ? self::LEGACY_FLAG : '';
-        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:'{$this->password}' {$legacyFlag}";
+        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$this->password} {$legacyFlag}";
 
         runCliCommandProcesses($openSslCommand);
 
