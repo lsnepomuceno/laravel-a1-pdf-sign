@@ -46,6 +46,35 @@ class HelpersTest extends TestCase
      * @throws Invalidx509PrivateKeyException
      * @throws Throwable
      * @throws InvalidCertificateContentException
+     * @throws InvalidPFXException
+     * @throws CertificateOutputNotFoundException
+     */
+    public function testWhenAFileIsSignedByTheSignPdfFromFileHelperUsingPathEnv()
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+
+        $signed = signPdfFromFile(
+            pfxPath: $pfxPath,
+            password: $pass,
+            pdfPath: __DIR__ . '/Resources/test.pdf',
+            usePathEnv: true
+        );
+        $pdfPath = a1TempDir(true, '.pdf');
+
+        File::put($pdfPath, $signed);
+        $fileExists = File::exists($pdfPath);
+
+        $this->assertTrue($fileExists);
+        File::delete([$pfxPath, $pdfPath]);
+    }
+
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws Throwable
+     * @throws InvalidCertificateContentException
      * @throws CertificateOutputNotFoundException
      * @throws InvalidPFXException
      */
@@ -56,6 +85,36 @@ class HelpersTest extends TestCase
 
         $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
         $signed = signPdfFromUpload($uploadedFile, $pass, __DIR__ . '/Resources/test.pdf');
+        $pdfPath = a1TempDir(true, '.pdf');
+
+        File::put($pdfPath, $signed);
+        $fileExists = File::exists($pdfPath);
+
+        $this->assertTrue($fileExists);
+        File::delete([$pfxPath, $pdfPath]);
+    }
+
+    /**
+     * @throws FileNotFoundException
+     * @throws ProcessRunTimeException
+     * @throws Invalidx509PrivateKeyException
+     * @throws Throwable
+     * @throws InvalidCertificateContentException
+     * @throws CertificateOutputNotFoundException
+     * @throws InvalidPFXException
+     */
+    public function testWhenAFileIsSignedByTheSignPdfFromUploadHelperUsingPathEnv()
+    {
+        $cert = new ManageCert;
+        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+
+        $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
+        $signed = signPdfFromUpload(
+            uploadedPfx: $uploadedFile,
+            password: $pass,
+            pdfPath: __DIR__ . '/Resources/test.pdf',
+            usePathEnv: true
+        );
         $pdfPath = a1TempDir(true, '.pdf');
 
         File::put($pdfPath, $signed);
