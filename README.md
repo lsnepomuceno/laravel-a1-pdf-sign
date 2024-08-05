@@ -6,13 +6,13 @@
 
 <p align="center">
   <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/releases/latest">
-    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v" alt="Latest Stable Version">
+    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v" alt="Latest Stable Version">
   </a>
   <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats">
-    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads" alt="Total Downloads">
+    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads" alt="Total Downloads">
   </a>
   <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/tree/dev">
-    <img src="http://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable" alt="Latest Unstable Version">
+    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable" alt="Latest Unstable Version">
   </a>
   <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md">
     <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
