@@ -64,7 +64,7 @@ class ManageCert
      * @throws Invalidx509PrivateKeyException
      * @throws ProcessRunTimeException
      */
-    public function fromPfx(string $pfxPath, string $password): self
+    public function fromPfx(string $pfxPath, string $password, bool $usePathEnv = false): self
     {
         if (!Str::of($pfxPath)->lower()->endsWith('.pfx')) {
             throw new InvalidPFXException($pfxPath);
@@ -75,11 +75,12 @@ class ManageCert
         }
 
         $this->password = $password;
+        $shellArgPassword = escapeshellarg($password);
         $output = a1TempDir(true, '.crt');
         $legacyFlag = $this->isLegacy ? self::LEGACY_FLAG : '';
-        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:'{$this->password}' {$legacyFlag}";
+        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$shellArgPassword} {$legacyFlag}";
 
-        runCliCommandProcesses($openSslCommand);
+        runCliCommandProcesses($openSslCommand, $usePathEnv);
 
         if (!File::exists($output)) {
             throw new CertificateOutputNotFoundException;
@@ -105,7 +106,7 @@ class ManageCert
      * @throws ProcessRunTimeException
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function fromUpload(UploadedFile $uploadedPfx, string $password): self
+    public function fromUpload(UploadedFile $uploadedPfx, string $password, bool $usePathEnv = false): self
     {
         $pfxTemp = a1TempDir(true);
 
@@ -115,7 +116,7 @@ class ManageCert
 
         File::put($pfxTemp, $uploadedPfx->get());
 
-        $this->fromPfx($pfxTemp, $password);
+        $this->fromPfx($pfxTemp, $password, $usePathEnv);
 
         File::delete($pfxTemp);
 
@@ -129,8 +130,8 @@ class ManageCert
     public function setCertContent(string $certContent): self
     {
         $this->originalCertContent = $certContent;
-        $this->certContent         = openssl_x509_read(certificate: $certContent);
-        $this->parsedData          = openssl_x509_parse(certificate: $this->certContent, short_names: false);
+        $this->certContent = openssl_x509_read(certificate: $certContent);
+        $this->parsedData = openssl_x509_parse(certificate: $this->certContent, short_names: false);
         $this->validate();
         return $this;
     }
@@ -155,17 +156,17 @@ class ManageCert
     private function invalidate(): void
     {
         $this->originalCertContent = '';
-        $this->certContent         = false;
-        $this->parsedData          = [];
-        $this->password            = '';
+        $this->certContent = false;
+        $this->parsedData = [];
+        $this->password = '';
     }
 
     public function getCert(): CertificateProcessed
     {
         return new CertificateProcessed(
             original: $this->originalCertContent,
-            openssl : $this->certContent,
-            data    : $this->parsedData,
+            openssl: $this->certContent,
+            data: $this->parsedData,
             password: $this->password
         );
     }
@@ -231,12 +232,13 @@ class ManageCert
      */
     public function makeDebugCertificate(bool $returnPathAndPass = false, bool $wrongPass = false): array|static
     {
-        $pass = 123456;
+        $pass = "example's password with special chars: $ & * ? \" '";
+        $shellArgPassword = escapeshellarg($pass);
         $name = $this->tempDir . Str::orderedUuid();
 
         $genCommands = [
-            "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=Test Certificate /OU=LucasNepomuceno\" -days 600 -passout pass:{$pass}",
-            "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$pass} -passout pass:{$pass}"
+            "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=Test Certificate /OU=LucasNepomuceno\" -days 600 -passout pass:{$shellArgPassword}",
+            "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$shellArgPassword} -passout pass:{$shellArgPassword}"
         ];
 
         foreach ($genCommands as $command) {

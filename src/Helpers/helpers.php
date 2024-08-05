@@ -6,17 +6,24 @@ use LSNepomuceno\LaravelA1PdfSign\Entities\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Entities\ValidatedSignedPDF;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\{ManageCert, SignaturePdf, ValidatePdfSignature};
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\Process\Process;
 
 if (!function_exists('signPdf')) {
     /**
      * @throws Throwable
      */
-    function signPdfFromFile(string $pfxPath, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
+    function signPdfFromFile(
+        string $pfxPath,
+        string $password,
+        string $pdfPath,
+        string $mode = SignaturePdf::MODE_RESOURCE,
+        bool   $usePathEnv = false
+    ): BinaryFileResponse|string
     {
         return (new SignaturePdf(
             $pdfPath,
-            (new ManageCert)->fromPfx($pfxPath, $password),
+            (new ManageCert)->fromPfx($pfxPath, $password, $usePathEnv),
             $mode
         ))->signature();
     }
@@ -26,11 +33,17 @@ if (!function_exists('signPdfFromUpload')) {
     /**
      * @throws Throwable
      */
-    function signPdfFromUpload(UploadedFile $uploadedPfx, string $password, string $pdfPath, string $mode = SignaturePdf::MODE_RESOURCE)
+    function signPdfFromUpload(
+        UploadedFile $uploadedPfx,
+        string       $password,
+        string       $pdfPath,
+        string       $mode = SignaturePdf::MODE_RESOURCE,
+        bool         $usePathEnv = false
+    ): BinaryFileResponse|string
     {
         return (new SignaturePdf(
             $pdfPath,
-            (new ManageCert)->fromUpload($uploadedPfx, $password),
+            (new ManageCert)->fromUpload($uploadedPfx, $password, $usePathEnv),
             $mode
         ))->signature();
     }
@@ -40,20 +53,24 @@ if (!function_exists('encryptCertData')) {
     /**
      * @throws Throwable
      */
-    function encryptCertData($uploadedOrPfxPath, string $password): EncryptedCertificate
+    function encryptCertData(
+        UploadedFile|string $uploadedOrPfxPath,
+        string              $password,
+        bool                $usePathEnv = false
+    ): EncryptedCertificate
     {
         $cert = new ManageCert;
 
         if ($uploadedOrPfxPath instanceof UploadedFile) {
-            $cert->fromUpload($uploadedOrPfxPath, $password);
+            $cert->fromUpload($uploadedOrPfxPath, $password, $usePathEnv);
         } else {
-            $cert->fromPfx($uploadedOrPfxPath, $password);
+            $cert->fromPfx($uploadedOrPfxPath, $password, $usePathEnv);
         }
 
         return new EncryptedCertificate(
             certificate: $cert->getEncrypter()->encryptString($cert->getCert()->original),
-            password:    $cert->getEncrypter()->encryptString($password),
-            hash:        $cert->getHashKey() // IMPORTANT, USE ON DECRYPT HELPER
+            password: $cert->getEncrypter()->encryptString($password),
+            hash: $cert->getHashKey() // IMPORTANT, USE ON DECRYPT HELPER
         );
     }
 }
@@ -62,7 +79,13 @@ if (!function_exists('decryptCertData')) {
     /**
      * @throws Throwable
      */
-    function decryptCertData(string $hashKey, string $encryptCert, string $password, bool $isBase64 = false): ManageCert
+    function decryptCertData(
+        string $hashKey,
+        string $encryptCert,
+        string $password,
+        bool   $isBase64 = false,
+        bool   $usePathEnv = false,
+    ): ManageCert
     {
         $cert = (new ManageCert)->setHashKey($hashKey);
         $uuid = Str::orderedUuid();
@@ -73,7 +96,8 @@ if (!function_exists('decryptCertData')) {
 
         return $cert->fromPfx(
             $pfxName,
-            $cert->getEncrypter()->decryptString($password)
+            $cert->getEncrypter()->decryptString($password),
+            $usePathEnv
         );
     }
 }
@@ -109,9 +133,20 @@ if (!function_exists('runCliCommandProcesses')) {
     /**
      * @throws ProcessRunTimeException
      */
-    function runCliCommandProcesses(string $command): void
+    function runCliCommandProcesses(string $command, bool $usePathEnv = false): void
     {
-        $process = Process::fromShellCommandline($command);
+        $env = null;
+
+        if ($usePathEnv) {
+            $env = [
+                'PATH' => getenv('PATH')
+            ];
+        }
+
+        $process = Process::fromShellCommandline(
+            command: $command,
+            env: $env
+        );
         $process->run();
         while ($process->isRunning()) continue;
 
