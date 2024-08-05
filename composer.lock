@@ -5269,16 +5269,16 @@
         },
         {
             "name": "tecnickcom/tc-lib-pdf",
-            "version": "8.0.60",
+            "version": "8.0.62",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-                "reference": "d46e20edf270273834773a1af4e6b4502a93630a"
+                "reference": "ea326dbcd25f8bf3b09a6ae547ce4167353c40f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/d46e20edf270273834773a1af4e6b4502a93630a",
-                "reference": "d46e20edf270273834773a1af4e6b4502a93630a",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/ea326dbcd25f8bf3b09a6ae547ce4167353c40f5",
+                "reference": "ea326dbcd25f8bf3b09a6ae547ce4167353c40f5",
                 "shasum": ""
             },
             "require": {
@@ -5330,7 +5330,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.60"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.62"
             },
             "funding": [
                 {
@@ -5338,7 +5338,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:58:43+00:00"
+            "time": "2024-07-31T17:39:06+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
@@ -9687,5 +9687,5 @@
         "ext-openssl": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
