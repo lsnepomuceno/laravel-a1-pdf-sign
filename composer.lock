@@ -5034,16 +5034,16 @@
         },
         {
             "name": "tecnickcom/tc-lib-barcode",
-            "version": "2.2.1",
+            "version": "2.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-barcode.git",
-                "reference": "6877202fe7b3f746f22032e22d454c60c3db20fc"
+                "reference": "1ec056eb68daf8aab072d9d7908712d7144814fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/6877202fe7b3f746f22032e22d454c60c3db20fc",
-                "reference": "6877202fe7b3f746f22032e22d454c60c3db20fc",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/1ec056eb68daf8aab072d9d7908712d7144814fa",
+                "reference": "1ec056eb68daf8aab072d9d7908712d7144814fa",
                 "shasum": ""
             },
             "require": {
@@ -5052,7 +5052,7 @@
                 "ext-gd": "*",
                 "ext-pcre": "*",
                 "php": ">=8.0",
-                "tecnickcom/tc-lib-color": "^2.0"
+                "tecnickcom/tc-lib-color": "^2.2"
             },
             "require-dev": {
                 "pdepend/pdepend": "2.13.0",
@@ -5122,7 +5122,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-barcode/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-barcode/tree/2.2.1"
+                "source": "https://github.com/tecnickcom/tc-lib-barcode/tree/2.2.3"
             },
             "funding": [
                 {
@@ -5130,20 +5130,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:55:21+00:00"
+            "time": "2024-08-18T14:47:12+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-color",
-            "version": "2.0.8",
+            "version": "2.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-color.git",
-                "reference": "62a67d7795a3d303e5029dd3ffc7b2d5f8bf614b"
+                "reference": "14fc157ae64767cc6761e9126f7ec7e5b27bf1cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/62a67d7795a3d303e5029dd3ffc7b2d5f8bf614b",
-                "reference": "62a67d7795a3d303e5029dd3ffc7b2d5f8bf614b",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/14fc157ae64767cc6761e9126f7ec7e5b27bf1cb",
+                "reference": "14fc157ae64767cc6761e9126f7ec7e5b27bf1cb",
                 "shasum": ""
             },
             "require": {
@@ -5191,7 +5191,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-color/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-color/tree/2.0.8"
+                "source": "https://github.com/tecnickcom/tc-lib-color/tree/2.2.2"
             },
             "funding": [
                 {
@@ -5199,20 +5199,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:53:29+00:00"
+            "time": "2024-08-18T14:45:34+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-file",
-            "version": "2.0.11",
+            "version": "2.0.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-file.git",
-                "reference": "ddd3a2d99b4c6c45a98a2a456fe3184242a476f0"
+                "reference": "9bb2c364062d87918e2b0da31c12372660a13bca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/ddd3a2d99b4c6c45a98a2a456fe3184242a476f0",
-                "reference": "ddd3a2d99b4c6c45a98a2a456fe3184242a476f0",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/9bb2c364062d87918e2b0da31c12372660a13bca",
+                "reference": "9bb2c364062d87918e2b0da31c12372660a13bca",
                 "shasum": ""
             },
             "require": {
@@ -5257,7 +5257,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-file/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-file/tree/2.0.11"
+                "source": "https://github.com/tecnickcom/tc-lib-file/tree/2.0.13"
             },
             "funding": [
                 {
@@ -5265,20 +5265,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:53:43+00:00"
+            "time": "2024-08-18T14:45:46+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf",
-            "version": "8.0.62",
+            "version": "8.0.77",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-                "reference": "ea326dbcd25f8bf3b09a6ae547ce4167353c40f5"
+                "reference": "29aff776b584cdb72ea51dd96dbfa3a827e4adbe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/ea326dbcd25f8bf3b09a6ae547ce4167353c40f5",
-                "reference": "ea326dbcd25f8bf3b09a6ae547ce4167353c40f5",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/29aff776b584cdb72ea51dd96dbfa3a827e4adbe",
+                "reference": "29aff776b584cdb72ea51dd96dbfa3a827e4adbe",
                 "shasum": ""
             },
             "require": {
@@ -5286,13 +5286,13 @@
                 "ext-pcre": "*",
                 "php": ">=8.0",
                 "tecnickcom/tc-lib-barcode": "^2.2",
-                "tecnickcom/tc-lib-color": "^2.0",
+                "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-file": "^2.0",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1",
-                "tecnickcom/tc-lib-pdf-font": "^2.2",
-                "tecnickcom/tc-lib-pdf-graph": "^2.0",
-                "tecnickcom/tc-lib-pdf-image": "^2.0",
-                "tecnickcom/tc-lib-pdf-page": "^4.0",
+                "tecnickcom/tc-lib-pdf-font": "^2.5",
+                "tecnickcom/tc-lib-pdf-graph": "^2.1",
+                "tecnickcom/tc-lib-pdf-image": "^2.1",
+                "tecnickcom/tc-lib-pdf-page": "^4.2",
                 "tecnickcom/tc-lib-unicode": "^2.0",
                 "tecnickcom/tc-lib-unicode-data": "^2.0"
             },
@@ -5330,7 +5330,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.62"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.77"
             },
             "funding": [
                 {
@@ -5338,20 +5338,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-07-31T17:39:06+00:00"
+            "time": "2024-08-27T08:33:13+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
-            "version": "2.1.2",
+            "version": "2.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
-                "reference": "20dc0dc1c0a19ae7caee3445ac10db2f96574118"
+                "reference": "59ec05413500515a119b0741210b6b38402dfde3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/20dc0dc1c0a19ae7caee3445ac10db2f96574118",
-                "reference": "20dc0dc1c0a19ae7caee3445ac10db2f96574118",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/59ec05413500515a119b0741210b6b38402dfde3",
+                "reference": "59ec05413500515a119b0741210b6b38402dfde3",
                 "shasum": ""
             },
             "require": {
@@ -5399,7 +5399,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/2.1.2"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/2.1.5"
             },
             "funding": [
                 {
@@ -5407,27 +5407,27 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:54:00+00:00"
+            "time": "2024-08-30T06:58:13+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-font",
-            "version": "2.2.3",
+            "version": "2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-font.git",
-                "reference": "7e3591c5d4aa3c06d2916dda82a29685bd9b793d"
+                "reference": "6537d65aa7fbc63ab9aae5eb6c69900c6d4b6905"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/7e3591c5d4aa3c06d2916dda82a29685bd9b793d",
-                "reference": "7e3591c5d4aa3c06d2916dda82a29685bd9b793d",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/6537d65aa7fbc63ab9aae5eb6c69900c6d4b6905",
+                "reference": "6537d65aa7fbc63ab9aae5eb6c69900c6d4b6905",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-pcre": "*",
                 "ext-zlib": "*",
-                "php": ">=5.4.0",
+                "php": ">=8.0",
                 "tecnickcom/tc-lib-file": "^2.0",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1",
                 "tecnickcom/tc-lib-unicode-data": "^2.0"
@@ -5468,7 +5468,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-font/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-font/tree/2.2.3"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-font/tree/2.5.0"
             },
             "funding": [
                 {
@@ -5476,26 +5476,26 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:57:44+00:00"
+            "time": "2024-08-24T13:12:13+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-graph",
-            "version": "2.0.12",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-graph.git",
-                "reference": "8727f40f95f03c550d90ae740bb420b2ae3682c4"
+                "reference": "dc5d6703cc5e9d0756b0ab2b93e9bd54b7e95d4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/8727f40f95f03c550d90ae740bb420b2ae3682c4",
-                "reference": "8727f40f95f03c550d90ae740bb420b2ae3682c4",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/dc5d6703cc5e9d0756b0ab2b93e9bd54b7e95d4b",
+                "reference": "dc5d6703cc5e9d0756b0ab2b93e9bd54b7e95d4b",
                 "shasum": ""
             },
             "require": {
                 "ext-zlib": "*",
                 "php": ">=8.0",
-                "tecnickcom/tc-lib-color": "^2.0",
+                "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
             "require-dev": {
@@ -5532,7 +5532,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-graph/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-graph/tree/2.0.12"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-graph/tree/2.2.0"
             },
             "funding": [
                 {
@@ -5540,27 +5540,27 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:56:35+00:00"
+            "time": "2024-08-29T08:08:37+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-image",
-            "version": "2.0.12",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-image.git",
-                "reference": "dae84ed9ecc0c90c815f9db0a66facbb2ef2c81c"
+                "reference": "8ccba63917b92bea730f4f3039b771bae4393013"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/dae84ed9ecc0c90c815f9db0a66facbb2ef2c81c",
-                "reference": "dae84ed9ecc0c90c815f9db0a66facbb2ef2c81c",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/8ccba63917b92bea730f4f3039b771bae4393013",
+                "reference": "8ccba63917b92bea730f4f3039b771bae4393013",
                 "shasum": ""
             },
             "require": {
                 "ext-gd": "*",
                 "ext-zlib": "*",
                 "php": ">=8.0",
-                "tecnickcom/tc-lib-color": "^2.0",
+                "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-file": "^2.0",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
@@ -5599,7 +5599,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-image/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-image/tree/2.0.12"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-image/tree/2.1.1"
             },
             "funding": [
                 {
@@ -5607,27 +5607,27 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:56:54+00:00"
+            "time": "2024-08-18T14:48:40+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-page",
-            "version": "4.0.8",
+            "version": "4.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-page.git",
-                "reference": "9f42eb77bad8d69b42d970decc2ec2c01a220b91"
+                "reference": "df9f7f0b17eeb7eba526dbaa4ce4a32f49317c97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/9f42eb77bad8d69b42d970decc2ec2c01a220b91",
-                "reference": "9f42eb77bad8d69b42d970decc2ec2c01a220b91",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/df9f7f0b17eeb7eba526dbaa4ce4a32f49317c97",
+                "reference": "df9f7f0b17eeb7eba526dbaa4ce4a32f49317c97",
                 "shasum": ""
             },
             "require": {
                 "ext-date": "*",
                 "ext-zlib": "*",
                 "php": ">=8.0",
-                "tecnickcom/tc-lib-color": "^2.0",
+                "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
             "require-dev": {
@@ -5663,7 +5663,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-page/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-page/tree/4.0.8"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-page/tree/4.2.0"
             },
             "funding": [
                 {
@@ -5671,20 +5671,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:56:18+00:00"
+            "time": "2024-08-27T08:29:02+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-unicode",
-            "version": "2.0.11",
+            "version": "2.0.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode.git",
-                "reference": "55b48356a7fdba80197dee14495c225b6fed7ad1"
+                "reference": "287d616ce2b97206514b61ad829358b109199ffb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/55b48356a7fdba80197dee14495c225b6fed7ad1",
-                "reference": "55b48356a7fdba80197dee14495c225b6fed7ad1",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/287d616ce2b97206514b61ad829358b109199ffb",
+                "reference": "287d616ce2b97206514b61ad829358b109199ffb",
                 "shasum": ""
             },
             "require": {
@@ -5727,7 +5727,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-unicode/tree/2.0.11"
+                "source": "https://github.com/tecnickcom/tc-lib-unicode/tree/2.0.13"
             },
             "funding": [
                 {
@@ -5735,20 +5735,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:56:01+00:00"
+            "time": "2024-08-18T14:47:53+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-unicode-data",
-            "version": "2.0.11",
+            "version": "2.0.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
-                "reference": "3f362142d4f15949d0a1946d63576bab588b484b"
+                "reference": "e82487c457e7ff9cb7ed29a53130099bc293c412"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/3f362142d4f15949d0a1946d63576bab588b484b",
-                "reference": "3f362142d4f15949d0a1946d63576bab588b484b",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/e82487c457e7ff9cb7ed29a53130099bc293c412",
+                "reference": "e82487c457e7ff9cb7ed29a53130099bc293c412",
                 "shasum": ""
             },
             "require": {
@@ -5788,7 +5788,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode-data/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/2.0.11"
+                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/2.0.13"
             },
             "funding": [
                 {
@@ -5796,7 +5796,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-04-12T04:54:37+00:00"
+            "time": "2024-08-18T14:46:31+00:00"
         },
         {
             "name": "tecnickcom/tcpdf",
