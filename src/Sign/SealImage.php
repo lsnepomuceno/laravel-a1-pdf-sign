@@ -4,30 +4,35 @@ namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Closure;
 use Illuminate\Support\Fluent;
+use Intervention\Image\Drivers\AbstractDriver;
+use Intervention\Image\Drivers\Gd\Driver as GDDriver;
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager as IMG;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
 
 class SealImage
 {
-    private string $imagePathOrContent, $imageDriver;
+    private string $imagePathOrContent;
+
+    private AbstractDriver $imageDriver;
 
     private array $textFieldsDefinitions = [];
 
     private bool $previousTextBreakLine = false;
 
-    const
-        IMAGE_DRIVER_GD = 'gd',
-        IMAGE_DRIVER_IMAGICK = 'imagick',
-        FONT_SIZE_SMALL = 'FONT_SIZE_SMALL',
-        FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM',
-        FONT_SIZE_LARGE = 'FONT_SIZE_LARGE',
-        RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT',
-        RETURN_BASE64 = 'RETURN_BASE64';
+    const IMAGE_DRIVER_GD = 'gd';
+    const IMAGE_DRIVER_IMAGICK = 'imagick';
+    const FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
+    const FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
+    const FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
+    const RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
+    const RETURN_BASE64 = 'RETURN_BASE64';
 
     /**
      * @throws InvalidImageDriverException
      */
-    public function __construct(string $imageDriver = self::IMAGE_DRIVER_GD)
+    public function __construct(AbstractDriver $imageDriver = new GDDriver)
     {
         $this->setImageDriver($imageDriver);
     }
@@ -39,9 +44,9 @@ class SealImage
         string     $dueDateFormat = 'd/m/Y H:i:s'
     ): string
     {
-        $subject    = new Fluent($cert->getCert()->data['subject']);
-        $firstLine  = $subject->commonName ?? $subject->organizationName;
-        $issuer     = new Fluent($cert->getCert()->data['issuer']);
+        $subject = new Fluent($cert->getCert()->data['subject']);
+        $firstLine = $subject->commonName ?? $subject->organizationName;
+        $issuer = new Fluent($cert->getCert()->data['issuer']);
         $secondLine = $issuer->organizationalUnitName ?? $issuer->commonName ?? $issuer->organizationName;
 
         $certDueDate = $showDueDate
@@ -55,9 +60,9 @@ class SealImage
             $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
 
             $size = match ($fontSize) {
-                self::FONT_SIZE_SMALL  => 15,
+                self::FONT_SIZE_SMALL => 15,
                 self::FONT_SIZE_MEDIUM => 20,
-                default                => 28
+                default => 28
             };
 
             $font->size($size);
@@ -69,21 +74,21 @@ class SealImage
         return $selfObj
             ->setImagePath()
             ->addTextField(
-                text    : $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
-                textX   : 160,
-                textY   : 80,
+                text: $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
+                textX: 160,
+                textY: 80,
                 callback: $callback
             )
             ->addTextField(
-                text    : $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
-                textX   : 160,
-                textY   : 150,
+                text: $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
+                textX: 160,
+                textY: 150,
                 callback: $callback
             )
             ->addTextField(
-                text    : $certDueDate ?? '',
-                textX   : 160,
-                textY   : 250,
+                text: $certDueDate ?? '',
+                textX: 160,
+                textY: 250,
                 callback: $callback)
             ->generateImage();
     }
@@ -91,9 +96,9 @@ class SealImage
     private function breakText(string $text, string $fontSize = self::FONT_SIZE_LARGE): string
     {
         $cropSize = match ($fontSize) {
-            self::FONT_SIZE_SMALL  => 60,
+            self::FONT_SIZE_SMALL => 60,
             self::FONT_SIZE_MEDIUM => 48,
-            default                => 35
+            default => 35
         };
 
         $this->previousTextBreakLine = strlen($text) >= $cropSize;
@@ -101,7 +106,7 @@ class SealImage
         if ($this->previousTextBreakLine) {
             $textSplit = str_split(string: $text, length: ($cropSize - 3));
             $textSplit = array_map(callback: 'trim', array: $textSplit);
-            $text      = join(separator: PHP_EOL, array: $textSplit);
+            $text = join(separator: PHP_EOL, array: $textSplit);
         }
 
         return $text;
@@ -110,10 +115,10 @@ class SealImage
     /**
      * @throws InvalidImageDriverException
      */
-    public function setImageDriver(string $imageDriver): self
+    public function setImageDriver(AbstractDriver $imageDriver): self
     {
-        if (!in_array($imageDriver, [self::IMAGE_DRIVER_GD, self::IMAGE_DRIVER_IMAGICK])) {
-            throw new InvalidImageDriverException($imageDriver);
+        if (!in_array($imageDriver::class, [GDDriver::class, ImagickDriver::class])) {
+            throw new InvalidImageDriverException($imageDriver::class);
         }
 
         $this->imageDriver = $imageDriver;
@@ -139,9 +144,9 @@ class SealImage
     ): self
     {
         $newText = [
-            'text'     => $text,
-            'x'        => $textX,
-            'y'        => $textY,
+            'text' => $text,
+            'x' => $textX,
+            'y' => $textY,
             'callback' => $callback ?? fn() => null
         ];
 
@@ -155,8 +160,8 @@ class SealImage
      */
     public function generateImage(string $returnType = self::RETURN_IMAGE_CONTENT): string
     {
-        $image = new IMG(['driver' => $this->imageDriver]);
-        $image = $image->make($this->imagePathOrContent);
+        $image = new IMG(driver: $this->imageDriver);
+        $image = $image->read($this->imagePathOrContent);
 
         foreach ($this->textFieldsDefinitions as $text) {
             ['text' => $text, 'x' => $x, 'y' => $y, 'callback' => $callback] = $text;
@@ -164,9 +169,9 @@ class SealImage
         }
 
         if ($returnType === self::RETURN_IMAGE_CONTENT) {
-            return $image->encode(format: 'png');
+            return $image->encode(encoder: new JpegEncoder)->toString();
         }
 
-        return $image->encode(format: 'data-url')->encoded;
+        return $image->encode(encoder: new JpegEncoder)->toDataUri();
     }
 }

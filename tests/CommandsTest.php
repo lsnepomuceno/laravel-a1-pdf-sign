@@ -25,36 +25,34 @@ class CommandsTest extends TestCase
     {
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
-        $pdfPath    = __DIR__ . '/Resources/test.pdf';
-        $fileName   = a1TempDir(true, '.pdf');
+        $pdfPath = __DIR__ . '/Resources/test.pdf';
+        $fileName = a1TempDir(true, '.pdf');
         $parameters = [
-            'pdfPath'  => $pdfPath,
-            'pfxPath'  => $pfxPath,
+            'pdfPath' => $pdfPath,
+            'pfxPath' => $pfxPath,
             'password' => $pass,
             'fileName' => $fileName
         ];
 
         $this->artisan('pdf:sign', $parameters)
-             ->assertSuccessful()
-             ->expectsOutput('Your PDF file is being signed!')
-             ->expectsOutput("Your file has been signed and is available at: \"{$fileName}\"");
-
-        File::delete([$pfxPath, $fileName]);
+            ->assertSuccessful()
+            ->expectsOutput('Your PDF file is being signed!')
+            ->expectsOutput("Your file has been signed and is available at: \"{$fileName}\"");
     }
 
     public function testWhenTheSignatureCommandDoesNotFinishSuccessfully()
     {
         $parameters = [
-            'pdfPath'  => a1TempDir(true, '.pdf'),
-            'pfxPath'  => a1TempDir(true, '.pfx'),
+            'pdfPath' => a1TempDir(true, '.pdf'),
+            'pfxPath' => a1TempDir(true, '.pfx'),
             'password' => Str::random(32),
             'fileName' => a1TempDir(true, '.pdf')
         ];
 
         $this->artisan('pdf:sign', $parameters)
 //             ->assertFailed()
-             ->expectsOutput('Your PDF file is being signed!')
-             ->expectsOutputToContain('Could not sign your file, error occurred:');
+            ->expectsOutput('Your PDF file is being signed!')
+            ->expectsOutputToContain('Could not sign your file, error occurred:');
 
     }
 
@@ -72,7 +70,7 @@ class CommandsTest extends TestCase
         $cert = new ManageCert;
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
-        $signed  = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
+        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
         $pdfPath = a1TempDir(true, '.pdf');
 
         File::put($pdfPath, $signed);
@@ -85,23 +83,21 @@ class CommandsTest extends TestCase
         ];
 
         $this->artisan('pdf:validate-signature', $parameters)
-             ->assertSuccessful()
-             ->expectsOutput('Your PDF document is being validated.')
-             ->expectsOutput('Your PDF document is VALID');
-
-        File::delete([$pfxPath, $pdfPath]);
+            ->assertSuccessful()
+            ->expectsOutput('Your PDF document is being validated.')
+            ->expectsOutput('Your PDF document is VALID');
     }
 
     public function testWhenAnUnsignedDocumentThrowsAnErrorWhenRunningAValidationCommand()
     {
-        $pdfPath    = __DIR__ . '/Resources/test.pdf';
+        $pdfPath = __DIR__ . '/Resources/test.pdf';
         $parameters = [
             'pdfPath' => $pdfPath
         ];
 
         $this->artisan('pdf:validate-signature', $parameters)
-             ->assertFailed()
-             ->expectsOutput('Your PDF document is being validated.')
-             ->expectsOutputToContain('Unable to validate your file signature, an error occurred:');
+            ->assertFailed()
+            ->expectsOutput('Your PDF document is being validated.')
+            ->expectsOutputToContain('Unable to validate your file signature, an error occurred:');
     }
 }

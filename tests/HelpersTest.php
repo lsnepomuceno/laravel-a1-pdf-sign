@@ -121,7 +121,6 @@ class HelpersTest extends TestCase
         $fileExists = File::exists($pdfPath);
 
         $this->assertTrue($fileExists);
-        File::delete([$pfxPath, $pdfPath]);
     }
 
     /**
@@ -143,8 +142,6 @@ class HelpersTest extends TestCase
         foreach (['certificate', 'password', 'hash'] as $key) {
             $this->assertArrayHasKey($key, $encryptedData->toArray());
         }
-
-        File::delete([$pfxPath]);
     }
 
     public function testWhenTheA1TempDirHelperCreatesTheFilesCorrectly()
@@ -189,7 +186,5 @@ class HelpersTest extends TestCase
 
         $validation = validatePdfSignature($pdfPath);
         $this->assertTrue($validation->isValidated);
-
-        File::delete([$pfxPath, $pdfPath]);
     }
 }
