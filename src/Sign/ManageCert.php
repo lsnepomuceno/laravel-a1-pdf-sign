@@ -75,10 +75,12 @@ class ManageCert
         }
 
         $this->password = $password;
-        $shellArgPassword = escapeshellarg($password);
         $output = a1TempDir(true, '.crt');
+        $shellPfxPath = escapeshellarg($pfxPath);
+        $shellOutput = escapeshellarg($output);
+        $shellArgPassword = escapeshellarg($password);
         $legacyFlag = $this->isLegacy ? self::LEGACY_FLAG : '';
-        $openSslCommand = "openssl pkcs12 -in {$pfxPath} -out {$output} -nodes -password pass:{$shellArgPassword} {$legacyFlag}";
+        $openSslCommand = "openssl pkcs12 -in {$shellPfxPath} -out {$shellOutput} -nodes -password pass:{$shellArgPassword} {$legacyFlag}";
 
         runCliCommandProcesses($openSslCommand, $usePathEnv);
 
