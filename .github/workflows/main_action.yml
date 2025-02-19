@@ -2,9 +2,15 @@ name: A1 Pdf Sign Tests
 
 on:
   push:
-    branches: [ main, dev, v1.x-dev ]
+    branches:
+      - main
+      - dev
+      - v1.x-dev
   pull_request:
-    branches: [ main, dev, v1.x-dev ]
+    branches:
+      - main
+      - dev
+      - v1.x-dev
 
 permissions:
   contents: read
@@ -12,16 +18,23 @@ permissions:
 jobs:
   run:
     runs-on: ${{ matrix.operating-system }}
+
     strategy:
       fail-fast: false
       matrix:
-        operating-system: [ ubuntu-latest ]
-        php-versions: [ '8.1', '8.2', '8.3' ]
-        laravel-version: [ '11.*','10.*','9.*' ]
+        operating-system: [ubuntu-latest]
+        php-versions: ['8.1', '8.2', '8.3']
+        laravel-version: ['9.*', '10.*', '11.*', '12.*']
+        exclude:
+          - laravel-version: 12.*
+            php-versions: '8.1'
+
     env:
       extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
       key: cache-v5
+
     name: PHP ${{ matrix.php-versions }} - Laravel ${{ matrix.laravel-version }} - ${{ matrix.operating-system}}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
