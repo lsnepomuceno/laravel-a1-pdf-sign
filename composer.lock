@@ -4759,16 +4759,16 @@
         },
         {
             "name": "tecnickcom/tc-lib-barcode",
-            "version": "2.4.0",
+            "version": "2.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-barcode.git",
-                "reference": "bac7e86fb22c22dc69ae121337b77e4a7354793d"
+                "reference": "8d65345d64cdcf8f5e254bd24f26c7e5f966befa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/bac7e86fb22c22dc69ae121337b77e4a7354793d",
-                "reference": "bac7e86fb22c22dc69ae121337b77e4a7354793d",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/8d65345d64cdcf8f5e254bd24f26c7e5f966befa",
+                "reference": "8d65345d64cdcf8f5e254bd24f26c7e5f966befa",
                 "shasum": ""
             },
             "require": {
@@ -4776,14 +4776,14 @@
                 "ext-date": "*",
                 "ext-gd": "*",
                 "ext-pcre": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-color": "^2.2"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -4847,7 +4847,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-barcode/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-barcode/tree/2.4.0"
+                "source": "https://github.com/tecnickcom/tc-lib-barcode/tree/2.4.3"
             },
             "funding": [
                 {
@@ -4855,31 +4855,31 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:25:11+00:00"
+            "time": "2025-02-07T10:37:48+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-color",
-            "version": "2.2.5",
+            "version": "2.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-color.git",
-                "reference": "bddf746992e46026ac7387d56042ba6d9d14573d"
+                "reference": "77d68d5206aef08ee0f3b69c0c6df4e559ad28bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/bddf746992e46026ac7387d56042ba6d9d14573d",
-                "reference": "bddf746992e46026ac7387d56042ba6d9d14573d",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/77d68d5206aef08ee0f3b69c0c6df4e559ad28bc",
+                "reference": "77d68d5206aef08ee0f3b69c0c6df4e559ad28bc",
                 "shasum": ""
             },
             "require": {
                 "ext-pcre": "*",
-                "php": ">=8.0"
+                "php": ">=8.1"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -4916,7 +4916,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-color/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-color/tree/2.2.5"
+                "source": "https://github.com/tecnickcom/tc-lib-color/tree/2.2.8"
             },
             "funding": [
                 {
@@ -4924,20 +4924,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:23:21+00:00"
+            "time": "2025-02-07T10:30:03+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-file",
-            "version": "2.1.2",
+            "version": "2.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-file.git",
-                "reference": "f550489aaa828f4275d047f9787b19dddef1f206"
+                "reference": "a14a94795a393e6dec252a24fac307ffa1d0aa3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/f550489aaa828f4275d047f9787b19dddef1f206",
-                "reference": "f550489aaa828f4275d047f9787b19dddef1f206",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/a14a94795a393e6dec252a24fac307ffa1d0aa3d",
+                "reference": "a14a94795a393e6dec252a24fac307ffa1d0aa3d",
                 "shasum": ""
             },
             "require": {
@@ -4948,8 +4948,8 @@
             "require-dev": {
                 "pdepend/pdepend": "2.16.2",
                 "phpmd/phpmd": "2.15.0",
-                "phpunit/phpunit": "11.5.2 || 10.5.40",
-                "squizlabs/php_codesniffer": "3.11.2"
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -4982,7 +4982,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-file/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-file/tree/2.1.2"
+                "source": "https://github.com/tecnickcom/tc-lib-file/tree/2.1.3"
             },
             "funding": [
                 {
@@ -4990,29 +4990,29 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-12-24T17:45:12+00:00"
+            "time": "2025-02-07T10:30:17+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf",
-            "version": "8.0.82",
+            "version": "8.0.85",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-                "reference": "e952e4d8bf47d741e4e6046d514cbe20563de47c"
+                "reference": "b0eb7997d96255000bbd6f46a463340828a55e2b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/e952e4d8bf47d741e4e6046d514cbe20563de47c",
-                "reference": "e952e4d8bf47d741e4e6046d514cbe20563de47c",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/b0eb7997d96255000bbd6f46a463340828a55e2b",
+                "reference": "b0eb7997d96255000bbd6f46a463340828a55e2b",
                 "shasum": ""
             },
             "require": {
                 "ext-date": "*",
                 "ext-pcre": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-barcode": "^2.4",
                 "tecnickcom/tc-lib-color": "^2.2",
-                "tecnickcom/tc-lib-file": "^2.0",
+                "tecnickcom/tc-lib-file": "^2.1",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1",
                 "tecnickcom/tc-lib-pdf-font": "^2.6",
                 "tecnickcom/tc-lib-pdf-graph": "^2.2",
@@ -5022,10 +5022,10 @@
                 "tecnickcom/tc-lib-unicode-data": "^2.0"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5055,7 +5055,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.82"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf/tree/8.0.85"
             },
             "funding": [
                 {
@@ -5063,20 +5063,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:28:28+00:00"
+            "time": "2025-02-07T10:45:41+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
-            "version": "2.1.10",
+            "version": "2.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
-                "reference": "eaf0b9ebd96322e56e66a48a3077a20ad75f4862"
+                "reference": "058119347fb15d0473a9b056b8ee504c393ed515"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/eaf0b9ebd96322e56e66a48a3077a20ad75f4862",
-                "reference": "eaf0b9ebd96322e56e66a48a3077a20ad75f4862",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/058119347fb15d0473a9b056b8ee504c393ed515",
+                "reference": "058119347fb15d0473a9b056b8ee504c393ed515",
                 "shasum": ""
             },
             "require": {
@@ -5089,8 +5089,8 @@
             "require-dev": {
                 "pdepend/pdepend": "2.16.2",
                 "phpmd/phpmd": "2.15.0",
-                "phpunit/phpunit": "11.5.2 || 10.5.40",
-                "squizlabs/php_codesniffer": "3.11.2"
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "suggest": {
                 "ext-posix": "*"
@@ -5124,7 +5124,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/2.1.10"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-encrypt/tree/2.1.11"
             },
             "funding": [
                 {
@@ -5132,20 +5132,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-12-24T18:04:10+00:00"
+            "time": "2025-02-07T10:30:31+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-font",
-            "version": "2.6.5",
+            "version": "2.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-font.git",
-                "reference": "b67b979d2fb16b6f6b26dbb0641d86b78cc5a746"
+                "reference": "316bdc5bdf820a564be05d7efcb194254f8982c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/b67b979d2fb16b6f6b26dbb0641d86b78cc5a746",
-                "reference": "b67b979d2fb16b6f6b26dbb0641d86b78cc5a746",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/316bdc5bdf820a564be05d7efcb194254f8982c3",
+                "reference": "316bdc5bdf820a564be05d7efcb194254f8982c3",
                 "shasum": ""
             },
             "require": {
@@ -5160,8 +5160,8 @@
             "require-dev": {
                 "pdepend/pdepend": "2.16.2",
                 "phpmd/phpmd": "2.15.0",
-                "phpunit/phpunit": "11.5.2 || 10.5.40",
-                "squizlabs/php_codesniffer": "3.11.2"
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5193,7 +5193,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-font/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-font/tree/2.6.5"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-font/tree/2.6.6"
             },
             "funding": [
                 {
@@ -5201,33 +5201,33 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-12-26T12:21:55+00:00"
+            "time": "2025-02-07T10:44:19+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-graph",
-            "version": "2.2.4",
+            "version": "2.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-graph.git",
-                "reference": "9d71f4483772c447b2d03581a12b4f229710d765"
+                "reference": "26e61ae5d77c1a17579e7a515eb59bd01b5c4ddf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/9d71f4483772c447b2d03581a12b4f229710d765",
-                "reference": "9d71f4483772c447b2d03581a12b4f229710d765",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/26e61ae5d77c1a17579e7a515eb59bd01b5c4ddf",
+                "reference": "26e61ae5d77c1a17579e7a515eb59bd01b5c4ddf",
                 "shasum": ""
             },
             "require": {
                 "ext-zlib": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5257,7 +5257,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-graph/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-graph/tree/2.2.4"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-graph/tree/2.2.7"
             },
             "funding": [
                 {
@@ -5265,35 +5265,35 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:26:24+00:00"
+            "time": "2025-02-07T10:39:15+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-image",
-            "version": "2.1.4",
+            "version": "2.1.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-image.git",
-                "reference": "a8d19441863b879f38322bda767158849b53031b"
+                "reference": "5c203b9cab4204c3ad2cb839f07789f45ebe9355"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/a8d19441863b879f38322bda767158849b53031b",
-                "reference": "a8d19441863b879f38322bda767158849b53031b",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/5c203b9cab4204c3ad2cb839f07789f45ebe9355",
+                "reference": "5c203b9cab4204c3ad2cb839f07789f45ebe9355",
                 "shasum": ""
             },
             "require": {
                 "ext-gd": "*",
                 "ext-zlib": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-color": "^2.2",
-                "tecnickcom/tc-lib-file": "^2.0",
+                "tecnickcom/tc-lib-file": "^2.1",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5324,7 +5324,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-image/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-image/tree/2.1.4"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-image/tree/2.1.7"
             },
             "funding": [
                 {
@@ -5332,34 +5332,34 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:26:37+00:00"
+            "time": "2025-02-07T10:39:30+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-page",
-            "version": "4.2.3",
+            "version": "4.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf-page.git",
-                "reference": "0524884e5ab71908c2d14f2443fa29cbaae06d77"
+                "reference": "5b0b4efe1e03e0cb6d4638f4d69cf83bf2152097"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/0524884e5ab71908c2d14f2443fa29cbaae06d77",
-                "reference": "0524884e5ab71908c2d14f2443fa29cbaae06d77",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/5b0b4efe1e03e0cb6d4638f4d69cf83bf2152097",
+                "reference": "5b0b4efe1e03e0cb6d4638f4d69cf83bf2152097",
                 "shasum": ""
             },
             "require": {
                 "ext-date": "*",
                 "ext-zlib": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-color": "^2.2",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.1"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5388,7 +5388,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-pdf-page/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-pdf-page/tree/4.2.3"
+                "source": "https://github.com/tecnickcom/tc-lib-pdf-page/tree/4.2.6"
             },
             "funding": [
                 {
@@ -5396,33 +5396,33 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:26:08+00:00"
+            "time": "2025-02-07T10:39:00+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-unicode",
-            "version": "2.0.16",
+            "version": "2.0.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode.git",
-                "reference": "aca88c4764650e06fc398e4e3a2cb7b61b23f2e1"
+                "reference": "568fcc0dad08c11d6f2f6a6bfc6e4795fe4739a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/aca88c4764650e06fc398e4e3a2cb7b61b23f2e1",
-                "reference": "aca88c4764650e06fc398e4e3a2cb7b61b23f2e1",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/568fcc0dad08c11d6f2f6a6bfc6e4795fe4739a8",
+                "reference": "568fcc0dad08c11d6f2f6a6bfc6e4795fe4739a8",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
                 "ext-pcre": "*",
-                "php": ">=8.0",
+                "php": ">=8.1",
                 "tecnickcom/tc-lib-unicode-data": "^2.0"
             },
             "require-dev": {
-                "pdepend/pdepend": "2.13.0",
-                "phpmd/phpmd": "2.13.0",
-                "phpunit/phpunit": "10.1.2 || 9.6.13",
-                "squizlabs/php_codesniffer": "3.7.2"
+                "pdepend/pdepend": "2.16.2",
+                "phpmd/phpmd": "2.15.0",
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5452,7 +5452,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-unicode/tree/2.0.16"
+                "source": "https://github.com/tecnickcom/tc-lib-unicode/tree/2.0.19"
             },
             "funding": [
                 {
@@ -5460,20 +5460,20 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-11-22T20:25:54+00:00"
+            "time": "2025-02-07T10:38:36+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-unicode-data",
-            "version": "2.0.18",
+            "version": "2.0.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
-                "reference": "3de9acbf5f868e21c1c9a7d78f83a563a79038b1"
+                "reference": "e07852d634f30e3c06280633339f7c6c636348e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/3de9acbf5f868e21c1c9a7d78f83a563a79038b1",
-                "reference": "3de9acbf5f868e21c1c9a7d78f83a563a79038b1",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/e07852d634f30e3c06280633339f7c6c636348e8",
+                "reference": "e07852d634f30e3c06280633339f7c6c636348e8",
                 "shasum": ""
             },
             "require": {
@@ -5482,8 +5482,8 @@
             "require-dev": {
                 "pdepend/pdepend": "2.16.2",
                 "phpmd/phpmd": "2.15.0",
-                "phpunit/phpunit": "11.5.2 || 10.5.40",
-                "squizlabs/php_codesniffer": "3.11.2"
+                "phpunit/phpunit": "12.0.1 || 11.5.7 || 10.5.40",
+                "squizlabs/php_codesniffer": "3.11.3"
             },
             "type": "library",
             "autoload": {
@@ -5513,7 +5513,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/tc-lib-unicode-data/issues",
-                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/2.0.18"
+                "source": "https://github.com/tecnickcom/tc-lib-unicode-data/tree/2.0.19"
             },
             "funding": [
                 {
@@ -5521,7 +5521,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-12-24T18:10:59+00:00"
+            "time": "2025-02-07T10:31:00+00:00"
         },
         {
             "name": "tecnickcom/tcpdf",
@@ -9682,5 +9682,5 @@
         "ext-openssl": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
