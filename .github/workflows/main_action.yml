@@ -1,8 +1,6 @@
 name: A1 Pdf Sign Tests
 
 on:
-  push:
-    branches: [ main, dev, v1.x-dev ]
   pull_request:
     branches: [ main, dev, v1.x-dev ]
 
@@ -10,62 +8,72 @@ permissions:
   contents: read
 
 jobs:
-  run:
-    runs-on: ${{ matrix.operating-system }}
+  test:
+    runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
-        operating-system: [ ubuntu-latest ]
-        php-versions: [ '8.1', '8.2', '8.3' ]
-        laravel-version: [ '11.*','10.*','9.*' ]
-    env:
-      extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
-      key: cache-v5
-    name: PHP ${{ matrix.php-versions }} - Laravel ${{ matrix.laravel-version }} - ${{ matrix.operating-system}}
+        include:
+          # Laravel 9 supports PHP 8.1–8.2
+          - php: 8.1
+            laravel: 9.*
+          - php: 8.2
+            laravel: 9.*
+
+          # Laravel 10 supports PHP 8.1–8.3
+          - php: 8.1
+            laravel: 10.*
+          - php: 8.2
+            laravel: 10.*
+          - php: 8.3
+            laravel: 10.*
+
+          # Laravel 11 supports PHP 8.2–8.4
+          - php: 8.2
+            laravel: 11.*
+          - php: 8.3
+            laravel: 11.*
+          - php: 8.4
+            laravel: 11.*
+
+          # Laravel 12 supports PHP 8.2–8.4
+          - php: 8.2
+            laravel: 12.*
+          - php: 8.3
+            laravel: 12.*
+          - php: 8.4
+            laravel: 12.*
+
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup cache environment
-        id: cache-env
-        uses: shivammathur/cache-extensions@develop
-        with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: ${{ env.extensions }}
-          key: ${{ env.key }}
-
-      - name: Cache extensions
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.cache-env.outputs.dir }}
-          key: ${{ steps.cache-env.outputs.key }}
-          restore-keys: ${{ steps.cache-env.outputs.key }}
-
-      - name: Setup PHP with latest versions
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
-        env:
-          update: true
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
+          coverage: none
 
-      - name: Testing PHP version
+      - name: Validate PHP and Composer
         run: |
           php -v
-          php -r "if(strpos(phpversion(), '${{ matrix.php-versions }}') === false) {throw new Exception('Wrong PHP version Installed');}"
-
-      - name: Testing Composer version
-        run: |
           composer -V
-          php -r "if(strpos(@exec('composer -V'), 'Composer version') === false) {throw new Exception('Composer not found');}"
-
-      - name: Validate composer.json and composer.lock
-        run: |
           composer validate
+
+      - name: Configure Laravel Version
+        run: |
+          composer require "illuminate/support:${{ matrix.laravel }}" \
+                           "illuminate/encryption:${{ matrix.laravel }}" \
+                           "illuminate/http:${{ matrix.laravel }}" \
+                           --no-interaction --no-update
 
       - name: Install dependencies
         run: |
-          composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          composer update --prefer-dist --no-interaction --no-progress
 
-      - name: Execute tests
-        run: |
-          vendor/bin/testbench package:test
+      - name: Run tests
+        run: composer test
