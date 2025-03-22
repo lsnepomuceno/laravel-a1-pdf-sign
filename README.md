@@ -36,9 +36,9 @@
   </tr>
 
   <tr>
-    <td>^8~8.54</td>
+    <td>^8 ~8.54</td>
     <td rowspan="2">^7.4</td>
-    <td>^0~0.0.11</td>
+    <td>^0 ~0.0.11</td>
     <td rowspan="2"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home">Official Doc</a></td>
   </tr>
 
@@ -48,12 +48,21 @@
   </tr>
 
   <tr>
-    <td>^9, ^10 or ^11</td>
-    <td>^8.1, ^8.2 or ^8.3</td>
-    <td>^1</td>
-    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+    <td>^9</td>
+    <td>^8.1 || ^8.2</td>
+    <td rowspan="3">^1</td>
+    <td rowspan="3"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
   </tr>
 
+  <tr>
+    <td>^10</td>
+    <td>^8.1 || ^8.2 || ^8.3</td>
+  </tr>
+
+  <tr>
+    <td>^11 || ^12</td>
+    <td>^8.2 || ^8.3 || ^8.4</td>
+  </tr>
 </table>
 
 
