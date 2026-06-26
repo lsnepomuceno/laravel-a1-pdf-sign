@@ -50,8 +50,8 @@
   <tr>
     <td>^9</td>
     <td>^8.1 || ^8.2</td>
-    <td rowspan="3">^1</td>
-    <td rowspan="3"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+    <td rowspan="4">^1</td>
+    <td rowspan="4"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
   </tr>
 
   <tr>
@@ -60,8 +60,13 @@
   </tr>
 
   <tr>
-    <td>^11 || ^12</td>
+    <td>^11</td>
     <td>^8.2 || ^8.3 || ^8.4</td>
+  </tr>
+
+  <tr>
+    <td>^12</td>
+    <td>^8.2 || ^8.3 || ^8.4 || ^8.5</td>
   </tr>
 </table>
 

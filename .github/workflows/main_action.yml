@@ -37,12 +37,14 @@ jobs:
           - php: 8.4
             laravel: 11.*
 
-          # Laravel 12 supports PHP 8.2–8.4
+          # Laravel 12 supports PHP 8.2–8.5
           - php: 8.2
             laravel: 12.*
           - php: 8.3
             laravel: 12.*
           - php: 8.4
+            laravel: 12.*
+          - php: 8.5
             laravel: 12.*
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
