@@ -1,0 +1,58 @@
+# Local reproduction of the CI matrix.
+#
+#   docker compose -f .docker/compose.yaml run --rm php   composer install
+#   docker compose -f .docker/compose.yaml run --rm php   vendor/bin/pest
+#   docker compose -f .docker/compose.yaml run --rm php85 composer check
+#
+# The `php` service (8.4 by default) covers day-to-day work; php83 and php85
+# cover the edges of the matrix. Each service keeps `vendor/` in its own named
+# volume so switching PHP versions does not invalidate the other install.
+
+x-php: &php
+  build:
+    context: ..
+    dockerfile: .docker/Dockerfile
+  working_dir: /app
+  volumes:
+    - ../:/app
+  environment:
+    COMPOSER_CACHE_DIR: /tmp/composer-cache
+
+services:
+  php:
+    <<: *php
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+      args:
+        PHP_VERSION: "8.4"
+    volumes:
+      - ../:/app
+      - vendor-84:/app/vendor
+
+  php83:
+    <<: *php
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+      args:
+        PHP_VERSION: "8.3"
+    volumes:
+      - ../:/app
+      - vendor-83:/app/vendor
+
+  php85:
+    <<: *php
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+      args:
+        PHP_VERSION: "8.5"
+    volumes:
+      - ../:/app
+      - vendor-85:/app/vendor
+
+volumes:
+  vendor-83:
+  vendor-84:
+  vendor-85:
