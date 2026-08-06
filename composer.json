@@ -52,7 +52,7 @@
     "test": "vendor/bin/pest",
     "test:cov": "vendor/bin/pest --coverage",
     "test:types": "vendor/bin/pest --type-coverage --min=100",
-    "test:mutate": "vendor/bin/pest --mutate",
+    "test:mutate": "vendor/bin/pest --mutate --path=src/Certificates,src/Validation --covered-min=70",
     "lint": "vendor/bin/pint",
     "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
     "check": [
@@ -65,7 +65,7 @@
     "test": "Run the test suite.",
     "test:cov": "Run the test suite with line coverage (needs pcov or xdebug).",
     "test:types": "Report type coverage across src/.",
-    "test:mutate": "Run mutation testing.",
+    "test:mutate": "Run mutation testing over the certificate and validation code.",
     "lint": "Fix code style with Pint (append --test to only check).",
     "analyse": "Run PHPStan static analysis.",
     "check": "Run everything the CI runs: style, static analysis and tests."

@@ -2,7 +2,9 @@
 
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureExtractor;
@@ -126,4 +128,37 @@ it('validates through the artisan command', function () {
         ->expectsOutput('Your PDF document is VALID');
 
     unlink($path);
+});
+
+it('accepts an uppercase pdf extension', function () {
+    $path = A1PdfSign::tempPath(true, '.PDF');
+    file_put_contents($path, signedOnce());
+
+    expect(app(SignatureValidator::class)->validateFile($path)->isValid())->toBeTrue();
+
+    unlink($path);
+});
+
+it('rejects a path that is not a pdf', function () {
+    app(SignatureValidator::class)->validateFile('/tmp/whatever.txt');
+})->throws(InvalidPdfFileException::class);
+
+it('raises when the file does not exist', function () {
+    app(SignatureValidator::class)->validateFile('/tmp/missing-' . uniqid() . '.pdf');
+})->throws(FileNotFoundException::class);
+
+it('finds no certificates in a blob that holds none', function () {
+    $reader = app(Pkcs7Reader::class);
+
+    expect($reader->certificates(''))->toBe([])
+        ->and($reader->certificates(str_repeat("\x30\x82\x00\x10", 20)))->toBe([])
+        ->and($reader->signers('not der at all'))->toBe([]);
+});
+
+it('deduplicates a certificate that appears twice', function () {
+    $extracted = app(PdfSignatureExtractor::class)->extract(signedOnce());
+    $cms = $extracted[0]['cms'];
+
+    // The same bytes twice must still yield one certificate.
+    expect(app(Pkcs7Reader::class)->certificates($cms . $cms))->toHaveCount(1);
 });

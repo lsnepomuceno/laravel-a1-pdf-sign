@@ -86,3 +86,29 @@ jobs:
       # src/ is fully typed as of PR 5; the gate keeps it that way.
       - name: Check type coverage
         run: vendor/bin/pest --type-coverage --min=100
+
+  mutation:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    # Only when the code it covers changes: a full run takes minutes.
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      # The floor is the value measured when mutation testing landed. Raise it
+      # as the score improves; never lower it to make a run pass.
+      - name: Run mutation testing
+        run: composer test:mutate

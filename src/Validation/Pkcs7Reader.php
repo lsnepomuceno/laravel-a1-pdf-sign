@@ -18,6 +18,8 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Signer;
  */
 final class Pkcs7Reader
 {
+    public function __construct(private readonly DerReader $der = new DerReader()) {}
+
     /**
      * @return list<Signer>
      */
@@ -69,10 +71,9 @@ final class Pkcs7Reader
                 continue;
             }
 
-            $size = (ord($der[$offset + 2]) << 8) | ord($der[$offset + 3]);
-            $candidate = substr($der, $offset, $size + 4);
+            $candidate = $this->der->truncate(substr($der, $offset));
 
-            if (strlen($candidate) < $size + 4) {
+            if ($candidate === '') {
                 continue;
             }
 
@@ -87,7 +88,7 @@ final class Pkcs7Reader
 
             // Skip past the certificate just taken, so its inner sequences are
             // not offered again.
-            $offset += $size + 3;
+            $offset += strlen($candidate) - 1;
         }
 
         return array_values($found);

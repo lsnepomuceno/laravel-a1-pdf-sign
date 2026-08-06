@@ -12,6 +12,8 @@ namespace LSNepomuceno\LaravelA1PdfSign\Validation;
  */
 final class PdfSignatureExtractor
 {
+    public function __construct(private readonly DerReader $der = new DerReader()) {}
+
     /**
      * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int}>
      */
@@ -73,31 +75,9 @@ final class PdfSignatureExtractor
             return null;
         }
 
-        $der = $this->truncateToDeclaredLength($binary);
+        $der = $this->der->truncate($binary);
 
         return $der === '' ? null : $der;
     }
 
-    private function truncateToDeclaredLength(string $binary): string
-    {
-        $lengthByte = ord($binary[1]);
-
-        if ($lengthByte < 0x80) {
-            return substr($binary, 0, 2 + $lengthByte);
-        }
-
-        $count = $lengthByte & 0x7F;
-
-        if ($count === 0 || strlen($binary) < 2 + $count) {
-            return '';
-        }
-
-        $length = 0;
-
-        for ($i = 0; $i < $count; $i++) {
-            $length = ($length << 8) | ord($binary[2 + $i]);
-        }
-
-        return substr($binary, 0, 2 + $count + $length);
-    }
 }
