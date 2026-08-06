@@ -1,0 +1,21 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+    - phpstan-baseline.neon
+
+parameters:
+    # The gate is "no new errors": everything the v1 sources already violate is
+    # captured in phpstan-baseline.neon and must shrink to zero by the end of v2
+    # (ARCHITECTURE-V2.md §7, decision 13). New code has to be max-clean.
+    level: max
+
+    paths:
+        - src
+        - tests
+
+    # poc/ holds throwaway spikes (ARCHITECTURE-V2.md §5), not production code.
+    excludePaths:
+        - poc
+
+    treatPhpDocTypesAsCertain: false

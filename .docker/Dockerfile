@@ -21,6 +21,9 @@ RUN apk add --no-cache \
     && apk del $PHPIZE_DEPS \
     && rm -rf /tmp/pear
 
+# Static analysis needs far more than the 128M CLI default.
+RUN printf 'memory_limit = 1G\n' > /usr/local/etc/php/conf.d/zz-dev.ini
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \

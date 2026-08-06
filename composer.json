@@ -54,7 +54,20 @@
     }
   },
   "scripts": {
-    "test": "vendor/bin/testbench package:test"
+    "test": "vendor/bin/testbench package:test",
+    "lint": "vendor/bin/pint",
+    "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+    "check": [
+      "@lint --test",
+      "@analyse",
+      "@test"
+    ]
+  },
+  "scripts-descriptions": {
+    "test": "Run the test suite.",
+    "lint": "Fix code style with Pint (append --test to only check).",
+    "analyse": "Run PHPStan static analysis.",
+    "check": "Run everything the CI runs: style, static analysis and tests."
   },
   "extra": {
     "laravel": {
@@ -69,8 +82,13 @@
     "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
   },
   "require-dev": {
+    "larastan/larastan": "^3.10",
+    "laravel/pint": "^1.30",
+    "nunomaduro/collision": "^8",
     "orchestra/testbench": "^10 || ^11",
-    "nunomaduro/collision": "^8"
+    "phpstan/phpstan": "^2.2",
+    "phpstan/phpstan-deprecation-rules": "^2.0",
+    "phpstan/phpstan-strict-rules": "^2.0"
   },
   "config": {
     "allow-plugins": {

@@ -7,7 +7,9 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 
 ## Pull Requests
 
-- **[PSR-2 Coding Standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md)** - The easiest way to apply the conventions is to install [PHP Code Sniffer](http://pear.php.net/package/PHP_CodeSniffer).
+- **Code style is [PER-CS](https://www.php-fig.org/per/coding-style/)**, enforced by [Pint](https://laravel.com/docs/pint). Run `composer lint` to apply it; CI runs `vendor/bin/pint --test` and fails on any difference.
+
+- **Static analysis must stay clean** - PHPStan runs at `level: max`. Pre-existing violations live in `phpstan-baseline.neon` and are being driven to zero; new code must not add to it. Run `composer analyse`.
 
 - **Add tests!** - Your patch won't be accepted if it doesn't have tests.
 
@@ -22,10 +24,20 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 - **Send coherent history** - Make sure each individual commit in your pull request is meaningful. If you had to make multiple intermediate commits while developing, please [squash them](http://www.git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages) before submitting.
 
 
-## Running Tests
+## Running the checks
 
 ``` bash
-$ composer test
+$ composer check     # style, static analysis and tests — the same as CI
+$ composer test      # tests only
+$ composer lint      # fix code style
+$ composer analyse   # static analysis only
+```
+
+The package targets PHP 8.4+ and Laravel 12+. If your machine runs an older PHP,
+`.docker/` reproduces any cell of the CI matrix:
+
+``` bash
+$ docker compose -f .docker/compose.yaml run --rm php composer check
 ```
 
 

@@ -1,0 +1,1015 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Only booleans are allowed in &&, string\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string\|null given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Parameter \#1 \$fileName of method LSNepomuceno\\LaravelA1PdfSign\\Commands\\SignPdfCommand\:\:defineFileName\(\) expects string\|null, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Parameter \#3 \$pdfPath of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '#^Parameter \#1 \$pdfPath of function validatePdfSignature expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Commands/ValidatePdfSignatureCommand.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Entities\\BaseEntity implements generic interface Illuminate\\Contracts\\Support\\Arrayable but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Entities/BaseEntity.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:\:__construct\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Entities/CertificateProcessed.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:\:__construct\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Entities/ValidatedSignedPDF.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/CertificateOutputNotFoundException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/FileNotFoundException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/HasNoSignatureOrInvalidPkcs7Exception.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidCertificateContentException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidImageDriverException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidPFXException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidPdfFileException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidPdfSignModeTypeException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/InvalidX509PrivateKeyException.php
+
+		-
+			message: '#^Part \$this\-\>code \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Exceptions/ProcessRunTimeException.php
+
+		-
+			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/Helpers/helpers.php
+
+		-
+			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 2
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) should return array\|static\(LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\) but returns LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, bool\|OpenSSLCertificate given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Parameter \#2 \$contents of static method Illuminate\\Support\\Facades\\File\:\:put\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Parameter \$certificate of function openssl_x509_check_private_key expects OpenSSLCertificate\|string, OpenSSLCertificate\|true given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Parameter \$certificate of function openssl_x509_parse expects OpenSSLCertificate\|string, OpenSSLCertificate\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:\$parsedData \(array\) does not accept array\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:\$parsedData type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/ManageCert.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$commonName\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$organizationName\.$#'
+			identifier: property.notFound
+			count: 2
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$organizationalUnitName\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Cannot call method color\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Cannot call method file\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Cannot call method size\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Cannot use array destructuring on mixed\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Dynamic call to static method Carbon\\Carbon\:\:createFromTimestamp\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#1 \$attributes of class Illuminate\\Support\\Fluent constructor expects iterable\<TKey of \(int\|string\), TValue\>, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#1 \$text of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#1 \$text of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:\:breakText\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#1 \$timestamp of method Carbon\\Carbon\:\:createFromTimestamp\(\) expects float\|int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#2 \$x of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#3 \$y of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Parameter \#4 \$font of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects \(callable\(\)\: mixed\)\|Intervention\\Image\\Interfaces\\FontInterface, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:\:\$textFieldsDefinitions type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Sign/SealImage.php
+
+		-
+			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Call to method TCPDF\:\:Output\(\) with incorrect case\: output$#'
+			identifier: method.nameCase
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Call to method TCPDF\:\:setPrintFooter\(\) with incorrect case\: SetPrintFooter$#'
+			identifier: method.nameCase
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Call to method TCPDF\:\:setPrintHeader\(\) with incorrect case\: SetPrintHeader$#'
+			identifier: method.nameCase
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Cannot use array destructuring on array\|bool\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
+			identifier: empty.notAllowed
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
+			identifier: booleanAnd.rightNotBoolean
+			count: 4
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Only booleans are allowed in &&, string\|null given on the left side\.$#'
+			identifier: booleanAnd.leftNotBoolean
+			count: 4
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, array\|null given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#1 \$file of method TCPDF\:\:Image\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#1 \$x of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#2 \$x of method TCPDF\:\:Image\(\) expects float\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#2 \$y of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#3 \$w of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#3 \$y of method TCPDF\:\:Image\(\) expects float\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#4 \$h of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#4 \$w of method TCPDF\:\:Image\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#5 \$h of method TCPDF\:\:Image\(\) expects float, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Parameter \#5 \$page of method TCPDF\:\:setSignatureAppearance\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:\:\$image type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:\:\$info type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imageH in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imageH might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imagePath in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imagePath might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imageW in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$imageW might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$page in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$page might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$pageX in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$pageX might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$pageY in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Variable \$pageY might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Sign/SignaturePdf.php
+
+		-
+			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Cannot access an offset on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Cannot access offset mixed on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ValidatePdfSignature\:\:processDataToInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, int given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Only booleans are allowed in a negated boolean, string given\.$#'
+			identifier: booleanNot.exprNotBoolean
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Only booleans are allowed in an if condition, resource\|false given\.$#'
+			identifier: if.condNotBoolean
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#1 \$array of function key expects array\|object, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''trim'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#2 \$contents of static method Illuminate\\Support\\Facades\\File\:\:put\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of function in_array expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#2 \$length of function stream_get_contents expects int\|null, float\|int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#3 \$offset of function stream_get_contents expects int, float\|int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function preg_replace expects array\<float\|int\|string\>\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 2
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
+			message: '#^Cannot call method assertFailed\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Cannot call method assertSuccessful\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Cannot call method expectsOutput\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			identifier: offsetAccess.nonArray
+			count: 2
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Method CommandsTest\:\:testWhenASignedPdfIsSuccessfullyValidated\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Method CommandsTest\:\:testWhenAnUnsignedDocumentThrowsAnErrorWhenRunningAValidationCommand\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Method CommandsTest\:\:testWhenTheSignatureCommandDoesNotFinishSuccessfully\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Method CommandsTest\:\:testWhenTheSignatureCommandIsSuccessfullyCompleted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			identifier: offsetAccess.nonArray
+			count: 6
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 9
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromFileHelper\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromFileHelperUsingPathEnv\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromUploadHelper\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromUploadHelperUsingPathEnv\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenASignedPdfFileIsCorrectlyValidatedByTheValidatePdfSignatureHelper\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenCertificateDataIsEncrypted\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenTheA1TempDirHelperCreatesTheFilesCorrectly\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#1 \$path of class Illuminate\\Http\\UploadedFile constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#1 \$uploadedOrPfxPath of function encryptCertData expects Illuminate\\Http\\UploadedFile\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#2 \$password of function encryptCertData expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \#2 \$password of function signPdfFromUpload expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \$password of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \$password of function signPdfFromUpload expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Parameter \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with string will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			identifier: offsetAccess.nonArray
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method Illuminate\\Encryption\\Encrypter\:\:supported\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 2
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 3
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertIsResource\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertStringContainsStringIgnoringCase\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 3
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateCertificateStructureFromPfxFile\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateEncryperInstanceAndResources\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateNotFoundPfxFileException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidatePfxFileExtensionException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateProcessRunTimeException\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidatesIfThePfxFileWillBeDeletedAfterBeingPreserved\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Parameter \#1 \$path of static method Illuminate\\Support\\Facades\\File\:\:exists\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Parameter \#1 \$paths of static method Illuminate\\Support\\Facades\\File\:\:delete\(\) expects array\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Parameter \#1 \$pfxPath of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:fromPfx\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Parameter \#2 \$cipher of method Illuminate\\Encryption\\Encrypter\:\:supported\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Parameter \#2 \$password of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:fromPfx\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 2
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEqualsIgnoringCase\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 3
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\SealImageTest\:\:testGenerateImageFromCertFile\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\SealImageTest\:\:testInsertSealImageOnPdfFile\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/SealImageTest.php
+
+		-
+			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\)\.$#'
+			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\Sign\\ValidatePdfSignature\\ProcessDataInfoFunctionTest\:\:stringsDataProvider\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
