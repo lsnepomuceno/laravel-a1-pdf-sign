@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -12,8 +13,8 @@ use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use LSNepomuceno\LaravelA1PdfSign\Sign\SignaturePdf;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature;
+use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
 use SensitiveParameter;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -29,7 +30,13 @@ final readonly class A1PdfSignManager implements A1PdfSign
     public function __construct(
         private Config $config,
         private CertificateParser $parser,
+        private Container $container,
     ) {}
+
+    public function newSignature(): PendingSignature
+    {
+        return $this->container->make(PendingSignature::class);
+    }
 
     public function signFromFile(
         string $pfxPath,
@@ -131,12 +138,24 @@ final readonly class A1PdfSignManager implements A1PdfSign
             ->setIsLegacy((bool) $this->config->get('a1-pdf-sign.certificate.legacy', false));
     }
 
+    /**
+     * Signing produces bytes; the mode only picks how they are handed back.
+     * The v1 flow wrote them to disk and read them straight back for the
+     * bytes case (§1.8).
+     */
     private function sign(
         string $pdfPath,
         ManageCert $cert,
         SignatureMode|string|null $mode,
     ): BinaryFileResponse|string {
-        return (new SignaturePdf($pdfPath, $cert, $mode ?? SignatureMode::Resource))->signature();
+        $signed = $this->newSignature()
+            ->usingCertificate($cert->getCert())
+            ->pdf($pdfPath)
+            ->sign();
+
+        return SignatureMode::resolve($mode ?? SignatureMode::Resource) === SignatureMode::Download
+            ? $signed->download()
+            : $signed->contents();
     }
 
     private function usePathEnv(?bool $override): bool

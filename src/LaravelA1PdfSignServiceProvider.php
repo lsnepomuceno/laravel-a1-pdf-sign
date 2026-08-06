@@ -2,9 +2,14 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Commands\{SignPdfCommand, ValidatePdfSignatureCommand};
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
+use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
 
 class LaravelA1PdfSignServiceProvider extends ServiceProvider
 {
@@ -12,27 +17,20 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->registerFontPath();
         $this->mergeConfigFrom(self::CONFIG_PATH, 'a1-pdf-sign');
 
         // Bound to the contract rather than the concrete class, so consuming
         // applications and tests can swap the implementation.
         $this->app->singleton(A1PdfSign::class, A1PdfSignManager::class);
-    }
 
-    /**
-     * tc-lib-pdf resolves fonts through the K_PATH_FONTS constant and cannot
-     * emit any PDF without one, yet ships no font files. The package bundles
-     * the Core 14 metrics it needs; see resources/fonts/README.md and
-     * ARCHITECTURE-V2.md §3g.2.
-     *
-     * An application that defined the constant first keeps its own directory.
-     */
-    private function registerFontPath(): void
-    {
-        if (! defined('K_PATH_FONTS')) {
-            define('K_PATH_FONTS', dirname(__DIR__) . '/resources/fonts');
-        }
+        // The incremental signer is the default: it preserves the original
+        // bytes and lets a document carry more than one signature (§3h).
+        $this->app->bind(PdfSigner::class, IncrementalSigner::class);
+
+        $this->app->bind(
+            CertificateReader::class,
+            static fn(Application $app): CertificateReader => $app->make(ReaderFactory::class)->make(),
+        );
     }
 
     public function boot(): void

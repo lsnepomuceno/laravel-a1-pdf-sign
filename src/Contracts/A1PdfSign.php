@@ -83,6 +83,11 @@ interface A1PdfSign
     public function validate(string $pdfPath): SignatureReport;
 
     /**
+     * Starts a fluent signature. Nothing happens until sign() is called.
+     */
+    public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
+
+    /**
      * The directory the package writes temporary files to, or a path inside it
      * when $tempFile is true.
      */

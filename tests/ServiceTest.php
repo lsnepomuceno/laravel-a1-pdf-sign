@@ -90,6 +90,11 @@ it('lets the container swap the implementation', function () {
             return new SignatureReport(true, []);
         }
 
+        public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature
+        {
+            return app(\LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature::class);
+        }
+
         public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string
         {
             return '/tmp/';

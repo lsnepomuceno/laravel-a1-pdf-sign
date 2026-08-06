@@ -56,7 +56,11 @@ class ValidatePdfSignature
     private function extractSignatureData(): self
     {
         $content = File::get($this->pdfPath);
-        $regexp  = '#ByteRange\[\s*(\d+) (\d+) (\d+)#'; // subexpressions are used to extract b and c
+        // ISO 32000-1 allows any whitespace between the four numbers, and a
+        // signer that pads them to a fixed width — as ours must, to patch the
+        // values in place — produces runs of spaces. Matching a single space
+        // would reject those documents.
+        $regexp  = '#ByteRange\[\s*(\d+)\s+(\d+)\s+(\d+)#';
         $result  = [];
         preg_match_all($regexp, $content, $result);
 

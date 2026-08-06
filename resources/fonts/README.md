@@ -5,8 +5,22 @@ signature-only document containing no text — and it ships none: upstream build
 them with `make fonts`. A plain `composer install` therefore leaves the package
 unable to produce anything. See `ARCHITECTURE-V2.md` §3g.2.
 
-These four files close that gap. The service provider points `K_PATH_FONTS`
-here, so consumers never have to know any of it.
+These four files close that gap.
+
+## ⚠️ The constant is not defined globally
+
+`K_PATH_FONTS` is read by **both** tc-lib-pdf and TCPDF 6, with incompatible
+formats — JSON here, PHP definition files there. TCPDF 6 only falls back to its
+own directory when the constant is *not already defined*, so defining it in the
+service provider hijacks its lookup and it fails outright:
+
+```
+TCPDF ERROR: Could not include font definition file: helvetica
+```
+
+So the constant is defined at the point tc-lib-pdf is used, not globally. The
+incremental signer needs neither tc-lib-pdf nor a font — it is byte
+manipulation plus ext-openssl — which is why nothing defines it yet.
 
 ## Provenance
 
