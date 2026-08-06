@@ -24,7 +24,7 @@ final readonly class HttpTransport
      */
     public function timestamp(string $url, ?string $username = null, ?string $password = null): callable
     {
-        $timeout = (int) $this->config->get('a1-pdf-sign.signature.timestamp.timeout', 20);
+        $timeout = $this->intConfig('signature.timestamp.timeout', 20);
 
         return function (string $request) use ($url, $username, $password, $timeout): string {
             $headers = ['Content-Type: application/timestamp-query'];
@@ -44,7 +44,7 @@ final readonly class HttpTransport
      */
     public function ocsp(): callable
     {
-        $timeout = (int) $this->config->get('a1-pdf-sign.signature.ltv.timeout', 10);
+        $timeout = $this->intConfig('signature.ltv.timeout', 10);
 
         return function (string $url, string $request) use ($timeout): string|false {
             try {
@@ -64,7 +64,7 @@ final readonly class HttpTransport
      */
     public function crl(): callable
     {
-        $timeout = (int) $this->config->get('a1-pdf-sign.signature.ltv.timeout', 10);
+        $timeout = $this->intConfig('signature.ltv.timeout', 10);
 
         return function (string $url) use ($timeout): string|false {
             $context = stream_context_create(['http' => ['timeout' => $timeout], 'https' => ['timeout' => $timeout]]);
@@ -97,5 +97,12 @@ final readonly class HttpTransport
         }
 
         return $response;
+    }
+
+    private function intConfig(string $key, int $default): int
+    {
+        $value = $this->config->get("a1-pdf-sign.{$key}", $default);
+
+        return is_numeric($value) ? (int) $value : $default;
     }
 }

@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Testing;
 
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
+use OpenSSLAsymmetricKey;
 use RuntimeException;
 
 /**
@@ -29,9 +30,11 @@ final class DebugCertificate
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
 
-        if ($key === false) {
+        if (! $key instanceof OpenSSLAsymmetricKey) {
             throw new RuntimeException('Unable to generate a test key: ' . openssl_error_string());
         }
+
+        /** @var OpenSSLAsymmetricKey $key */
 
         $csr = openssl_csr_new(
             ['commonName' => 'Test Certificate', 'organizationalUnitName' => 'LucasNepomuceno'],
@@ -41,6 +44,10 @@ final class DebugCertificate
 
         if ($csr === false) {
             throw new RuntimeException('Unable to generate a test CSR: ' . openssl_error_string());
+        }
+
+        if ($csr === true) {
+            throw new RuntimeException('openssl_csr_new returned no signing request');
         }
 
         $x509 = openssl_csr_sign($csr, null, $key, $daysValid, ['digest_alg' => 'sha256']);
@@ -55,6 +62,7 @@ final class DebugCertificate
             throw new CertificateOutputNotFoundException();
         }
 
+        /** @var string $pfx */
         return [$pfx, self::PASSWORD];
     }
 }

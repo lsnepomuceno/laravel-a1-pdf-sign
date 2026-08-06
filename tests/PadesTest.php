@@ -30,7 +30,7 @@ it('writes the CAdES sub-filter for a PAdES signature', function () {
         ->profile(SignatureProfile::PadesBB)
         ->sign();
 
-    expect($signed->contents)->toContain('/SubFilter/ETSI.CAdES.detached')
+    expect((string) $signed->contents)->toContain('/SubFilter/ETSI.CAdES.detached')
         ->not->toContain('/SubFilter/adbe.pkcs7.detached');
 });
 
@@ -55,12 +55,13 @@ it('embeds the ESS signing-certificate-v2 attribute openssl cannot produce', fun
         ->sign();
 
     preg_match('/\/Contents\s*<([0-9a-fA-F]+)>/', $signed->contents, $matches);
-    $der = (string) hex2bin(rtrim($matches[1], '0') . (strlen(rtrim($matches[1], '0')) % 2 ? '0' : ''));
+    $hex = rtrim($matches[1] ?? '', '0');
+    $der = (string) hex2bin(strlen($hex) % 2 === 1 ? $hex . '0' : $hex);
 
     // OID 1.2.840.113549.1.9.16.2.47 — id-aa-signingCertificateV2.
     $oid = hex2bin('2A864886F70D010910022F');
 
-    expect($der)->toContain($oid);
+    expect($der)->toContain((string) $oid);
 });
 
 it('refuses a timestamped profile without a configured authority', function () {
@@ -94,7 +95,7 @@ it('signs at PAdES B-T against a live timestamp authority', function () {
     $size = static function (string $pdf): int {
         preg_match('/\/Contents\s*<([0-9a-fA-F]+)>/', $pdf, $m);
 
-        return strlen(rtrim($m[1], '0'));
+        return strlen(rtrim($m[1] ?? '', '0'));
     };
 
     // The token is embedded as an unsigned attribute, so the CMS must grow.

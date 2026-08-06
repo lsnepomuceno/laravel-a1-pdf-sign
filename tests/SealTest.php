@@ -78,7 +78,7 @@ it('signs with a visible seal', function () {
         ->seal()
         ->sign();
 
-    expect($signed->contents)->toContain('/Subtype/Image')
+    expect((string) $signed->contents)->toContain('/Subtype/Image')
         ->toContain('/Subtype/Form')
         ->toContain('/AP<</N ')
         // A visible signature must not keep the zero rectangle.
@@ -93,7 +93,7 @@ it('leaves the signature invisible when no seal is requested', function () {
         ->pdf(resource('test.pdf'))
         ->sign();
 
-    expect($signed->contents)->toContain('/Rect[0 0 0 0]')
+    expect((string) $signed->contents)->toContain('/Rect[0 0 0 0]')
         ->not->toContain('/AP<</N ');
 });
 

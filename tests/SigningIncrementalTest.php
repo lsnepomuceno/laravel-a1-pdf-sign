@@ -8,6 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
+use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
 
 function testCertificate(): LSNepomuceno\LaravelA1PdfSign\Data\Certificate
@@ -18,7 +19,7 @@ function testCertificate(): LSNepomuceno\LaravelA1PdfSign\Data\Certificate
 }
 
 it('leaves the original bytes untouched', function () {
-    $original = file_get_contents(resource('test.pdf'));
+    $original = Files::read(resource('test.pdf'));
 
     $signed = app(IncrementalSigner::class)
         ->sign($original, testCertificate(), new SignatureInfo(name: 'Signer'));
@@ -30,7 +31,7 @@ it('leaves the original bytes untouched', function () {
 it('signs the same document three times without invalidating earlier signatures', function () {
     $signer = app(IncrementalSigner::class);
     $certificate = testCertificate();
-    $pdf = file_get_contents(resource('test.pdf'));
+    $pdf = Files::read(resource('test.pdf'));
 
     for ($round = 1; $round <= 3; $round++) {
         $pdf = $signer->sign($pdf, $certificate, new SignatureInfo(name: "Signer {$round}"))->contents;
@@ -57,7 +58,7 @@ it('gives each signature its own field name', function () {
     $signer = app(IncrementalSigner::class);
     $certificate = testCertificate();
 
-    $pdf = file_get_contents(resource('test.pdf'));
+    $pdf = Files::read(resource('test.pdf'));
     $pdf = $signer->sign($pdf, $certificate, new SignatureInfo())->contents;
     $pdf = $signer->sign($pdf, $certificate, new SignatureInfo())->contents;
 
@@ -68,7 +69,7 @@ it('gives each signature its own field name', function () {
 
 it('writes the signature metadata into the document', function () {
     $signed = app(IncrementalSigner::class)->sign(
-        file_get_contents(resource('test.pdf')),
+        Files::read(resource('test.pdf')),
         testCertificate(),
         new SignatureInfo(name: 'Lucas', location: 'Brazil', reason: 'Contract'),
     );
@@ -91,7 +92,7 @@ it('reads the last byte range, not the first', function () {
 });
 
 it('reads the cross-reference chain of an unsigned document', function () {
-    $document = app(DocumentReader::class)->read(file_get_contents(resource('test.pdf')));
+    $document = app(DocumentReader::class)->read(Files::read(resource('test.pdf')));
 
     expect($document->root)->toBe(14)
         ->and($document->size)->toBe(19)
@@ -124,7 +125,7 @@ it('lets the caller choose the transport after signing', function () {
     $path = $signed->save(A1PdfSign::tempPath(true, '.pdf'));
 
     expect($signed->contents())->toBe((string) $signed)
-        ->and(file_get_contents($path))->toBe($signed->contents)
+        ->and(Files::read($path))->toBe($signed->contents)
         ->and($signed->download()->getStatusCode())->toBe(200)
         ->and($signed->toResponse()->headers->get('Content-Type'))->toBe('application/pdf');
 

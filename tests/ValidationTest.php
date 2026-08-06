@@ -6,6 +6,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureExtractor;
 use LSNepomuceno\LaravelA1PdfSign\Validation\Pkcs7Reader;
@@ -89,7 +90,7 @@ it('reads the signer identity as structured data', function () {
 });
 
 it('raises when the document carries no signature', function () {
-    app(SignatureValidator::class)->validate(file_get_contents(resource('test.pdf')));
+    app(SignatureValidator::class)->validate(Files::read(resource('test.pdf')));
 })->throws(HasNoSignatureOrInvalidPkcs7Exception::class);
 
 it('extracts the byte ranges and the embedded CMS', function () {

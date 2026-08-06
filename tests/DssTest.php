@@ -148,6 +148,7 @@ it('closes with an archive timestamp at PAdES B-LTA', function () {
     // The archive timestamp covers the whole file, unlike the signature which
     // stops at its own revision.
     preg_match_all('/\\/ByteRange\\[0 (\\d+)\\s+(\\d+)\\s+(\\d+)\\s*\\]/', $archived->contents, $ranges, PREG_SET_ORDER);
+    /** @var array{0: string, 1: numeric-string, 2: numeric-string, 3: numeric-string} $last */
     $last = end($ranges);
 
     expect((int) $last[2] + (int) $last[3])->toBe(strlen($archived->contents));

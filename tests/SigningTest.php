@@ -8,7 +8,7 @@ it('signs a pdf using a certificate on disk', function () {
     [$pfxPath, $pass] = debugCertificate();
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
+    A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf'))->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue();
 
@@ -19,12 +19,12 @@ it('signs a pdf using a certificate on disk with the PATH env', function () {
     [$pfxPath, $pass] = debugCertificate();
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromFile(
+    A1PdfSign::signFromFile(
         pfxPath: $pfxPath,
         password: $pass,
         pdfPath: resource('test.pdf'),
         usePathEnv: true,
-    ));
+    )->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue();
 
@@ -37,7 +37,7 @@ it('signs a pdf using an uploaded certificate', function () {
     $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromUpload($uploadedFile, $pass, resource('test.pdf')));
+    A1PdfSign::signFromUpload($uploadedFile, $pass, resource('test.pdf'))->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue();
 
@@ -50,12 +50,12 @@ it('signs a pdf using an uploaded certificate with the PATH env', function () {
     $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromUpload(
+    A1PdfSign::signFromUpload(
         uploadedPfx: $uploadedFile,
         password: $pass,
         pdfPath: resource('test.pdf'),
         usePathEnv: true,
-    ));
+    )->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue();
 });
@@ -77,7 +77,7 @@ it('validates a signed pdf', function () {
     [$pfxPath, $pass] = debugCertificate();
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
+    A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf'))->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue()
         ->and(A1PdfSign::validate($pdfPath)->isValid())->toBeTrue();

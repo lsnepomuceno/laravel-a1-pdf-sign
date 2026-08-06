@@ -42,6 +42,7 @@ final class Pkcs7Reader
             $data = openssl_x509_parse($pem, false);
 
             if ($data !== false) {
+                /** @var array<string, mixed> $data */
                 $parsed[] = $data;
             }
         }

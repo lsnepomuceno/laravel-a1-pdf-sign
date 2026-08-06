@@ -4,7 +4,6 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\ImageDriver;
-use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
 
 it('carries the point size for each font size', function (FontSize $size, int $points) {
     expect($size->points())->toBe($points);
@@ -39,10 +38,4 @@ it('builds the image driver instances', function () {
 it('maps a driver instance back to its case', function () {
     expect(ImageDriver::fromDriver(new GdDriver()))->toBe(ImageDriver::Gd)
         ->and(ImageDriver::fromDriver(new ImagickDriver()))->toBe(ImageDriver::Imagick);
-});
-
-it('resolves a signature mode from its backing value', function () {
-    expect(SignatureMode::resolve('resource'))->toBe(SignatureMode::Resource)
-        ->and(SignatureMode::resolve('download'))->toBe(SignatureMode::Download)
-        ->and(SignatureMode::resolve('nonsense'))->toBeNull();
 });

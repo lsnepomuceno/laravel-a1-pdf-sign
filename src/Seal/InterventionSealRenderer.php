@@ -34,7 +34,7 @@ final readonly class InterventionSealRenderer implements SealRenderer
         bool $showExpiry = false,
         string $expiryFormat = 'd/m/Y H:i:s',
     ): SealImage {
-        $size = FontSize::resolve($fontSize ?? $this->configured('seal.font.size', 'large'));
+        $size = FontSize::resolve($fontSize ?? $this->configured('seal.font.size', 'large') ?? 'large');
 
         $image = (new ImageManager(driver: $this->driver()->create()))->read($this->background());
 
@@ -102,7 +102,7 @@ final readonly class InterventionSealRenderer implements SealRenderer
             return $text;
         }
 
-        return implode(PHP_EOL, array_map('trim', str_split($text, $limit - 3)));
+        return implode(PHP_EOL, array_map('trim', str_split($text, max(1, $limit - 3))));
     }
 
     private function font(FontSize $size): callable
@@ -125,9 +125,7 @@ final readonly class InterventionSealRenderer implements SealRenderer
 
     private function driver(): ImageDriver
     {
-        $configured = $this->configured('seal.driver', 'gd');
-
-        return ImageDriver::tryFrom($configured) ?? ImageDriver::Gd;
+        return ImageDriver::tryFrom($this->configured('seal.driver', 'gd') ?? 'gd') ?? ImageDriver::Gd;
     }
 
     private function configured(string $key, ?string $default = null): ?string

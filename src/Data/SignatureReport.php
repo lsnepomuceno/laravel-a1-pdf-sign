@@ -70,10 +70,14 @@ final readonly class SignatureReport extends BaseData
      */
     public function signers(): array
     {
+        if ($this->signatures === []) {
+            return [];
+        }
+
         return array_merge(...array_map(
             static fn(SignatureDetails $signature): array => $signature->signers,
             $this->signatures,
-        )) ?: [];
+        ));
     }
 
     /**

@@ -80,7 +80,7 @@ it('deletes a temporary file even when the callback throws', function () {
         // expected
     }
 
-    expect(File::exists($path))->toBeFalse();
+    expect(File::exists((string) $path))->toBeFalse();
 });
 
 it('generates a debug certificate without shelling out', function () {
@@ -107,5 +107,5 @@ it('rejects a bundle whose key does not match its certificate', function () {
     preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $certificate, $cert);
     preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $other, $key);
 
-    app(CertificateParser::class)->parse($cert[0] . "\n" . $key[0] . "\n");
+    app(CertificateParser::class)->parse(($cert[0] ?? '') . "\n" . ($key[0] ?? '') . "\n");
 })->throws(InvalidX509PrivateKeyException::class);

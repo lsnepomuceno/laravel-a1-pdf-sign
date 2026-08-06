@@ -70,11 +70,11 @@ final class ByteRangeCalculator
      */
     public function lastContentsOffset(string $pdf): int
     {
-        if (! preg_match_all('/\/Contents\s*</', $pdf, $matches, PREG_OFFSET_CAPTURE)) {
+        if (preg_match_all('/\/Contents\s*</', $pdf, $matches, PREG_OFFSET_CAPTURE) === 0) {
             throw new InvalidPdfFileException('no /Contents placeholder to sign');
         }
 
-        /** @var array{0: string, 1: int} $last */
+        /** @var array{0: string, 1: int<0, max>} $last */
         $last = end($matches[0]);
 
         return $last[1] + strlen($last[0]) - 1;
@@ -93,10 +93,11 @@ final class ByteRangeCalculator
      */
     public function readLast(string $pdf): array
     {
-        if (! preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $all, PREG_SET_ORDER)) {
+        if (preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $all, PREG_SET_ORDER) === 0) {
             throw new InvalidPdfFileException('no /ByteRange could be read back');
         }
 
+        /** @var array{0: string, 1: numeric-string, 2: numeric-string, 3: numeric-string} $last */
         $last = end($all);
 
         return [(int) $last[1], (int) $last[2], (int) $last[3]];

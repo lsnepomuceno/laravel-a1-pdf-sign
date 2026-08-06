@@ -93,7 +93,7 @@ final readonly class CadesBuilder
     private function toDer(string $pem): string
     {
         $body = preg_replace('/-----(BEGIN|END) CERTIFICATE-----|\s/', '', $pem);
-        $der = base64_decode((string) $body, true);
+        $der = base64_decode($body ?? '', true);
 
         if ($der === false || $der === '') {
             throw new InvalidCertificateContentException('a certificate in the bundle is not valid base64');
@@ -110,8 +110,10 @@ final readonly class CadesBuilder
         $key = openssl_pkey_get_private($certificate->original, $certificate->password);
 
         if ($key === false) {
+            $error = openssl_error_string();
+
             throw new InvalidCertificateContentException(
-                'the private key could not be read: ' . (openssl_error_string() ?: 'unknown error'),
+                'the private key could not be read: ' . ($error === false ? 'unknown error' : $error),
             );
         }
 
@@ -142,7 +144,7 @@ final readonly class CadesBuilder
         $client = new TimestampClient(new TimestampConfig(
             host: $url,
             hashAlgorithm: $this->digestAlgorithm(),
-            timeout: max(1, (int) $this->config->get('a1-pdf-sign.signature.timestamp.timeout', 20)),
+            timeout: max(1, $this->intConfig('signature.timestamp.timeout', 20)),
         ));
 
         return [
@@ -167,5 +169,12 @@ final readonly class CadesBuilder
         $value = $this->config->get("a1-pdf-sign.{$key}");
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    private function intConfig(string $key, int $default): int
+    {
+        $value = $this->config->get("a1-pdf-sign.{$key}", $default);
+
+        return is_numeric($value) ? (int) $value : $default;
     }
 }

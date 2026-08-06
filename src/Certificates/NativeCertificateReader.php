@@ -37,11 +37,15 @@ final readonly class NativeCertificateReader implements CertificateReader
         $parsed = [];
 
         if (! openssl_pkcs12_read($pfxContents, $parsed, $password)) {
+            $error = openssl_error_string();
+
             throw new InvalidCertificateContentException(
-                'Unable to read the PKCS#12 bundle: ' . (openssl_error_string() ?: 'wrong password or unsupported encryption'),
+                'Unable to read the PKCS#12 bundle: '
+                . ($error === false ? 'wrong password or unsupported encryption' : $error),
             );
         }
 
+        /** @var array{cert?: string, pkey?: string, extracerts?: array<int, string>} $parsed */
         return $this->parser->parse($this->toPem($parsed), $password);
     }
 

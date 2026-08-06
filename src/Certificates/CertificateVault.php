@@ -80,7 +80,8 @@ final readonly class CertificateVault
         $pem = $this->encrypter->decryptString($encryptedCertificate);
 
         if ($isBase64) {
-            $pem = base64_decode($pem, true) ?: $pem;
+            $decoded = base64_decode($pem, true);
+            $pem = $decoded === false || $decoded === '' ? $pem : $decoded;
         }
 
         return $parser->parse($pem, $this->encrypter->decryptString($encryptedPassword));

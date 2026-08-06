@@ -116,7 +116,7 @@ final readonly class DocTimeStampWriter
         $client = new TimestampClient(new TimestampConfig(
             host: $url,
             hashAlgorithm: $this->digestAlgorithm(),
-            timeout: max(1, (int) $this->config->get('a1-pdf-sign.signature.timestamp.timeout', 20)),
+            timeout: max(1, $this->intConfig('signature.timestamp.timeout', 20)),
         ));
 
         try {
@@ -138,7 +138,7 @@ final readonly class DocTimeStampWriter
      */
     private function widget(int $number, int $stampNumber, int $pageNumber, string $pdf): string
     {
-        $index = preg_match_all('/\/FT\s*\/Sig/', $pdf) + 1;
+        $index = $this->signatureCount($pdf) + 1;
 
         return "{$number} 0 obj\n"
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
@@ -163,5 +163,22 @@ final readonly class DocTimeStampWriter
         $value = $this->config->get("a1-pdf-sign.{$key}");
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    private function intConfig(string $key, int $default): int
+    {
+        $value = $this->config->get("a1-pdf-sign.{$key}", $default);
+
+        return is_numeric($value) ? (int) $value : $default;
+    }
+
+    /**
+     * How many signature fields the document already carries.
+     */
+    private function signatureCount(string $pdf): int
+    {
+        $count = preg_match_all('/\/FT\s*\/Sig/', $pdf);
+
+        return $count === false ? 0 : $count;
     }
 }

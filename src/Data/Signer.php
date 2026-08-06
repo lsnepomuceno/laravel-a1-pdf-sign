@@ -28,7 +28,9 @@ final readonly class Signer extends BaseData
      */
     public static function fromParsedCertificate(array $parsed): self
     {
+        /** @var array<string, mixed> $subject */
         $subject = is_array($parsed['subject'] ?? null) ? $parsed['subject'] : [];
+        /** @var array<string, mixed> $issuer */
         $issuer = is_array($parsed['issuer'] ?? null) ? $parsed['issuer'] : [];
 
         return new self(

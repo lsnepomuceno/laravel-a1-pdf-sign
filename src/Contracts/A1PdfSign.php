@@ -6,8 +6,7 @@ use Illuminate\Http\UploadedFile;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 
 /**
  * The package's entry point.
@@ -25,15 +24,16 @@ interface A1PdfSign
     /**
      * Signs a PDF with a certificate read from a .pfx file on disk.
      *
+     * Returns the document; the caller picks how it is delivered.
+     *
      * @throws \Throwable
      */
     public function signFromFile(
         string $pfxPath,
         string $password,
         string $pdfPath,
-        SignatureMode|string|null $mode = null,
         ?bool $usePathEnv = null,
-    ): BinaryFileResponse|string;
+    ): SignedPdf;
 
     /**
      * Signs a PDF with a certificate read from an uploaded .pfx file.
@@ -44,9 +44,8 @@ interface A1PdfSign
         UploadedFile $uploadedPfx,
         string $password,
         string $pdfPath,
-        SignatureMode|string|null $mode = null,
         ?bool $usePathEnv = null,
-    ): BinaryFileResponse|string;
+    ): SignedPdf;
 
     /**
      * Encrypts a certificate and its password for storage.

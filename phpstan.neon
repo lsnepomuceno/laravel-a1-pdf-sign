@@ -2,12 +2,10 @@ includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon
-    - phpstan-baseline.neon
 
 parameters:
-    # The gate is "no new errors": everything the v1 sources already violate is
-    # captured in phpstan-baseline.neon and must shrink to zero by the end of v2
-    # (ARCHITECTURE-V2.md §7, decision 13). New code has to be max-clean.
+    # No baseline: src/ and tests/ are clean at the strictest level. The gate is
+    # "no errors", not "no new errors" (ARCHITECTURE-V2.md §7, decision 13).
     level: max
 
     paths:
@@ -34,4 +32,7 @@ parameters:
             path: tests/*
         -
             identifier: property.nonObject
+            path: tests/*
+        -
+            identifier: property.notFound
             path: tests/*

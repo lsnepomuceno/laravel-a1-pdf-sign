@@ -37,8 +37,19 @@ final class CertificateParser
         return new Certificate(
             original: $pem,
             openssl: $x509,
-            data: openssl_x509_parse($x509, false) ?: [],
+            data: $this->parsedData($x509),
             password: $password,
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function parsedData(\OpenSSLCertificate $x509): array
+    {
+        $data = openssl_x509_parse($x509, false);
+
+        /** @var array<string, mixed> */
+        return $data === false ? [] : $data;
     }
 }

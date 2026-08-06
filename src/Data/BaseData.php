@@ -16,6 +16,7 @@ abstract readonly class BaseData implements Arrayable
      */
     public function toArray(): array
     {
+        /** @var array<string, mixed> */
         return get_object_vars($this);
     }
 }

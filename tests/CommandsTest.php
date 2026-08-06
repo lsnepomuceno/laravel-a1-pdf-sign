@@ -36,7 +36,7 @@ it('validates a signed pdf through the pdf:validate-signature command', function
     [$pfxPath, $pass] = debugCertificate();
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
+    A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf'))->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue();
 

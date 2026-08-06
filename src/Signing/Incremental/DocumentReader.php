@@ -22,7 +22,7 @@ final class DocumentReader
      */
     public function read(string $pdf): DocumentInfo
     {
-        if (! preg_match_all('/startxref\s+(\d+)\s*%%EOF/', $pdf, $matches)) {
+        if (preg_match_all('/startxref\s+(\d+)\s*%%EOF/', $pdf, $matches) === 0) {
             throw new InvalidPdfFileException('no startxref pointer found; the file is not a PDF or is truncated');
         }
 
@@ -101,7 +101,7 @@ final class DocumentReader
             }
 
             // The negative lookahead keeps /Pages, the page tree root, out.
-            if (preg_match('/\/Type\s*\/Page(?![s\w])/', substr($pdf, $offset, 400))) {
+            if (preg_match('/\/Type\s*\/Page(?![s\w])/', substr($pdf, $offset, 400)) === 1) {
                 return $number;
             }
         }
@@ -133,7 +133,7 @@ final class DocumentReader
 
         // Subsections: "<first> <count>" followed by <count> entries of exactly
         // 20 bytes each.
-        while (preg_match('/\G\s*(\d+)\s+(\d+)\s*(?:\r\n|\r|\n)/', $pdf, $header, 0, $position)) {
+        while (preg_match('/\G\s*(\d+)\s+(\d+)\s*(?:\r\n|\r|\n)/', $pdf, $header, 0, $position) === 1) {
             $first = (int) $header[1];
             $count = (int) $header[2];
             $position += strlen($header[0]);
@@ -141,7 +141,7 @@ final class DocumentReader
             for ($i = 0; $i < $count; $i++) {
                 $entry = substr($pdf, $position + ($i * 20), 20);
 
-                if (preg_match('/^(\d{10})\s(\d{5})\s([nf])/', $entry, $parts) && $parts[3] === 'n') {
+                if (preg_match('/^(\d{10})\s(\d{5})\s([nf])/', $entry, $parts) === 1 && $parts[3] === 'n') {
                     $xref[$first + $i] = (int) $parts[1];
                 }
             }

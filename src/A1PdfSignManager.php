@@ -16,10 +16,10 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
-use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
+use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use SensitiveParameter;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Default implementation of the package's entry point.
@@ -47,16 +47,12 @@ final readonly class A1PdfSignManager implements A1PdfSign
         #[SensitiveParameter]
         string $password,
         string $pdfPath,
-        SignatureMode|string|null $mode = null,
         ?bool $usePathEnv = null,
-    ): BinaryFileResponse|string {
-        return $this->deliver(
-            $this->newSignature()
-                ->usingCertificate($this->read(File::get($pfxPath), $password, $usePathEnv))
+    ): SignedPdf {
+        return $this->newSignature()
+                ->usingCertificate($this->read(Files::read($pfxPath), $password, $usePathEnv))
                 ->pdf($pdfPath)
-                ->sign(),
-            $mode,
-        );
+                ->sign();
     }
 
     public function signFromUpload(
@@ -64,16 +60,12 @@ final readonly class A1PdfSignManager implements A1PdfSign
         #[SensitiveParameter]
         string $password,
         string $pdfPath,
-        SignatureMode|string|null $mode = null,
         ?bool $usePathEnv = null,
-    ): BinaryFileResponse|string {
-        return $this->deliver(
-            $this->newSignature()
-                ->usingCertificate($this->read($uploadedPfx->get(), $password, $usePathEnv))
+    ): SignedPdf {
+        return $this->newSignature()
+                ->usingCertificate($this->read(self::uploadedBytes($uploadedPfx), $password, $usePathEnv))
                 ->pdf($pdfPath)
-                ->sign(),
-            $mode,
-        );
+                ->sign();
     }
 
     public function encryptCertificate(
@@ -83,8 +75,8 @@ final readonly class A1PdfSignManager implements A1PdfSign
         ?bool $usePathEnv = null,
     ): EncryptedCertificate {
         $bytes = $uploadedOrPfxPath instanceof UploadedFile
-            ? $uploadedOrPfxPath->get()
-            : File::get($uploadedOrPfxPath);
+            ? self::uploadedBytes($uploadedOrPfxPath)
+            : Files::read($uploadedOrPfxPath);
 
         // The hash it returns is required by decryptCertificate(); without it
         // the pair cannot be read back.
@@ -146,17 +138,20 @@ final readonly class A1PdfSignManager implements A1PdfSign
         return $this->readers->make(usePathEnv: $usePathEnv)->read($pfxContents, $password);
     }
 
+
     /**
-     * Signing produces bytes; the mode only picks how they are handed back.
-     * The v1 flow wrote them to disk and read them straight back for the bytes
-     * case (§1.8).
+     * UploadedFile::get() returns false when the temporary upload is gone.
+     *
+     * @throws FileNotFoundException
      */
-    private function deliver(
-        SignedPdf $signed,
-        SignatureMode|string|null $mode,
-    ): BinaryFileResponse|string {
-        return SignatureMode::resolve($mode ?? SignatureMode::Resource) === SignatureMode::Download
-            ? $signed->download()
-            : $signed->contents();
+    private static function uploadedBytes(UploadedFile $file): string
+    {
+        $contents = $file->get();
+
+        if ($contents === false) {
+            throw new FileNotFoundException($file->getClientOriginalName());
+        }
+
+        return $contents;
     }
 }

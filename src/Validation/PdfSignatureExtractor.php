@@ -21,7 +21,7 @@ final class PdfSignatureExtractor
     {
         // ISO 32000-1 allows any whitespace between the four numbers, and a
         // signer must pad them to a fixed width to patch the values in place.
-        if (! preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
+        if (preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) === 0) {
             return [];
         }
 
@@ -40,7 +40,7 @@ final class PdfSignatureExtractor
                 'byteRange' => [$open, $close, $trailing],
                 'cms' => $cms,
                 'coverageEnd' => $close + $trailing,
-                'isTimestamp' => $this->isDocumentTimestamp($pdf, (int) $match[0][1]),
+                'isTimestamp' => $this->isDocumentTimestamp($pdf, $match[0][1]),
             ];
         }
 

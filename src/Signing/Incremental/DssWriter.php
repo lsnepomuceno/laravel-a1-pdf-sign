@@ -98,7 +98,8 @@ final readonly class DssWriter
             $matches,
         );
 
-        return array_values($matches[0]);
+        /** @var list<string> */
+        return $matches[0];
     }
 
     /**

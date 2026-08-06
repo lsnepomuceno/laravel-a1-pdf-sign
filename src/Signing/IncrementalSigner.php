@@ -129,6 +129,16 @@ final readonly class IncrementalSigner implements PdfSigner
      */
     private function uniqueFieldName(string $pdf, string $base): string
     {
-        return $base . (preg_match_all('/\/FT\s*\/Sig/', $pdf) + 1);
+        return $base . ($this->signatureCount($pdf) + 1);
+    }
+
+    /**
+     * How many signature fields the document already carries.
+     */
+    private function signatureCount(string $pdf): int
+    {
+        $count = preg_match_all('/\/FT\s*\/Sig/', $pdf);
+
+        return $count === false ? 0 : $count;
     }
 }

@@ -9,6 +9,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 
 /**
  * Reports on every signature in a document.
@@ -36,7 +37,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
             throw new FileNotFoundException($pdfPath);
         }
 
-        return $this->validate(File::get($pdfPath), $pdfPath);
+        return $this->validate(Files::read($pdfPath), $pdfPath);
     }
 
     /**

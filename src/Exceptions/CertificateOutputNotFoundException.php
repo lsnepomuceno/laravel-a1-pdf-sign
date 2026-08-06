@@ -16,6 +16,6 @@ class CertificateOutputNotFoundException extends Exception implements Stringable
 
     public function __toString(): string
     {
-        return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+        return __CLASS__ . ": [{$this->getCode()}]: {$this->getMessage()}\n";
     }
 }

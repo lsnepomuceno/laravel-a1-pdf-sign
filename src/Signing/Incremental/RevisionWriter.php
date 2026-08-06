@@ -237,13 +237,13 @@ final class RevisionWriter
      */
     private function withAcroForm(string $catalog, int $widgetNumber): string
     {
-        if (! preg_match('/\/AcroForm\s*<<(.*?)>>/s', $catalog, $matches)) {
+        if (preg_match('/\/AcroForm\s*<<(.*?)>>/s', $catalog, $matches) !== 1) {
             return $this->injectBeforeClose($catalog, "/AcroForm <</Fields [{$widgetNumber} 0 R]/SigFlags 3>>");
         }
 
         $acroForm = $matches[1];
 
-        if (preg_match('/\/Fields\s*\[(.*?)\]/s', $acroForm, $fields)) {
+        if (preg_match('/\/Fields\s*\[(.*?)\]/s', $acroForm, $fields) === 1) {
             $acroForm = (string) preg_replace(
                 '/\/Fields\s*\[.*?\]/s',
                 '/Fields [' . trim(trim($fields[1]) . " {$widgetNumber} 0 R") . ']',
@@ -263,7 +263,7 @@ final class RevisionWriter
 
     private function withAnnotation(string $page, int $widgetNumber): string
     {
-        if (preg_match('/\/Annots\s*\[(.*?)\]/s', $page, $matches)) {
+        if (preg_match('/\/Annots\s*\[(.*?)\]/s', $page, $matches) === 1) {
             return str_replace(
                 $matches[0],
                 '/Annots [' . trim(trim($matches[1]) . " {$widgetNumber} 0 R") . ']',

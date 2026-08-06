@@ -15,6 +15,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use SensitiveParameter;
 
 /**
@@ -71,7 +72,7 @@ final class PendingSignature
             throw new FileNotFoundException($pfxPath);
         }
 
-        $this->certificate = $this->reader->read(File::get($pfxPath), $password);
+        $this->certificate = $this->reader->read(Files::read($pfxPath), $password);
 
         return $this;
     }
@@ -81,7 +82,7 @@ final class PendingSignature
         #[SensitiveParameter]
         string $password,
     ): self {
-        $this->certificate = $this->reader->read($uploadedPfx->get(), $password);
+        $this->certificate = $this->reader->read(self::uploadedBytes($uploadedPfx), $password);
 
         return $this;
     }
@@ -102,7 +103,7 @@ final class PendingSignature
             throw new FileNotFoundException($pdfPath);
         }
 
-        $this->pdfContents = File::get($pdfPath);
+        $this->pdfContents = Files::read($pdfPath);
         $this->fileName = pathinfo($pdfPath, PATHINFO_BASENAME);
 
         return $this;
@@ -239,5 +240,21 @@ final class PendingSignature
         $name = pathinfo($this->fileName, PATHINFO_FILENAME);
 
         return "{$name}_signed.pdf";
+    }
+
+    /**
+     * UploadedFile::get() returns false when the temporary upload is gone.
+     *
+     * @throws FileNotFoundException
+     */
+    private static function uploadedBytes(UploadedFile $file): string
+    {
+        $contents = $file->get();
+
+        if ($contents === false) {
+            throw new FileNotFoundException($file->getClientOriginalName());
+        }
+
+        return $contents;
     }
 }

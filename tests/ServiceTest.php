@@ -21,7 +21,7 @@ it('signs through the facade', function () {
     [$pfxPath, $pass] = debugCertificate();
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');
-    File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
+    A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf'))->save($pdfPath);
 
     expect(File::exists($pdfPath))->toBeTrue()
         ->and(A1PdfSign::validate($pdfPath))->toBeInstanceOf(SignatureReport::class);
@@ -65,17 +65,17 @@ it('honours the configured temp path', function () {
 
 it('lets the container swap the implementation', function () {
     $fake = new class implements A1PdfSignContract {
-        public function signFromFile(string $p, string $pw, string $pdf, $mode = null, ?bool $env = null): string
+        public function signFromFile(string $p, string $pw, string $pdf, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
         {
-            return 'faked';
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
         }
 
-        public function signFromUpload($upload, string $pw, string $pdf, $mode = null, ?bool $env = null): string
+        public function signFromUpload(\Illuminate\Http\UploadedFile $upload, string $pw, string $pdf, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
         {
-            return 'faked';
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
         }
 
-        public function encryptCertificate($path, string $pw, ?bool $env = null): EncryptedCertificate
+        public function encryptCertificate(\Illuminate\Http\UploadedFile|string $path, string $pw, ?bool $env = null): EncryptedCertificate
         {
             return new EncryptedCertificate('c', 'p', 'h');
         }
@@ -105,6 +105,6 @@ it('lets the container swap the implementation', function () {
 
     // The facade and every internal caller resolve the contract, so a swapped
     // implementation reaches all of them.
-    expect(A1PdfSign::signFromFile('a.pfx', 'x', 'b.pdf'))->toBe('faked')
+    expect(A1PdfSign::signFromFile('a.pfx', 'x', 'b.pdf')->contents)->toBe('faked')
         ->and(A1PdfSign::validate('b.pdf')->isSigned())->toBeFalse();
 });

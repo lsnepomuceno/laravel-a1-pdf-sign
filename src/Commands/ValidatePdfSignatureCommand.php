@@ -16,7 +16,7 @@ class ValidatePdfSignatureCommand extends Command
     {
         $this->line('Your PDF document is being validated.', 'info');
         try {
-            $pdfPath = $this->argument(key: 'pdfPath');
+            $pdfPath = $this->stringArgument('pdfPath');
 
             $validated = app(A1PdfSign::class)->validate($pdfPath);
             $validationText = $validated->isValid() ? 'VALID' : 'INVALID';
@@ -24,7 +24,8 @@ class ValidatePdfSignatureCommand extends Command
             $this->line("Your PDF document is {$validationText}", 'info');
 
             foreach ($validated->signatures as $index => $signature) {
-                $signer = $signature->signer()?->commonName ?? 'unknown signer';
+                $signer = $signature->signer()?->commonName;
+                $signer = $signer ?? 'unknown signer';
                 $status = $signature->verified ? 'verified' : 'NOT verified';
                 $scope = $signature->coversWholeDocument ? 'covers the whole file' : 'covers its own revision';
 
@@ -36,5 +37,15 @@ class ValidatePdfSignatureCommand extends Command
             $this->line("Unable to validate your file signature, an error occurred: {$th->getMessage()}", 'error');
             return self::FAILURE;
         }
+    }
+
+    /**
+     * Console arguments are mixed; every one this command takes is a string.
+     */
+    private function stringArgument(string $key): string
+    {
+        $value = $this->argument($key);
+
+        return is_string($value) ? $value : '';
     }
 }
