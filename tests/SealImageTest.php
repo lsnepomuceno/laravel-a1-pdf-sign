@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\File;
 use Intervention\Image\Drivers\Gd\Driver as GDDriver;
 use Intervention\Image\ImageManager as IMG;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 use LSNepomuceno\LaravelA1PdfSign\Sign\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Sign\SignaturePdf;
@@ -22,17 +23,17 @@ it('stamps the seal onto a signed pdf', function () {
     $cert = new ManageCert();
     $cert->makeDebugCertificate();
 
-    $imagePath = a1TempDir(true, '.png');
+    $imagePath = A1PdfSign::tempPath(true, '.png');
     File::put($imagePath, SealImage::fromCert($cert));
 
     expect(File::exists($imagePath))->toBeTrue();
 
-    $pdfPath = a1TempDir(true, '.pdf');
+    $pdfPath = A1PdfSign::tempPath(true, '.pdf');
     $signed = (new SignaturePdf(resource('test.pdf'), $cert))->setImage($imagePath)->signature();
     File::put($pdfPath, $signed);
 
     expect(File::exists($pdfPath))->toBeTrue()
-        ->and(validatePdfSignature($pdfPath)->isValidated)->toBeTrue();
+        ->and(A1PdfSign::validate($pdfPath)->isValidated)->toBeTrue();
 
     File::delete([$imagePath, $pdfPath]);
 });

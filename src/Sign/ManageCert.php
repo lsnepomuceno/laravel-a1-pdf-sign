@@ -2,57 +2,64 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
-use Illuminate\Contracts\Encryption\{DecryptException, EncryptException};
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Contracts\Encryption\EncryptException;
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\{Facades\File, Str};
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
-    FileNotFoundException,
-    InvalidCertificateContentException,
-    InvalidPFXException,
-    Invalidx509PrivateKeyException,
-    ProcessRunTimeException};
-use OpenSSLCertificate;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
+use SensitiveParameter;
 
+/**
+ * Holds a certificate while it is being read and used.
+ *
+ * As of PR 6 this delegates: reading is a {@see CertificateReader}, encryption
+ * is a {@see CertificateVault}. It survives as the object SignaturePdf and
+ * SealImage receive, and is replaced by the fluent builder in PR 7.
+ */
 class ManageCert
 {
-    private string $tempDir;
-    private string $originalCertContent;
-    private string $password;
-    private string $hashKey;
+    /** @deprecated 2.0 Use {@see CertificateVault::CIPHER}. */
+    public const string CIPHER = CertificateVault::CIPHER;
+
+    private Certificate $certificate;
+
+    private CertificateVault $vault;
 
     private bool $preservePfx = false;
+
     private bool $isLegacy = false;
 
-    private array $parsedData;
-
-    private OpenSSLCertificate|bool $certContent;
-
-    public const string CIPHER = 'aes-128-cbc';
-    public const string LEGACY_FLAG = '-legacy';
-
-    private Encrypter $encrypter;
-
-    public function __construct()
-    {
-        $this->tempDir = a1TempDir();
-        $this->generateHashKey()->setEncrypter();
-
-        if (!File::exists($this->tempDir)) {
-            File::makeDirectory($this->tempDir);
-        }
+    public function __construct(
+        private readonly ?CertificateReader $reader = null,
+        private readonly ?CertificateParser $parser = null,
+    ) {
+        $this->vault = CertificateVault::create();
     }
 
     public function setPreservePfx(bool $preservePfx = true): self
     {
         $this->preservePfx = $preservePfx;
+
         return $this;
     }
 
     public function setIsLegacy(bool $isLegacy = true): self
     {
         $this->isLegacy = $isLegacy;
+
         return $this;
     }
 
@@ -64,63 +71,43 @@ class ManageCert
      * @throws Invalidx509PrivateKeyException
      * @throws ProcessRunTimeException
      */
-    public function fromPfx(string $pfxPath, string $password, bool $usePathEnv = false): self
-    {
-        if (!Str::of($pfxPath)->lower()->endsWith('.pfx')) {
+    public function fromPfx(
+        string $pfxPath,
+        #[SensitiveParameter]
+        string $password,
+        bool $usePathEnv = false,
+    ): self {
+        if (! Str::of($pfxPath)->lower()->endsWith('.pfx')) {
             throw new InvalidPFXException($pfxPath);
         }
 
-        if (!File::exists($pfxPath)) {
+        if (! File::exists($pfxPath)) {
             throw new FileNotFoundException($pfxPath);
         }
 
-        $this->password = $password;
-        $output = a1TempDir(true, '.crt');
-        $shellPfxPath = escapeshellarg($pfxPath);
-        $shellOutput = escapeshellarg($output);
-        $shellArgPassword = escapeshellarg($password);
-        $legacyFlag = $this->isLegacy ? self::LEGACY_FLAG : '';
-        $openSslCommand = "openssl pkcs12 -in {$shellPfxPath} -out {$shellOutput} -nodes -password pass:{$shellArgPassword} {$legacyFlag}";
+        $this->certificate = $this->resolveReader($usePathEnv)->read(File::get($pfxPath), $password);
 
-        runCliCommandProcesses($openSslCommand, $usePathEnv);
-
-        if (!File::exists($output)) {
-            throw new CertificateOutputNotFoundException();
+        if (! $this->preservePfx) {
+            File::delete($pfxPath);
         }
 
-        $content = File::get($output);
-
-        $filesToBeDelete = [$output];
-
-        !$this->preservePfx && ($filesToBeDelete[] = $pfxPath);
-
-        File::delete($filesToBeDelete);
-
-        return $this->setCertContent($content);
+        return $this;
     }
 
     /**
      * @throws CertificateOutputNotFoundException
-     * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
      * @throws Invalidx509PrivateKeyException
      * @throws ProcessRunTimeException
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function fromUpload(UploadedFile $uploadedPfx, string $password, bool $usePathEnv = false): self
-    {
-        $pfxTemp = a1TempDir(true);
-
-        if (File::exists($pfxTemp)) {
-            $pfxTemp = microtime() . $pfxTemp;
-        }
-
-        File::put($pfxTemp, $uploadedPfx->get());
-
-        $this->fromPfx($pfxTemp, $password, $usePathEnv);
-
-        File::delete($pfxTemp);
+    public function fromUpload(
+        UploadedFile $uploadedPfx,
+        #[SensitiveParameter]
+        string $password,
+        bool $usePathEnv = false,
+    ): self {
+        // The upload never reaches disk under our control; the reader takes bytes.
+        $this->certificate = $this->resolveReader($usePathEnv)->read($uploadedPfx->get(), $password);
 
         return $this;
     }
@@ -129,82 +116,65 @@ class ManageCert
      * @throws InvalidCertificateContentException
      * @throws Invalidx509PrivateKeyException
      */
-    public function setCertContent(string $certContent): self
-    {
-        $this->originalCertContent = $certContent;
-        $this->certContent = openssl_x509_read(certificate: $certContent);
-        $this->parsedData = openssl_x509_parse(certificate: $this->certContent, short_names: false);
-        $this->validate();
+    public function setCertContent(
+        string $certContent,
+        #[SensitiveParameter]
+        string $password = '',
+    ): self {
+        $this->certificate = $this->parser()->parse($certContent, $password);
+
         return $this;
     }
 
     /**
      * @throws InvalidCertificateContentException
-     * @throws Invalidx509PrivateKeyException
      */
     public function validate(): void
     {
-        if (!$this->certContent) {
-            $this->invalidate();
+        if (! isset($this->certificate)) {
             throw new InvalidCertificateContentException();
         }
-
-        if (!openssl_x509_check_private_key(certificate: $this->certContent, private_key: $this->originalCertContent)) {
-            $this->invalidate();
-            throw new Invalidx509PrivateKeyException();
-        }
-    }
-
-    private function invalidate(): void
-    {
-        $this->originalCertContent = '';
-        $this->certContent = false;
-        $this->parsedData = [];
-        $this->password = '';
     }
 
     public function getCert(): Certificate
     {
-        return new Certificate(
-            original: $this->originalCertContent,
-            openssl: $this->certContent,
-            data: $this->parsedData,
-            password: $this->password,
-        );
+        $this->validate();
+
+        return $this->certificate;
     }
 
     public function getTempDir(): string
     {
-        return $this->tempDir;
+        return app(A1PdfSign::class)->tempPath();
     }
 
     public function generateHashKey(): self
     {
-        $this->hashKey = Encrypter::generateKey(self::CIPHER);
-        $this->setEncrypter();
+        $this->vault = CertificateVault::create();
+
         return $this;
     }
 
-    public function setHashKey(string $hashKey): self
+    public function setHashKey(#[SensitiveParameter] string $hashKey): self
     {
-        $this->hashKey = $hashKey;
-        $this->setEncrypter();
-        return $this;
-    }
+        $this->vault = CertificateVault::withKey($hashKey);
 
-    private function setEncrypter(): void
-    {
-        $this->encrypter = new Encrypter($this->hashKey, self::CIPHER);
+        return $this;
     }
 
     public function getHashKey(): string
     {
-        return $this->encrypter->getKey();
+        return $this->vault->key();
     }
 
     public function getEncrypter(): Encrypter
     {
-        return $this->encrypter;
+        return $this->vault->encrypter();
+    }
+
+    public function getVault(): CertificateVault
+    {
+        return $this->vault;
     }
 
     /**
@@ -212,7 +182,7 @@ class ManageCert
      */
     public function encryptBase64BlobString(string $blobString): string
     {
-        return $this->encrypter->encryptString(base64_encode($blobString));
+        return $this->getEncrypter()->encryptString(base64_encode($blobString));
     }
 
     /**
@@ -220,11 +190,14 @@ class ManageCert
      */
     public function decryptBase64BlobString(string $encryptedBlobString): string
     {
-        $string = $this->encrypter->decryptString($encryptedBlobString);
-        return base64_decode($string);
+        return base64_decode($this->getEncrypter()->decryptString($encryptedBlobString));
     }
 
     /**
+     * @deprecated 2.0 Use {@see DebugCertificate::make()}. Removed in 3.0.
+     *
+     * @return array{0: string, 1: string}|static
+     *
      * @throws CertificateOutputNotFoundException
      * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
@@ -234,25 +207,32 @@ class ManageCert
      */
     public function makeDebugCertificate(bool $returnPathAndPass = false, bool $wrongPass = false): array|static
     {
-        $pass = "example's password with special chars: $ & * ? \" '";
-        $shellArgPassword = escapeshellarg($pass);
-        $name = $this->tempDir . Str::orderedUuid();
+        [$pfx, $password] = DebugCertificate::make();
 
-        $genCommands = [
-            "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=Test Certificate /OU=LucasNepomuceno\" -days 600 -passout pass:{$shellArgPassword}",
-            "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$shellArgPassword} -passout pass:{$shellArgPassword}",
-        ];
-
-        foreach ($genCommands as $command) {
-            runCliCommandProcesses($command);
-        }
-
-        File::delete(["{$name}.key", "{$name}.crt"]);
+        $path = $this->getTempDir() . Str::orderedUuid() . '.pfx';
+        File::put($path, $pfx);
 
         if ($returnPathAndPass) {
-            return ["{$name}.pfx", $pass];
+            return [$path, $password];
         }
 
-        return $this->fromPfx("{$name}.pfx", $wrongPass ? 'wrongPass' : $pass);
+        return $this->fromPfx($path, $wrongPass ? 'wrongPass' : $password);
+    }
+
+    private function resolveReader(bool $usePathEnv): CertificateReader
+    {
+        if ($this->reader !== null) {
+            return $this->reader;
+        }
+
+        /** @var \LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory $factory */
+        $factory = app(\LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory::class);
+
+        return $factory->make($this->isLegacy, $usePathEnv);
+    }
+
+    private function parser(): CertificateParser
+    {
+        return $this->parser ?? app(CertificateParser::class);
     }
 }

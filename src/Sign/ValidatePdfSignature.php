@@ -3,12 +3,15 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\{Arr, Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException,
     HasNoSignatureOrInvalidPkcs7Exception,
     InvalidPdfFileException,
     ProcessRunTimeException
 };
+use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
+use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
 use Throwable;
 
 class ValidatePdfSignature
@@ -68,7 +71,7 @@ class ValidatePdfSignature
         if ($stream = fopen($this->pdfPath, 'rb')) {
             $signature = stream_get_contents($stream, $end - $start - 2, $start + 1); // because we need to exclude < and > from start and end
             fclose($stream);
-            $this->pkcs7Path = a1TempDir(tempFile: true, fileExt: '.pkcs7');
+            $this->pkcs7Path = app(A1PdfSign::class)->tempPath(tempFile: true, fileExt: '.pkcs7');
             File::put($this->pkcs7Path, hex2bin($signature));
         }
 
@@ -86,18 +89,26 @@ class ValidatePdfSignature
             throw new HasNoSignatureOrInvalidPkcs7Exception($this->pdfPath);
         }
 
-        $output         = a1TempDir(tempFile: true, fileExt: '.txt');
-        $openSslCommand = "openssl pkcs7 -in {$this->pkcs7Path} -inform DER -print_certs > {$output}";
+        $tempDir = app(A1PdfSign::class)->tempPath();
 
-        runCliCommandProcesses($openSslCommand);
+        try {
+            $this->plainTextContent = TemporaryFile::with($tempDir, '.txt', '', function (TemporaryFile $out): string {
+                app(ProcessRunner::class)->run(sprintf(
+                    'openssl pkcs7 -in %s -inform DER -print_certs > %s',
+                    escapeshellarg($this->pkcs7Path),
+                    escapeshellarg($out->path),
+                ));
 
-        if (!File::exists($output)) {
-            throw new FileNotFoundException($output);
+                if (! $out->exists()) {
+                    throw new FileNotFoundException($out->path);
+                }
+
+                return $out->contents();
+            });
+        } finally {
+            // The extracted PKCS#7 blob goes even when openssl fails.
+            File::delete($this->pkcs7Path);
         }
-
-        $this->plainTextContent = File::get($output);
-
-        File::delete([$output, $this->pkcs7Path]);
 
         return $this;
     }

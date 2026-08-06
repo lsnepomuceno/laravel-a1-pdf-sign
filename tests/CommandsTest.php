@@ -2,11 +2,12 @@
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 
 it('signs a pdf through the pdf:sign command', function () {
     [$pfxPath, $pass] = debugCertificate();
 
-    $fileName = a1TempDir(true, '.pdf');
+    $fileName = A1PdfSign::tempPath(true, '.pdf');
 
     $this->artisan('pdf:sign', [
         'pdfPath' => resource('test.pdf'),
@@ -21,10 +22,10 @@ it('signs a pdf through the pdf:sign command', function () {
 
 it('reports failure from the pdf:sign command when the inputs are invalid', function () {
     $this->artisan('pdf:sign', [
-        'pdfPath' => a1TempDir(true, '.pdf'),
-        'pfxPath' => a1TempDir(true, '.pfx'),
+        'pdfPath' => A1PdfSign::tempPath(true, '.pdf'),
+        'pfxPath' => A1PdfSign::tempPath(true, '.pfx'),
         'password' => Str::random(32),
-        'fileName' => a1TempDir(true, '.pdf'),
+        'fileName' => A1PdfSign::tempPath(true, '.pdf'),
     ])
         ->assertFailed()
         ->expectsOutput('Your PDF file is being signed!')
@@ -34,8 +35,8 @@ it('reports failure from the pdf:sign command when the inputs are invalid', func
 it('validates a signed pdf through the pdf:validate-signature command', function () {
     [$pfxPath, $pass] = debugCertificate();
 
-    $pdfPath = a1TempDir(true, '.pdf');
-    File::put($pdfPath, signPdfFromFile($pfxPath, $pass, resource('test.pdf')));
+    $pdfPath = A1PdfSign::tempPath(true, '.pdf');
+    File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
 
     expect(File::exists($pdfPath))->toBeTrue();
 

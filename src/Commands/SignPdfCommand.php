@@ -5,6 +5,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 
 class SignPdfCommand extends Command
 {
@@ -26,7 +27,7 @@ class SignPdfCommand extends Command
             $password = $this->argument(key: 'password');
             $fileName = $this->defineFileName($this->argument(key: 'fileName'));
 
-            $signedFileResource = signPdfFromFile($pfxPath, $password, $pdfPath);
+            $signedFileResource = app(A1PdfSign::class)->signFromFile($pfxPath, $password, $pdfPath);
 
             File::put($fileName, $signedFileResource);
 
@@ -46,7 +47,7 @@ class SignPdfCommand extends Command
         }
 
         if (!$fileName) {
-            $fileName = a1TempDir(tempFile: true, fileExt: '.pdf');
+            $fileName = app(A1PdfSign::class)->tempPath(tempFile: true, fileExt: '.pdf');
         }
 
         return $fileName;

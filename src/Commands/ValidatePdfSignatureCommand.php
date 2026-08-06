@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 
 use Illuminate\Console\Command;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 
 class ValidatePdfSignatureCommand extends Command
 {
@@ -17,7 +18,7 @@ class ValidatePdfSignatureCommand extends Command
         try {
             $pdfPath = $this->argument(key: 'pdfPath');
 
-            $validated = validatePdfSignature($pdfPath);
+            $validated = app(A1PdfSign::class)->validate($pdfPath);
             $validationText = $validated->isValidated ? 'VALID' : 'INVALID';
 
             $this->line("Your PDF document is {$validationText}", 'info');

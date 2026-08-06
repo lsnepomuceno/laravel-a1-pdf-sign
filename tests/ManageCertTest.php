@@ -4,8 +4,8 @@ use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
 it('exposes the parsed structure of a PFX certificate', function () {
@@ -38,9 +38,9 @@ it('builds a supported encrypter', function () {
         ->and($cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER))->toBeTrue();
 });
 
-it('surfaces openssl failures as ProcessRunTimeException', function () {
+it('rejects a wrong password', function () {
     (new ManageCert())->makeDebugCertificate(false, true);
-})->throws(ProcessRunTimeException::class);
+})->throws(InvalidCertificateContentException::class);
 
 it('keeps the PFX on disk when preservation is requested', function () {
     $cert = new ManageCert();

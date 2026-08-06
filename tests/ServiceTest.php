@@ -48,14 +48,7 @@ it('round-trips an encrypted certificate', function () {
     );
 
     expect($restored->getCert()->original)->toContain('BEGIN CERTIFICATE');
-})->skip(
-    'Known defect, inherited from v1 and never covered by a test: '
-    . 'encryptCertificate() stores the PEM produced by "openssl pkcs12 -nodes", '
-    . 'while decryptCertificate() feeds it back to "openssl pkcs12 -in", which '
-    . 'expects binary PKCS#12 and fails with an ASN.1 tag error. Fixing it means '
-    . 'deciding how ManageCert ingests already-decrypted content, which is PR 6 '
-    . 'scope. See ARCHITECTURE-V2.md §1.14.',
-);
+});
 
 it('honours the configured temp path', function () {
     $custom = sys_get_temp_dir() . '/a1-config-' . uniqid();
@@ -105,8 +98,8 @@ it('lets the container swap the implementation', function () {
 
     app()->instance(A1PdfSignContract::class, $fake);
 
-    // The deprecated global helpers route through the container too, so a
-    // swapped implementation reaches v1 call sites as well.
-    expect(signPdfFromFile('a.pfx', 'x', 'b.pdf'))->toBe('faked')
-        ->and(validatePdfSignature('b.pdf')->isValidated)->toBeTrue();
+    // The facade and every internal caller resolve the contract, so a swapped
+    // implementation reaches all of them.
+    expect(A1PdfSign::signFromFile('a.pfx', 'x', 'b.pdf'))->toBe('faked')
+        ->and(A1PdfSign::validate('b.pdf')->isValidated)->toBeTrue();
 });

@@ -75,7 +75,7 @@ arch('facades only proxy contracts')
  */
 arch('only the shell helper opens processes')
     ->expect(['Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])
-    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Helpers');
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner');
 
 arch('console commands stay in Commands')
     ->expect('Illuminate\Console\Command')

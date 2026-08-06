@@ -6,6 +6,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
@@ -25,7 +26,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 final readonly class A1PdfSignManager implements A1PdfSign
 {
-    public function __construct(private Config $config) {}
+    public function __construct(
+        private Config $config,
+        private CertificateParser $parser,
+    ) {}
 
     public function signFromFile(
         string $pfxPath,
@@ -66,14 +70,17 @@ final readonly class A1PdfSignManager implements A1PdfSign
             ? $cert->fromUpload($uploadedOrPfxPath, $password, $usePathEnv)
             : $cert->fromPfx($uploadedOrPfxPath, $password, $usePathEnv);
 
-        return new EncryptedCertificate(
-            certificate: $cert->getEncrypter()->encryptString($cert->getCert()->original),
-            password: $cert->getEncrypter()->encryptString($password),
-            // Required by decryptCertificate(): without it the pair cannot be read back.
-            hash: $cert->getHashKey(),
-        );
+        // The hash is required by decryptCertificate(); without it the pair
+        // cannot be read back.
+        return $cert->getVault()->seal($cert->getCert(), $password);
     }
 
+    /**
+     * encryptCertificate() stores the PEM bundle, so this parses it directly.
+     * The v1 helper wrote it to a .pfx and fed it back to `openssl pkcs12 -in`,
+     * which expects binary PKCS#12 and always failed — see
+     * ARCHITECTURE-V2.md §1.14.
+     */
     public function decryptCertificate(
         #[SensitiveParameter]
         string $hashKey,
@@ -85,16 +92,14 @@ final readonly class A1PdfSignManager implements A1PdfSign
     ): ManageCert {
         $cert = $this->certificate()->setHashKey($hashKey);
 
-        $pfxPath = $cert->getTempDir() . Str::orderedUuid() . '.pfx';
-        $decrypted = $cert->getEncrypter()->decryptString($encryptedCertificate);
-
-        File::put($pfxPath, $isBase64 ? base64_decode($decrypted) : $decrypted);
-
-        return $cert->fromPfx(
-            $pfxPath,
-            $cert->getEncrypter()->decryptString($password),
-            $this->usePathEnv($usePathEnv),
+        $restored = $cert->getVault()->open(
+            $this->parser,
+            $encryptedCertificate,
+            $password,
+            $isBase64,
         );
+
+        return $cert->setCertContent($restored->original, $restored->password);
     }
 
     public function validate(string $pdfPath): SignatureReport

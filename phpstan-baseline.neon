@@ -1,28 +1,46 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
-			identifier: function.strict
-			count: 1
-			path: src/A1PdfSignManager.php
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 2
+			path: src/Certificates/CertificateParser.php
 
 		-
-			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
+			message: '#^Parameter \$data of class LSNepomuceno\\LaravelA1PdfSign\\Data\\Certificate constructor expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Commands/SignPdfCommand.php
+			path: src/Certificates/CertificateParser.php
 
 		-
-			message: '''
-				#^Call to deprecated function signPdfFromFile\(\)\:
-				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
 			count: 1
-			path: src/Commands/SignPdfCommand.php
+			path: src/Certificates/CertificateParser.php
+
+		-
+			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
+			identifier: class.nameCase
+			count: 1
+			path: src/Certificates/CertificateVault.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Certificates/CertificateVault.php
+
+		-
+			message: '#^Parameter \#1 \$parsed of method LSNepomuceno\\LaravelA1PdfSign\\Certificates\\NativeCertificateReader\:\:toPem\(\) expects array\{cert\?\: string, pkey\?\: string, extracerts\?\: array\<int, string\>\}, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Certificates/NativeCertificateReader.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Certificates/NativeCertificateReader.php
 
 		-
 			message: '#^Only booleans are allowed in &&, string\|null given on the left side\.$#'
@@ -43,34 +61,25 @@ parameters:
 			path: src/Commands/SignPdfCommand.php
 
 		-
-			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			message: '#^Parameter \#1 \$pfxPath of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign\:\:signFromFile\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Commands/SignPdfCommand.php
 
 		-
-			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			message: '#^Parameter \#2 \$password of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign\:\:signFromFile\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Commands/SignPdfCommand.php
 
 		-
-			message: '#^Parameter \#3 \$pdfPath of function signPdfFromFile expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			message: '#^Parameter \#3 \$pdfPath of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign\:\:signFromFile\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Commands/SignPdfCommand.php
 
 		-
-			message: '''
-				#^Call to deprecated function validatePdfSignature\(\)\:
-				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 1
-			path: src/Commands/ValidatePdfSignatureCommand.php
-
-		-
-			message: '#^Parameter \#1 \$pdfPath of function validatePdfSignature expects string, array\|bool\|float\|int\|string\|null given\.$#'
+			message: '#^Parameter \#1 \$pdfPath of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign\:\:validate\(\) expects string, array\|bool\|float\|int\|string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Commands/ValidatePdfSignatureCommand.php
@@ -142,15 +151,6 @@ parameters:
 			path: src/Exceptions/ProcessRunTimeException.php
 
 		-
-			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 3
-			path: src/Sign/ManageCert.php
-
-		-
 			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
 			identifier: function.strict
 			count: 1
@@ -159,66 +159,18 @@ parameters:
 		-
 			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
 			identifier: class.nameCase
-			count: 2
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Sign/ManageCert.php
 
 		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) should return array\|static\(LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\) but returns LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) should return array\{string, string\}\|static\(LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\) but returns LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Sign/ManageCert.php
 
 		-
-			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
-			identifier: booleanAnd.rightNotBoolean
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Only booleans are allowed in a negated boolean, bool\|OpenSSLCertificate given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Parameter \#2 \$contents of static method Illuminate\\Support\\Facades\\File\:\:put\(\) expects string, string\|false given\.$#'
+			message: '#^Parameter \#1 \$pfxContents of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\CertificateReader\:\:read\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Parameter \$certificate of function openssl_x509_check_private_key expects OpenSSLCertificate\|string, OpenSSLCertificate\|true given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Parameter \$certificate of function openssl_x509_parse expects OpenSSLCertificate\|string, OpenSSLCertificate\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Parameter \$data of class LSNepomuceno\\LaravelA1PdfSign\\Data\\Certificate constructor expects array\<string, mixed\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:\$parsedData \(array\) does not accept array\|false\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:\$parsedData type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Sign/ManageCert.php
 
@@ -517,15 +469,6 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 2
-			path: src/Sign/ValidatePdfSignature.php
-
-		-
 			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
 			identifier: function.strict
 			count: 1
@@ -640,67 +583,52 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 5
-			path: tests/CommandsTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function signPdfFromFile\(\)\:
-				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Testing\\DebugCertificate\:\:make\(\) should return array\{string, string\} but returns array\{mixed, ''example\\''s password…''\}\.$#'
+			identifier: return.type
 			count: 1
-			path: tests/CommandsTest.php
+			path: src/Testing/DebugCertificate.php
 
 		-
-			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 8
-			path: tests/HelpersTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function encryptCertData\(\)\:
-				2\.0 Use A1PdfSign\:\:encryptCertificate\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
+			message: '#^Parameter \#1 \$csr of function openssl_csr_sign expects OpenSSLCertificateSigningRequest\|string, OpenSSLCertificateSigningRequest\|true given\.$#'
+			identifier: argument.type
 			count: 1
-			path: tests/HelpersTest.php
+			path: src/Testing/DebugCertificate.php
 
 		-
-			message: '''
-				#^Call to deprecated function signPdfFromFile\(\)\:
-				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 3
-			path: tests/HelpersTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function signPdfFromUpload\(\)\:
-				2\.0 Use A1PdfSign\:\:signFromUpload\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 2
-			path: tests/HelpersTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function validatePdfSignature\(\)\:
-				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
+			message: '#^Parameter \#3 \$private_key of function openssl_csr_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
 			count: 1
-			path: tests/HelpersTest.php
+			path: src/Testing/DebugCertificate.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_pkcs12_export expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Testing/DebugCertificate.php
+
+		-
+			message: '#^Parameter \#1 \$path of static method Illuminate\\Support\\Facades\\File\:\:exists\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/CertificatesTest.php
+
+		-
+			message: '''
+				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
+				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
+			'''
+			identifier: method.deprecated
+			count: 1
+			path: tests/DataTest.php
+
+		-
+			message: '''
+				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
+				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
+			'''
+			identifier: method.deprecated
+			count: 4
+			path: tests/ManageCertTest.php
 
 		-
 			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
@@ -711,6 +639,15 @@ parameters:
 		-
 			message: '#^Dynamic call to static method Illuminate\\Encryption\\Encrypter\:\:supported\(\)\.$#'
 			identifier: staticMethod.dynamicCall
+			count: 1
+			path: tests/ManageCertTest.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant CIPHER of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
+				2\.0 Use \{@see CertificateVault\:\:CIPHER\}\.$#
+			'''
+			identifier: classConstant.deprecated
 			count: 1
 			path: tests/ManageCertTest.php
 
@@ -739,6 +676,15 @@ parameters:
 			path: tests/ManageCertTest.php
 
 		-
+			message: '''
+				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
+				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
+			'''
+			identifier: method.deprecated
+			count: 1
+			path: tests/Pest.php
+
+		-
 			message: '#^Function debugCertificate\(\) should return array\{string, string\} but returns array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
 			identifier: return.type
 			count: 1
@@ -746,60 +692,33 @@ parameters:
 
 		-
 			message: '''
-				#^Call to deprecated function a1TempDir\(\)\:
-				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
+				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
 			'''
-			identifier: function.deprecated
+			identifier: method.deprecated
 			count: 2
 			path: tests/SealImageTest.php
 
 		-
-			message: '''
-				#^Call to deprecated function validatePdfSignature\(\)\:
-				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 1
-			path: tests/SealImageTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function signPdfFromFile\(\)\:
-				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 1
-			path: tests/ServiceTest.php
-
-		-
-			message: '''
-				#^Call to deprecated function validatePdfSignature\(\)\:
-				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
-			'''
-			identifier: function.deprecated
-			count: 1
-			path: tests/ServiceTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:encryptCertificate\(\) has parameter \$path with no type specified\.$#'
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:67\:\:encryptCertificate\(\) has parameter \$path with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: tests/ServiceTest.php
 
 		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromFile\(\) has parameter \$mode with no type specified\.$#'
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:67\:\:signFromFile\(\) has parameter \$mode with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: tests/ServiceTest.php
 
 		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromUpload\(\) has parameter \$mode with no type specified\.$#'
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:67\:\:signFromUpload\(\) has parameter \$mode with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: tests/ServiceTest.php
 
 		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromUpload\(\) has parameter \$upload with no type specified\.$#'
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:67\:\:signFromUpload\(\) has parameter \$upload with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
 			path: tests/ServiceTest.php
