@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Tests\Sign\ValidatePdfSignature;
 
 use LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature;
 use LSNepomuceno\LaravelA1PdfSign\Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionMethod;
 
 class ProcessDataInfoFunctionTest extends TestCase
@@ -28,14 +29,13 @@ class ProcessDataInfoFunctionTest extends TestCase
     }
 
     /**
-     * 
-     * @dataProvider stringsDataProvider
-     * 
+     * PHPUnit 13 no longer reads the @dataProvider annotation; the attribute is
+     * the supported form.
+     *
      * @param array<string, array<string, mixed>> $expectedResponse
-     * 
-     * @return void 
      */
-    public function testProcessDataToInfoFunction(array $expectedResponse, string $content)
+    #[DataProvider('stringsDataProvider')]
+    public function testProcessDataToInfoFunction(array $expectedResponse, string $content): void
     {
         $method = new ReflectionMethod(
             '\LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature',

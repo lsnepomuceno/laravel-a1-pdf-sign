@@ -9,12 +9,13 @@ FROM php:${PHP_VERSION}-cli-alpine
 
 # openssl: PKCS#7 signing and PKCS#12 reading
 # gd / imagick: seal rendering (Intervention Image)
+# bcmath: required by tc-lib-pdf through tc-lib-barcode
 # pcov: fast coverage driver, required by mutation testing
 RUN apk add --no-cache \
         git unzip libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev \
         imagemagick imagemagick-dev $PHPIZE_DEPS \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" gd zip \
+    && docker-php-ext-install -j"$(nproc)" gd zip bcmath \
     && pecl install pcov imagick \
     && docker-php-ext-enable pcov imagick \
     && apk del $PHPIZE_DEPS \

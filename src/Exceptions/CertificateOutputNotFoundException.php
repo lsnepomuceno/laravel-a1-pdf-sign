@@ -7,7 +7,7 @@ use Stringable;
 
 class CertificateOutputNotFoundException extends Exception implements Stringable
 {
-    public function __construct(int $code = 0, Exception $previous = null)
+    public function __construct(int $code = 0, ?Exception $previous = null)
     {
         $message = 'The certificate output file could not be found, check that the directory permissions are correct.';
         parent::__construct($message, $code, $previous);

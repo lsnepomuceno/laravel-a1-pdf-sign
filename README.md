@@ -63,6 +63,13 @@
     <td>^11 || ^12</td>
     <td>^8.2 || ^8.3 || ^8.4</td>
   </tr>
+
+  <tr>
+    <td>^12 || ^13</td>
+    <td>^8.4 || ^8.5</td>
+    <td>^2</td>
+    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+  </tr>
 </table>
 
 

@@ -126,7 +126,7 @@ class SealImage
         return $this;
     }
 
-    public function setImagePath(string $imagePathOrContent = null): self
+    public function setImagePath(?string $imagePathOrContent = null): self
     {
         $this->imagePathOrContent = $imagePathOrContent ?? dirname(__DIR__) . '/Resources/img/sign-seal.png';
 
@@ -140,7 +140,7 @@ class SealImage
         string  $text,
         float   $textX,
         float   $textY,
-        Closure $callback = null
+        ?Closure $callback = null
     ): self
     {
         $newText = [

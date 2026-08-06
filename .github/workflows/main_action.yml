@@ -2,10 +2,16 @@ name: A1 Pdf Sign Tests
 
 on:
   pull_request:
-    branches: [ main, dev, v1.x-dev ]
+    branches: [ main, dev, v1.x-dev, v2.x-dev ]
+  push:
+    branches: [ main, dev, v1.x-dev, v2.x-dev ]
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -14,36 +20,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Laravel 9 supports PHP 8.1–8.2
-          - php: 8.1
-            laravel: 9.*
-          - php: 8.2
-            laravel: 9.*
-
-          # Laravel 10 supports PHP 8.1–8.3
-          - php: 8.1
-            laravel: 10.*
-          - php: 8.2
-            laravel: 10.*
-          - php: 8.3
-            laravel: 10.*
-
-          # Laravel 11 supports PHP 8.2–8.4
-          - php: 8.2
-            laravel: 11.*
-          - php: 8.3
-            laravel: 11.*
-          - php: 8.4
-            laravel: 11.*
-
-          # Laravel 12 supports PHP 8.2–8.4
-          - php: 8.2
-            laravel: 12.*
-          - php: 8.3
-            laravel: 12.*
-          - php: 8.4
-            laravel: 12.*
+        # Laravel 12 supports PHP 8.2-8.5 and Laravel 13 supports PHP 8.3-8.5.
+        # The package floor is PHP 8.4, so every combination below is valid with
+        # no exclusions. See ARCHITECTURE-V2.md §3e.
+        php: [ '8.4', '8.5' ]
+        laravel: [ '12.*', '13.*' ]
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -55,8 +36,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
-          coverage: none
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: pcov
 
       - name: Validate PHP and Composer
         run: |
@@ -64,7 +45,7 @@ jobs:
           composer -V
           composer validate
 
-      - name: Configure Laravel Version
+      - name: Configure Laravel version
         run: |
           composer require "illuminate/support:${{ matrix.laravel }}" \
                            "illuminate/encryption:${{ matrix.laravel }}" \
@@ -72,8 +53,7 @@ jobs:
                            --no-interaction --no-update
 
       - name: Install dependencies
-        run: |
-          composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run tests
         run: composer test

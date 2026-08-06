@@ -7,7 +7,7 @@ use Stringable;
 
 class InvalidX509PrivateKeyException extends Exception implements Stringable
 {
-    public function __construct(int $code = 0, Exception $previous = null)
+    public function __construct(int $code = 0, ?Exception $previous = null)
     {
         $message = 'Invalid private key for the certificate, check that the file was generated correctly.';
         parent::__construct($message, $code, $previous);

@@ -9,7 +9,7 @@ class HasNoSignatureOrInvalidPkcs7Exception extends Exception implements Stringa
 {
     public string $currentFile;
 
-    public function __construct(string $currentFile, int $code = 0, Exception $previous = null)
+    public function __construct(string $currentFile, int $code = 0, ?Exception $previous = null)
     {
         $this->currentFile = $currentFile;
         $message           = 'The file is unsigned or the signature is not compatible with the PKCS7 type.';

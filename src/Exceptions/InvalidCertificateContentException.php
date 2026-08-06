@@ -7,7 +7,7 @@ use Stringable;
 
 class InvalidCertificateContentException extends Exception implements Stringable
 {
-    public function __construct(int $code = 0, Exception $previous = null)
+    public function __construct(int $code = 0, ?Exception $previous = null)
     {
         $message = 'Invalid file content, accept only valid OpenSSLCertificate.';
         parent::__construct($message, $code, $previous);

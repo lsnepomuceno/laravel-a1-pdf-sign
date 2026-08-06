@@ -7,7 +7,7 @@ use Stringable;
 
 class ProcessRunTimeException extends Exception implements Stringable
 {
-    public function __construct(string $reason, int $code = 0, Exception $previous = null)
+    public function __construct(string $reason, int $code = 0, ?Exception $previous = null)
     {
         $reason  = preg_replace('/[\n\r]/m', '. ', $reason);
         $message = "Process runtime error, reason: \"{$reason}\"";
