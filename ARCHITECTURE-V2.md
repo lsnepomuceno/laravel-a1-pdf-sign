@@ -692,7 +692,7 @@ Independent PRs on the `v2.x-dev` branch.
 | 2 | ✅ Formatting + static analysis | **done** — Pint (PER-CS), PHPStan `level: max` + Larastan + strict/deprecation rules, **216-error baseline**, `quality` job, `composer check`, `CONTRIBUTING.md` | — |
 | 3 | ✅ PHPUnit → Pest | **done** — Pest 5, `tests/Pest.php`, named datasets, **arch tests**, type coverage 94.3% gated in CI. `drift` tried and discarded (§6.4) | — |
 | 4 | ✅ Data + Enums | **done** — `Data/` readonly VOs, `Enums/` carrying behaviour, `Entities\*` as deprecated subclasses, `#[\SensitiveParameter]` on passwords, type coverage 95.7%. `SignatureInfo`, `SealPlacement` and `SignedPdf` deferred to PR 7, where they gain consumers | — |
-| 5 | Package infrastructure | publishable config, contracts, bindings, facade, **arch tests** (§6.2) | medium |
+| 5 | ✅ Package infrastructure | **done** — publishable config, `Contracts\A1PdfSign` bound as a singleton, facade, helpers delegating to the container, 4 more arch rules, **type coverage 100%**. Found defect §1.14. The finer-grained contracts land with their implementations in PRs 6-9 | — |
 | 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, `#[\SensitiveParameter]` on every `$password` | **high** |
 | 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
 | 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
