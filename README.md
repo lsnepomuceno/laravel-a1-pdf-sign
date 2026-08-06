@@ -65,13 +65,12 @@
   </tr>
 
   <tr>
-    <td>^12 || ^13</td>
+    <td>^13</td>
     <td>^8.4 || ^8.5</td>
     <td>^2</td>
     <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
   </tr>
 </table>
-
 
 ## Version 2
 
@@ -94,20 +93,19 @@ $signed->save($path);              // path
 $signed->download('contract.pdf'); // BinaryFileResponse
 ```
 
-**Signing appends a revision rather than rebuilding the document.** The
-original bytes survive, so annotations and form fields are preserved and a
-document can carry more than one signature — the request in
+**Signing appends a revision rather than rebuilding the document.** The original bytes survive, so annotations and form
+fields are preserved and a document can carry more than one signature — the request in
 [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
 
 ### PAdES profiles
 
-| Profile | Adds |
-|---|---|
-| `legacy` | ISO 32000-1 detached CMS |
-| `pades-b-b` | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default** |
-| `pades-b-t` | plus an RFC 3161 timestamp |
-| `pades-b-lt` | plus a Document Security Store, so it still verifies after the certificate expires |
-| `pades-b-lta` | plus an archive timestamp over the whole file |
+| Profile       | Adds                                                                               |
+|---------------|------------------------------------------------------------------------------------|
+| `legacy`      | ISO 32000-1 detached CMS                                                           |
+| `pades-b-b`   | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default**            |
+| `pades-b-t`   | plus an RFC 3161 timestamp                                                         |
+| `pades-b-lt`  | plus a Document Security Store, so it still verifies after the certificate expires |
+| `pades-b-lta` | plus an archive timestamp over the whole file                                      |
 
 ```php
 A1PdfSign::newSignature()
@@ -127,9 +125,8 @@ $report->count();       // how many signatures the document carries
 $report->signers();     // structured signer identity
 ```
 
-`isValid()` answers whether each signature matches the document. It does not
-check the issuer against a trust store — that decision stays with your
-application.
+`isValid()` answers whether each signature matches the document. It does not check the issuer against a trust store —
+that decision stays with your application.
 
 Configuration is publishable:
 
@@ -138,18 +135,3 @@ php artisan vendor:publish --tag=a1-pdf-sign-config
 ```
 
 Upgrading from 1.x? See [UPGRADE.md](UPGRADE.md).
-
-<h1 align="center">Project supported by JetBrains</h1>
-<h3 align="center">Special thanks to the team at JetBrains for supporting Open Source projects with licenses to use.</h3>
-<p align="center">
-  <a href="https://www.jetbrains.com/community/opensource/?from=https://github.com/lsnepomuceno/laravel-a1-pdf-sign#support">
-    <img src="https://user-images.githubusercontent.com/14093492/195155296-55db9dcb-feca-4f2b-a9d4-205fadc580b7.svg" width="100" alt="JetBrains Logo">
-  </a>
-</p>
-
-<h1 align="center">Do you want to support this project?</h1>
-<p align="center">
-  <a href="https://www.buymeacoffee.com/lucasnepomuceno" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="60" width="200" >
-  </a>
-</p>
