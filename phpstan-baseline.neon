@@ -355,6 +355,12 @@ parameters:
 			path: src/Signing/Incremental/DocumentReader.php
 
 		-
+			message: '#^Parameter \#1 \$array \(list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: src/Signing/Incremental/DssWriter.php
+
+		-
 			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
 			identifier: booleanNot.exprNotBoolean
 			count: 1
@@ -416,6 +422,42 @@ parameters:
 			identifier: method.deprecated
 			count: 1
 			path: tests/DataTest.php
+
+		-
+			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 5
+			path: tests/DssTest.php
+
+		-
+			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\DocumentReader\:\:read\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/DssTest.php
+
+		-
+			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\RevisionWriter\:\:appendObjects\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/DssTest.php
+
+		-
+			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\RevisionWriter\:\:catalogWithDss\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/DssTest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/DssTest.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match_all expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/DssTest.php
 
 		-
 			message: '''

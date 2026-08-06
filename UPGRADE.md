@@ -115,8 +115,8 @@ Signatures are now PAdES baseline by default, carrying the ESS
 | `legacy` | ISO 32000-1 detached CMS — the 1.x behaviour |
 | `pades-b-b` | CAdES signed attributes. **The new default** |
 | `pades-b-t` | B-B plus an RFC 3161 timestamp |
-| `pades-b-lt` | B-T plus a Document Security Store |
-| `pades-b-lta` | B-LT plus an archive timestamp |
+| `pades-b-lt` | B-T plus a Document Security Store, so the signature still verifies after the certificate expires |
+| `pades-b-lta` | B-LT plus an archive timestamp — **the archive timestamp revision is not written yet**; treat as B-LT |
 
 ```php
 A1PdfSign::newSignature()

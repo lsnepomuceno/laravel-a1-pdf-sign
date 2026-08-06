@@ -92,6 +92,63 @@ final class RevisionWriter
         return $pdf . $body;
     }
 
+    /**
+     * Appends a revision carrying arbitrary object bodies.
+     *
+     * The signature revision above is one caller; the DSS and document
+     * timestamp revisions of PAdES B-LT and B-LTA are the others. Object
+     * numbering is the caller's, so it stays authoritative.
+     *
+     * @param  array<int, string>  $objects  Full "N 0 obj … endobj" fragments, keyed by number.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function appendObjects(string $pdf, DocumentInfo $document, array $objects): string
+    {
+        if ($objects === []) {
+            return $pdf;
+        }
+
+        ksort($objects);
+
+        $base = strlen($pdf);
+        $body = "\n";
+        $offsets = [];
+
+        foreach ($objects as $number => $object) {
+            $offsets[$number] = $base + strlen($body);
+            $body .= $object;
+        }
+
+        $xrefOffset = $base + strlen($body);
+
+        $body .= $this->xrefTable($offsets);
+        $body .= $this->trailer(
+            max(max(array_keys($offsets)) + 1, $document->size),
+            $document->root,
+            $document,
+        );
+        $body .= "startxref\n{$xrefOffset}\n%%EOF\n";
+
+        return $pdf . $body;
+    }
+
+    /**
+     * The catalog with a /DSS entry pointing at the emitted store.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function catalogWithDss(string $pdf, DocumentInfo $document, int $dssNumber): string
+    {
+        $catalog = $this->reader->rawObject($pdf, $document, $document->root);
+
+        $catalog = preg_match('/\/DSS\s+\d+\s+\d+\s+R/', $catalog) === 1
+            ? (string) preg_replace('/\/DSS\s+\d+\s+\d+\s+R/', "/DSS {$dssNumber} 0 R", $catalog)
+            : $this->injectBeforeClose($catalog, "/DSS {$dssNumber} 0 R");
+
+        return "{$document->root} 0 obj\n{$catalog}\nendobj\n";
+    }
+
     private function signatureObject(
         int $number,
         SignatureInfo $info,

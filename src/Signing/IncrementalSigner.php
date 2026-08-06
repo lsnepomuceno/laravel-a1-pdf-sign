@@ -13,6 +13,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DssWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
 
 /**
@@ -42,6 +43,7 @@ final readonly class IncrementalSigner implements PdfSigner
         private RevisionWriter $writer,
         private ByteRangeCalculator $byteRange,
         private CadesBuilder $cades,
+        private DssWriter $dss,
     ) {}
 
     public function sign(
@@ -69,8 +71,15 @@ final readonly class IncrementalSigner implements PdfSigner
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
+        $signed = $this->embedSignature($withByteRange, $certificate, $profile);
 
-        return new SignedPdf($this->embedSignature($withByteRange, $certificate, $profile));
+        // B-LT and above append the validation material as a further revision,
+        // after the signature it vouches for is already in place.
+        if ($profile->needsValidationMaterial()) {
+            $signed = $this->dss->append($signed, $certificate);
+        }
+
+        return new SignedPdf($signed);
     }
 
     /**
