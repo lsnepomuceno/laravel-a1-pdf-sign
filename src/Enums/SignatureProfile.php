@@ -52,6 +52,14 @@ enum SignatureProfile: string
         return in_array($this, [self::PadesBLT, self::PadesBLTA], true);
     }
 
+    /**
+     * Whether the profile closes with an RFC 3161 timestamp over the whole file.
+     */
+    public function needsArchiveTimestamp(): bool
+    {
+        return $this === self::PadesBLTA;
+    }
+
     public function subFilter(): string
     {
         return $this->isPades() ? 'ETSI.CAdES.detached' : 'adbe.pkcs7.detached';

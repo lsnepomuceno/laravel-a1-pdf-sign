@@ -116,7 +116,7 @@ Signatures are now PAdES baseline by default, carrying the ESS
 | `pades-b-b` | CAdES signed attributes. **The new default** |
 | `pades-b-t` | B-B plus an RFC 3161 timestamp |
 | `pades-b-lt` | B-T plus a Document Security Store, so the signature still verifies after the certificate expires |
-| `pades-b-lta` | B-LT plus an archive timestamp — **the archive timestamp revision is not written yet**; treat as B-LT |
+| `pades-b-lta` | B-LT plus an archive timestamp over the whole file |
 
 ```php
 A1PdfSign::newSignature()

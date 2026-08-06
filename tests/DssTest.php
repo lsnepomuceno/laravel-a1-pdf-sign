@@ -2,6 +2,7 @@
 
 use Com\Tecnick\Pdf\Sign\Output\Dss;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
@@ -124,3 +125,45 @@ it('embeds a document security store at PAdES B-LT', function () {
     preg_match_all('/\/Prev\s+(\d+)/', $longTerm->contents, $prev);
     expect($prev[1])->toHaveCount(2);
 })->group('network');
+
+it('closes with an archive timestamp at PAdES B-LTA', function () {
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
+    [$pfxPath, $password] = debugCertificate();
+
+    $archived = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('test.pdf'))
+        ->profile(SignatureProfile::PadesBLTA)
+        ->sign();
+
+    // Signature, store and archive timestamp each ride in their own revision.
+    preg_match_all('/\\/Prev\\s+(\\d+)/', $archived->contents, $prev);
+
+    expect($archived->contents)->toContain('/Type /DocTimeStamp')
+        ->toContain('/SubFilter /ETSI.RFC3161')
+        ->toContain('/Type /DSS')
+        ->and($prev[1])->toHaveCount(3);
+
+    // The archive timestamp covers the whole file, unlike the signature which
+    // stops at its own revision.
+    preg_match_all('/\\/ByteRange\\[0 (\\d+)\\s+(\\d+)\\s+(\\d+)\\s*\\]/', $archived->contents, $ranges, PREG_SET_ORDER);
+    $last = end($ranges);
+
+    expect((int) $last[2] + (int) $last[3])->toBe(strlen($archived->contents));
+
+    // And the document still parses after three appended revisions.
+    expect(app(DocumentReader::class)->read($archived->contents)->root)->toBe(14);
+})->group('network');
+
+it('refuses an archive timestamp without an authority', function () {
+    config()->set('a1-pdf-sign.signature.timestamp.url', null);
+
+    [$pfxPath, $password] = debugCertificate();
+
+    A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('test.pdf'))
+        ->profile(SignatureProfile::PadesBLTA)
+        ->sign();
+})->throws(ProcessRunTimeException::class);

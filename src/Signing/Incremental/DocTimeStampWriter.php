@@ -53,7 +53,7 @@ final readonly class DocTimeStampWriter
 
         if (! is_string($url) || $url === '') {
             throw new ProcessRunTimeException(
-                'an archive timestamp needs a timestamp authority; set a1-pdf-sign.signature.timestamp.url'
+                'an archive timestamp needs a timestamp authority; set a1-pdf-sign.signature.timestamp.url',
             );
         }
 

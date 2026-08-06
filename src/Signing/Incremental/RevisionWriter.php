@@ -134,6 +134,34 @@ final class RevisionWriter
     }
 
     /**
+     * The catalog with an extra field registered on its /AcroForm.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function catalogWithField(string $pdf, DocumentInfo $document, int $widgetNumber): string
+    {
+        $catalog = $this->withAcroForm($this->reader->rawObject($pdf, $document, $document->root), $widgetNumber);
+
+        return "{$document->root} 0 obj\n{$catalog}\nendobj\n";
+    }
+
+    /**
+     * The page with an extra annotation appended to its /Annots.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function pageWithAnnotation(
+        string $pdf,
+        DocumentInfo $document,
+        int $pageNumber,
+        int $widgetNumber,
+    ): string {
+        $page = $this->withAnnotation($this->reader->rawObject($pdf, $document, $pageNumber), $widgetNumber);
+
+        return "{$pageNumber} 0 obj\n{$page}\nendobj\n";
+    }
+
+    /**
      * The catalog with a /DSS entry pointing at the emitted store.
      *
      * @throws InvalidPdfFileException

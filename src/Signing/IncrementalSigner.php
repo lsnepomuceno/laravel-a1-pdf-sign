@@ -12,6 +12,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocTimeStampWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DssWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
@@ -44,6 +45,7 @@ final readonly class IncrementalSigner implements PdfSigner
         private ByteRangeCalculator $byteRange,
         private CadesBuilder $cades,
         private DssWriter $dss,
+        private DocTimeStampWriter $archiveTimestamp,
     ) {}
 
     public function sign(
@@ -77,6 +79,12 @@ final readonly class IncrementalSigner implements PdfSigner
         // after the signature it vouches for is already in place.
         if ($profile->needsValidationMaterial()) {
             $signed = $this->dss->append($signed, $certificate);
+        }
+
+        // B-LTA closes with an archive timestamp over the whole file, so the
+        // validation material is attested along with the signature.
+        if ($profile->needsArchiveTimestamp()) {
+            $signed = $this->archiveTimestamp->append($signed);
         }
 
         return new SignedPdf($signed);

@@ -337,6 +337,18 @@ parameters:
 			path: src/Signing/Incremental/ByteRangeCalculator.php
 
 		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Signing/Incremental/DocTimeStampWriter.php
+
+		-
+			message: '#^Only numeric types are allowed in \+, int\<0, max\>\|false given on the left side\.$#'
+			identifier: plus.leftNonNumeric
+			count: 1
+			path: src/Signing/Incremental/DocTimeStampWriter.php
+
+		-
 			message: '#^Only booleans are allowed in &&, int\|false given on the left side\.$#'
 			identifier: booleanAnd.leftNotBoolean
 			count: 1
@@ -426,13 +438,25 @@ parameters:
 		-
 			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
 			identifier: staticMethod.notFound
-			count: 5
+			count: 7
+			path: tests/DssTest.php
+
+		-
+			message: '#^Cannot access offset 2 on array\{string, numeric\-string, numeric\-string, numeric\-string\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/DssTest.php
+
+		-
+			message: '#^Cannot access offset 3 on array\{string, numeric\-string, numeric\-string, numeric\-string\}\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: tests/DssTest.php
 
 		-
 			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\DocumentReader\:\:read\(\) expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 4
+			count: 5
 			path: tests/DssTest.php
 
 		-
@@ -450,13 +474,13 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: tests/DssTest.php
 
 		-
 			message: '#^Parameter \#2 \$subject of function preg_match_all expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 3
 			path: tests/DssTest.php
 
 		-
