@@ -1,6 +1,5 @@
 <?php
 
-use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
@@ -9,14 +8,6 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
-use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
-
-function testCertificate(): LSNepomuceno\LaravelA1PdfSign\Data\Certificate
-{
-    [$pfx, $password] = DebugCertificate::make();
-
-    return app(NativeCertificateReader::class)->read($pfx, $password);
-}
 
 it('leaves the original bytes untouched', function () {
     $original = Files::read(resource('test.pdf'));

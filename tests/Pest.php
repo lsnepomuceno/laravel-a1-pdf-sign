@@ -36,6 +36,20 @@ function debugCertificate(): array
 }
 
 /**
+ * Reads a throwaway certificate straight into the object the signer expects.
+ *
+ * Defined here rather than in a test file: helpers that live in one test file
+ * are invisible to the others once the suite runs in parallel.
+ */
+function testCertificate(): LSNepomuceno\LaravelA1PdfSign\Data\Certificate
+{
+    [$pfx, $password] = LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate::make();
+
+    return app(LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader::class)
+        ->read($pfx, $password);
+}
+
+/**
  * Absolute path of a file under tests/Resources.
  */
 function resource(string $name): string
