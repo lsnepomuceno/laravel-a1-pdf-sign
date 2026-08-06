@@ -666,7 +666,7 @@ Independent PRs on the `v2.x-dev` branch.
 | 0b | ✅ **Incremental update PoC** | **done** — 3/3 signatures valid. See `poc/incremental-signature/` and §3h.1 | — |
 | 1 | ✅ PHP/Laravel floor | **done** — `">=8.4 <8.6"` / L12+, 4-job matrix, tc-lib-pdf `^8.67`, `.gitattributes`, PHP 8.4 nullable fixes. Suite green on 8.4 and 8.5 (21 passed) | — |
 | 2 | ✅ Formatting + static analysis | **done** — Pint (PER-CS), PHPStan `level: max` + Larastan + strict/deprecation rules, **216-error baseline**, `quality` job, `composer check`, `CONTRIBUTING.md` | — |
-| 3 | PHPUnit → Pest | `drift` as a one-shot codemod, `pest-plugin-laravel`, PCOV in CI | low |
+| 3 | ✅ PHPUnit → Pest | **done** — Pest 5, `tests/Pest.php`, named datasets, **arch tests**, type coverage 94.3% gated in CI. `drift` tried and discarded (§6.4) | — |
 | 4 | Data + Enums | VOs with `private(set)`, property hooks, enums carrying behaviour, `Entities\*` as aliases, type-coverage ≥ 95% | low |
 | 5 | Package infrastructure | publishable config, contracts, bindings, facade, **arch tests** (§6.2) | medium |
 | 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, `#[\SensitiveParameter]` on every `$password` | **high** |
@@ -787,9 +787,17 @@ of `src/`, it is worth revisiting.
 
 ### 6.4 PHPUnit → Pest migration
 
-`pestphp/pest-plugin-drift` converts the current `TestCase` classes to Pest syntax
-automatically. It is a **one-shot codemod**, run locally in PR 3 and then removed — it does
-not need to become a permanent `require-dev` entry.
+> **Revised after PR 3 — drift was tried and discarded.** On this codebase
+> `pestphp/pest-plugin-drift` corrupted `tests/TestCase.php`, leaving method bodies without
+> their signatures, emitted `uses()` above the import block, and scaffolded `Feature/` and
+> `Unit/` example directories the package does not want. With six test files totalling ~590
+> lines, converting by hand was both safer and better. The plugin is not a dev dependency.
+>
+> The lesson generalises: a codemod is worth it at scale, not at this size.
+
+`pestphp/pest-plugin-drift` converts `TestCase` classes to Pest syntax automatically. It is a
+**one-shot codemod**, meant to be run locally and then removed — it does not need to become a
+permanent `require-dev` entry.
 
 Testbench's base `TestCase` still exists, referenced through `uses()` in `tests/Pest.php`.
 The `src/Temp/` cleanup in `tearDown()` disappears along with `src/Temp/` itself (§3c).
