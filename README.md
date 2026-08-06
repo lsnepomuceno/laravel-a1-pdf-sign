@@ -73,6 +73,72 @@
 </table>
 
 
+## Version 2
+
+```bash
+composer require lsnepomuceno/laravel-a1-pdf-sign
+```
+
+```php
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+$signed = A1PdfSign::newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($pdfPath)
+    ->info(name: 'Lucas', reason: 'Contract')
+    ->seal()                       // omit for an invisible signature
+    ->sign();
+
+$signed->contents();               // string
+$signed->save($path);              // path
+$signed->download('contract.pdf'); // BinaryFileResponse
+```
+
+**Signing appends a revision rather than rebuilding the document.** The
+original bytes survive, so annotations and form fields are preserved and a
+document can carry more than one signature — the request in
+[TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
+
+### PAdES profiles
+
+| Profile | Adds |
+|---|---|
+| `legacy` | ISO 32000-1 detached CMS |
+| `pades-b-b` | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default** |
+| `pades-b-t` | plus an RFC 3161 timestamp |
+| `pades-b-lt` | plus a Document Security Store, so it still verifies after the certificate expires |
+| `pades-b-lta` | plus an archive timestamp over the whole file |
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($path)
+    ->profile('pades-b-lt')   // needs A1_TSA_URL configured
+    ->sign();
+```
+
+### Validation
+
+```php
+$report = A1PdfSign::validate($pdfPath);
+
+$report->isValid();     // every signature verifies against the bytes it covers
+$report->count();       // how many signatures the document carries
+$report->signers();     // structured signer identity
+```
+
+`isValid()` answers whether each signature matches the document. It does not
+check the issuer against a trust store — that decision stays with your
+application.
+
+Configuration is publishable:
+
+```bash
+php artisan vendor:publish --tag=a1-pdf-sign-config
+```
+
+Upgrading from 1.x? See [UPGRADE.md](UPGRADE.md).
+
 <h1 align="center">Project supported by JetBrains</h1>
 <h3 align="center">Special thanks to the team at JetBrains for supporting Open Source projects with licenses to use.</h3>
 <p align="center">

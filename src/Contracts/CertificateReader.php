@@ -15,7 +15,7 @@ interface CertificateReader
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException
      */
     public function read(

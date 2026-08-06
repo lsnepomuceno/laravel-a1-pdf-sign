@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Certificates;
 
 use Illuminate\Contracts\Config\Repository as Config;
+use Illuminate\Contracts\Container\Container;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
@@ -16,11 +17,17 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  */
 final readonly class ReaderFactory
 {
+    /**
+     * The temp path comes from the A1PdfSign contract, but resolving it here
+     * would close a cycle — the manager depends on this factory. The container
+     * is held instead and the contract resolved only when the CLI reader is
+     * actually built, which is the rare path.
+     */
     public function __construct(
         private Config $config,
         private CertificateParser $parser,
         private ProcessRunner $processes,
-        private A1PdfSign $paths,
+        private Container $container,
     ) {}
 
     public function make(?bool $legacy = null, ?bool $usePathEnv = null): CertificateReader
@@ -29,7 +36,13 @@ final readonly class ReaderFactory
         $usePathEnv ??= (bool) $this->config->get('a1-pdf-sign.certificate.use_path_env', false);
 
         return $legacy
-            ? new OpenSslCliCertificateReader($this->parser, $this->processes, $this->paths, true, $usePathEnv)
+            ? new OpenSslCliCertificateReader(
+                $this->parser,
+                $this->processes,
+                $this->container->make(A1PdfSign::class),
+                true,
+                $usePathEnv,
+            )
             : new NativeCertificateReader($this->parser);
     }
 }

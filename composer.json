@@ -3,11 +3,6 @@
   "description": "Sign PDF files with valid x509 certificates",
   "license": "MIT",
   "type": "library",
-  "homepage": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign",
-  "support": {
-    "issues": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign/issues",
-    "source": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign"
-  },
   "keywords": [
     "a1",
     "sign pdf",
@@ -24,19 +19,45 @@
       "homepage": "https://github.com/lsnepomuceno"
     }
   ],
+  "homepage": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign",
+  "support": {
+    "issues": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign/issues",
+    "source": "https://github.com/lsnepomuceno/laravel-a1-pdf-sign"
+  },
   "require": {
     "php": ">=8.4 <8.6",
+    "ext-fileinfo": "*",
     "ext-gd": "*",
     "ext-json": "*",
-    "ext-fileinfo": "*",
     "ext-mbstring": "*",
     "ext-openssl": "*",
-    "illuminate/support": "^12 || ^13",
+    "illuminate/console": "^12 || ^13",
     "illuminate/encryption": "^12 || ^13",
     "illuminate/http": "^12 || ^13",
-    "tecnickcom/tc-lib-pdf-sign": "^1.1",
+    "illuminate/support": "^12 || ^13",
+    "intervention/image": "^3.11",
+    "symfony/http-foundation": "^7 || ^8",
     "symfony/process": "^7 || ^8",
-    "intervention/image": "^3.11"
+    "tecnickcom/tc-lib-pdf-sign": "^1.1"
+  },
+  "require-dev": {
+    "ergebnis/composer-normalize": "^2.52",
+    "larastan/larastan": "^3.10",
+    "laravel/pint": "^1.30",
+    "nunomaduro/collision": "^8",
+    "orchestra/testbench": "^10 || ^11",
+    "pestphp/pest": "^5.0",
+    "pestphp/pest-plugin-laravel": "^5.0",
+    "pestphp/pest-plugin-type-coverage": "^5.0",
+    "phpstan/phpstan": "^2.2",
+    "phpstan/phpstan-deprecation-rules": "^2.0",
+    "phpstan/phpstan-strict-rules": "^2.0",
+    "shipmonk/composer-dependency-analyser": "^1.8"
+  },
+  "suggest": {
+    "ext-gd": "To use GD library based image processing.",
+    "ext-imagick": "To use Imagick based image processing.",
+    "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
   },
   "autoload": {
     "psr-4": {
@@ -48,58 +69,45 @@
       "LSNepomuceno\\LaravelA1PdfSign\\Tests\\": "./tests"
     }
   },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true,
+      "pestphp/pest-plugin": true
+    }
+  },
+  "extra": {
+    "laravel": {
+      "aliases": {
+        "A1PdfSign": "LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign"
+      },
+      "providers": [
+        "LSNepomuceno\\LaravelA1PdfSign\\LaravelA1PdfSignServiceProvider"
+      ]
+    }
+  },
   "scripts": {
-    "test": "vendor/bin/pest",
-    "test:cov": "vendor/bin/pest --coverage",
-    "test:types": "vendor/bin/pest --type-coverage --min=100",
-    "test:mutate": "vendor/bin/pest --mutate --path=src/Certificates,src/Validation --covered-min=70",
-    "lint": "vendor/bin/pint",
     "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
     "check": [
       "@lint --test",
       "@analyse",
+      "@deps",
       "@test"
-    ]
+    ],
+    "deps": "vendor/bin/composer-dependency-analyser",
+    "lint": "vendor/bin/pint",
+    "test": "vendor/bin/pest",
+    "test:cov": "vendor/bin/pest --coverage",
+    "test:mutate": "vendor/bin/pest --mutate --path=src/Certificates,src/Validation --covered-min=70",
+    "test:types": "vendor/bin/pest --type-coverage --min=100"
   },
   "scripts-descriptions": {
+    "analyse": "Run PHPStan static analysis.",
+    "check": "Run everything the CI runs: style, static analysis and tests.",
+    "deps": "Report unused and shadow dependencies.",
+    "lint": "Fix code style with Pint (append --test to only check).",
     "test": "Run the test suite.",
     "test:cov": "Run the test suite with line coverage (needs pcov or xdebug).",
-    "test:types": "Report type coverage across src/.",
     "test:mutate": "Run mutation testing over the certificate and validation code.",
-    "lint": "Fix code style with Pint (append --test to only check).",
-    "analyse": "Run PHPStan static analysis.",
-    "check": "Run everything the CI runs: style, static analysis and tests."
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "LSNepomuceno\\LaravelA1PdfSign\\LaravelA1PdfSignServiceProvider"
-      ],
-      "aliases": {
-        "A1PdfSign": "LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign"
-      }
-    }
-  },
-  "suggest": {
-    "ext-gd": "To use GD library based image processing.",
-    "ext-imagick": "To use Imagick based image processing.",
-    "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
-  },
-  "require-dev": {
-    "larastan/larastan": "^3.10",
-    "laravel/pint": "^1.30",
-    "nunomaduro/collision": "^8",
-    "orchestra/testbench": "^10 || ^11",
-    "pestphp/pest": "^5.0",
-    "pestphp/pest-plugin-laravel": "^5.0",
-    "pestphp/pest-plugin-type-coverage": "^5.0",
-    "phpstan/phpstan": "^2.2",
-    "phpstan/phpstan-deprecation-rules": "^2.0",
-    "phpstan/phpstan-strict-rules": "^2.0"
-  },
-  "config": {
-    "allow-plugins": {
-      "pestphp/pest-plugin": true
-    }
+    "test:types": "Report type coverage across src/."
   }
 }

@@ -80,6 +80,12 @@ jobs:
       - name: Check code style
         run: vendor/bin/pint --test
 
+      - name: Check dependencies
+        run: vendor/bin/composer-dependency-analyser
+
+      - name: Check composer.json formatting
+        run: composer normalize --dry-run
+
       - name: Run static analysis
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 

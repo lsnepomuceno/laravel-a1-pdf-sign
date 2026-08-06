@@ -6,7 +6,7 @@ use Illuminate\Encryption\Encrypter;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use SensitiveParameter;
 
 /**
@@ -68,7 +68,7 @@ final readonly class CertificateVault
      * expects binary PKCS#12 and always failed. See ARCHITECTURE-V2.md §1.14.
      *
      * @throws InvalidCertificateContentException
-     * @throws Invalidx509PrivateKeyException
+     * @throws InvalidX509PrivateKeyException
      */
     public function open(
         CertificateParser $parser,

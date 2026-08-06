@@ -8,6 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Certificates\OpenSslCliCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
 
@@ -90,3 +91,21 @@ it('generates a debug certificate without shelling out', function () {
         ->and(app(NativeCertificateReader::class)->read($pfx, $password))
         ->toBeInstanceOf(Certificate::class);
 });
+
+it('rejects a bundle whose key does not match its certificate', function () {
+    // One certificate, a different key. Nothing had exercised this path, which
+    // is how a case mismatch in the exception's own name went unnoticed: the
+    // class was never autoloaded, so it would have fataled rather than thrown.
+    [$pfxA, $passwordA] = DebugCertificate::make();
+    [$pfxB, $passwordB] = DebugCertificate::make();
+
+    $reader = app(NativeCertificateReader::class);
+
+    $certificate = $reader->read($pfxA, $passwordA)->original;
+    $other = $reader->read($pfxB, $passwordB)->original;
+
+    preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $certificate, $cert);
+    preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $other, $key);
+
+    app(CertificateParser::class)->parse($cert[0] . "\n" . $key[0] . "\n");
+})->throws(InvalidX509PrivateKeyException::class);

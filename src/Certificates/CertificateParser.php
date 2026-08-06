@@ -4,7 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Certificates;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use SensitiveParameter;
 
 /**
@@ -17,7 +17,7 @@ final class CertificateParser
 {
     /**
      * @throws InvalidCertificateContentException
-     * @throws Invalidx509PrivateKeyException
+     * @throws InvalidX509PrivateKeyException
      */
     public function parse(
         string $pem,
@@ -31,7 +31,7 @@ final class CertificateParser
         }
 
         if (! openssl_x509_check_private_key($x509, $pem)) {
-            throw new Invalidx509PrivateKeyException();
+            throw new InvalidX509PrivateKeyException();
         }
 
         return new Certificate(

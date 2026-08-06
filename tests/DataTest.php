@@ -1,14 +1,15 @@
 <?php
 
+use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
+use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
 
-it('returns a Certificate from ManageCert', function () {
-    $cert = new ManageCert();
-    $cert->makeDebugCertificate();
+it('returns a Certificate from the reader', function () {
+    [$pfx, $password] = DebugCertificate::make();
 
-    expect($cert->getCert())->toBeInstanceOf(Certificate::class);
+    expect(app(NativeCertificateReader::class)->read($pfx, $password))
+        ->toBeInstanceOf(Certificate::class);
 });
 
 it('reports the certificate expiry from the parsed data', function () {

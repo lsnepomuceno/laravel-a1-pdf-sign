@@ -3,10 +3,10 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use Illuminate\Http\UploadedFile;
+use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
-use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -73,7 +73,7 @@ interface A1PdfSign
         string $password,
         bool $isBase64 = false,
         ?bool $usePathEnv = null,
-    ): ManageCert;
+    ): Certificate;
 
     /**
      * Inspects the signature embedded in a PDF.

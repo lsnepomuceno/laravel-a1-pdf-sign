@@ -27,7 +27,12 @@ uses(TestCase::class)->in(__DIR__);
  */
 function debugCertificate(): array
 {
-    return (new LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert())->makeDebugCertificate(true);
+    [$pfx, $password] = LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate::make();
+
+    $path = LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign::tempPath(true, '.pfx');
+    file_put_contents($path, $pfx);
+
+    return [$path, $password];
 }
 
 /**

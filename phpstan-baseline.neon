@@ -1,10 +1,10 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
+			message: '#^Parameter \#1 \$pfxContents of method LSNepomuceno\\LaravelA1PdfSign\\A1PdfSignManager\:\:read\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
 			count: 2
-			path: src/Certificates/CertificateParser.php
+			path: src/A1PdfSignManager.php
 
 		-
 			message: '#^Parameter \$data of class LSNepomuceno\\LaravelA1PdfSign\\Data\\Certificate constructor expects array\<string, mixed\>, array given\.$#'
@@ -17,12 +17,6 @@ parameters:
 			identifier: ternary.shortNotAllowed
 			count: 1
 			path: src/Certificates/CertificateParser.php
-
-		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: src/Certificates/CertificateVault.php
 
 		-
 			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
@@ -199,30 +193,6 @@ parameters:
 			path: src/Seal/InterventionSealRenderer.php
 
 		-
-			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
-			identifier: function.strict
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) should return array\{string, string\}\|static\(LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\) but returns LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Parameter \#1 \$pfxContents of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\CertificateReader\:\:read\(\) expects string, string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -343,25 +313,16 @@ parameters:
 			path: src/Validation/Pkcs7Reader.php
 
 		-
+			message: '#^Offset 0 might not exist on array\{\}\|array\{non\-falsy\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: tests/CertificatesTest.php
+
+		-
 			message: '#^Parameter \#1 \$path of static method Illuminate\\Support\\Facades\\File\:\:exists\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/CertificatesTest.php
-
-		-
-			message: '''
-				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
-				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
-			'''
-			identifier: method.deprecated
-			count: 1
-			path: tests/DataTest.php
-
-		-
-			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 7
-			path: tests/DssTest.php
 
 		-
 			message: '#^Cannot access offset 2 on array\{string, numeric\-string, numeric\-string, numeric\-string\}\|false\.$#'
@@ -376,99 +337,9 @@ parameters:
 			path: tests/DssTest.php
 
 		-
-			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\DocumentReader\:\:read\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: tests/DssTest.php
-
-		-
-			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\RevisionWriter\:\:appendObjects\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/DssTest.php
-
-		-
-			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\RevisionWriter\:\:catalogWithDss\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/DssTest.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/DssTest.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match_all expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: tests/DssTest.php
-
-		-
-			message: '''
-				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
-				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
-			'''
-			identifier: method.deprecated
-			count: 4
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method Illuminate\\Encryption\\Encrypter\:\:supported\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant CIPHER of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
-				2\.0 Use \{@see CertificateVault\:\:CIPHER\}\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Parameter \#1 \$path of static method Illuminate\\Support\\Facades\\File\:\:exists\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Parameter \#1 \$paths of static method Illuminate\\Support\\Facades\\File\:\:delete\(\) expects array\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Parameter \#1 \$pfxPath of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:fromPfx\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Parameter \#2 \$password of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:fromPfx\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<mixed\>\:\:\$not\.$#'
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<string\|null\>\:\:\$not\.$#'
 			identifier: property.notFound
 			count: 1
-			path: tests/PadesTest.php
-
-		-
-			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 6
 			path: tests/PadesTest.php
 
 		-
@@ -484,54 +355,9 @@ parameters:
 			path: tests/PadesTest.php
 
 		-
-			message: '#^Parameter \#1 \$pdf of closure expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/PadesTest.php
-
-		-
-			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/PadesTest.php
-
-		-
-			message: '''
-				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
-				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
-			'''
-			identifier: method.deprecated
-			count: 1
-			path: tests/Pest.php
-
-		-
-			message: '#^Function debugCertificate\(\) should return array\{string, string\} but returns array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/Pest.php
-
-		-
-			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<mixed\>\:\:\$not\.$#'
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<string\|null\>\:\:\$not\.$#'
 			identifier: property.notFound
 			count: 2
-			path: tests/SealTest.php
-
-		-
-			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 3
-			path: tests/SealTest.php
-
-		-
-			message: '#^Parameter \#1 \$filename of function unlink expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/SealTest.php
-
-		-
-			message: '#^Parameter \#1 \$pdfPath of static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:validate\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: tests/SealTest.php
 
 		-
@@ -559,30 +385,6 @@ parameters:
 			path: tests/ServiceTest.php
 
 		-
-			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 2
-			path: tests/SigningIncrementalTest.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: tests/SigningIncrementalTest.php
-
-		-
-			message: '#^Parameter \#1 \$filename of function file_get_contents expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/SigningIncrementalTest.php
-
-		-
-			message: '#^Parameter \#1 \$filename of function unlink expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/SigningIncrementalTest.php
-
-		-
 			message: '#^Parameter \#1 \$pdf of method LSNepomuceno\\LaravelA1PdfSign\\Signing\\Incremental\\DocumentReader\:\:read\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -605,30 +407,6 @@ parameters:
 			identifier: argument.type
 			count: 3
 			path: tests/SigningIncrementalTest.php
-
-		-
-			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 3
-			path: tests/ValidationTest.php
-
-		-
-			message: '#^Function signedOnce\(\) should return string but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/ValidationTest.php
-
-		-
-			message: '#^Parameter \#1 \$filename of function unlink expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ValidationTest.php
-
-		-
-			message: '#^Parameter \#1 \$pdfContents of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\SignatureValidator\:\:validate\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ValidationTest.php
 
 		-
 			message: '#^Parameter \#1 \$pdfContents of method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\SignatureValidator\:\:validate\(\) expects string, string\|false given\.$#'

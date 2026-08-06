@@ -47,7 +47,7 @@ it('round-trips an encrypted certificate', function () {
         $encrypted->password,
     );
 
-    expect($restored->getCert()->original)->toContain('BEGIN CERTIFICATE');
+    expect($restored->original)->toContain('BEGIN CERTIFICATE');
 });
 
 it('honours the configured temp path', function () {
@@ -80,9 +80,9 @@ it('lets the container swap the implementation', function () {
             return new EncryptedCertificate('c', 'p', 'h');
         }
 
-        public function decryptCertificate(string $h, string $c, string $pw, bool $b64 = false, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert
+        public function decryptCertificate(string $h, string $c, string $pw, bool $b64 = false, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\Certificate
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert();
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\Certificate('pem', false, [], '');
         }
 
         public function validate(string $pdfPath): SignatureReport
