@@ -34,10 +34,10 @@
     "illuminate/console": "^12 || ^13",
     "illuminate/encryption": "^12 || ^13",
     "illuminate/http": "^12 || ^13",
+    "illuminate/process": "^12 || ^13",
     "illuminate/support": "^12 || ^13",
     "intervention/image": "^3.11",
     "symfony/http-foundation": "^7 || ^8",
-    "symfony/process": "^7 || ^8",
     "tecnickcom/tc-lib-pdf-sign": "^1.1"
   },
   "require-dev": {

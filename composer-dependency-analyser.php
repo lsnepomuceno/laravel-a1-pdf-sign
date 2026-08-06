@@ -25,7 +25,7 @@ return (new Configuration())
      * the split packages this library actually requires.
      */
     ->ignoreErrorsOnPackages(
-        ['illuminate/console', 'illuminate/encryption', 'illuminate/http', 'illuminate/support'],
+        ['illuminate/console', 'illuminate/encryption', 'illuminate/http', 'illuminate/process', 'illuminate/support'],
         [ErrorType::UNUSED_DEPENDENCY],
     )
     ->ignoreErrorsOnPackage('laravel/framework', [ErrorType::SHADOW_DEPENDENCY])
