@@ -97,7 +97,7 @@
     "lint": "vendor/bin/pint",
     "test": "vendor/bin/pest",
     "test:cov": "vendor/bin/pest --coverage",
-    "test:mutate": "vendor/bin/pest --mutate --path=src/Certificates,src/Validation --covered-min=70",
+    "test:mutate": "vendor/bin/pest --mutate --path=src/Certificates,src/Signing,src/Validation --exclude-group=network --parallel --min=65",
     "test:types": "vendor/bin/pest --type-coverage --min=100"
   },
   "scripts-descriptions": {
@@ -107,7 +107,7 @@
     "lint": "Fix code style with Pint (append --test to only check).",
     "test": "Run the test suite.",
     "test:cov": "Run the test suite with line coverage (needs pcov or xdebug).",
-    "test:mutate": "Run mutation testing over the certificate and validation code.",
+    "test:mutate": "Run mutation testing over the certificate, signing and validation code.",
     "test:types": "Report type coverage across src/."
   }
 }
