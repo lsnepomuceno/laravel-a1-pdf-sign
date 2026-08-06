@@ -27,11 +27,17 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 ## Running the checks
 
 ``` bash
-$ composer check     # style, static analysis and tests — the same as CI
-$ composer test      # tests only
-$ composer lint      # fix code style
-$ composer analyse   # static analysis only
+$ composer check       # style, static analysis and tests — the same as CI
+$ composer test        # tests only
+$ composer lint        # fix code style
+$ composer analyse     # static analysis only
+$ composer test:types  # type coverage across src/
+$ composer test:cov    # line coverage (needs pcov or xdebug)
+$ composer test:mutate # mutation testing
 ```
+
+Tests are written with [Pest](https://pestphp.com). `tests/ArchTest.php` holds
+architectural rules that run with the rest of the suite.
 
 The package targets PHP 8.4+ and Laravel 12+. If your machine runs an older PHP,
 `.docker/` reproduces any cell of the CI matrix:

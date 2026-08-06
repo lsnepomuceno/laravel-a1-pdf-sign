@@ -54,7 +54,10 @@
     }
   },
   "scripts": {
-    "test": "vendor/bin/testbench package:test",
+    "test": "vendor/bin/pest",
+    "test:cov": "vendor/bin/pest --coverage",
+    "test:types": "vendor/bin/pest --type-coverage --min=94",
+    "test:mutate": "vendor/bin/pest --mutate",
     "lint": "vendor/bin/pint",
     "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
     "check": [
@@ -65,6 +68,9 @@
   },
   "scripts-descriptions": {
     "test": "Run the test suite.",
+    "test:cov": "Run the test suite with line coverage (needs pcov or xdebug).",
+    "test:types": "Report type coverage across src/.",
+    "test:mutate": "Run mutation testing.",
     "lint": "Fix code style with Pint (append --test to only check).",
     "analyse": "Run PHPStan static analysis.",
     "check": "Run everything the CI runs: style, static analysis and tests."
@@ -86,6 +92,9 @@
     "laravel/pint": "^1.30",
     "nunomaduro/collision": "^8",
     "orchestra/testbench": "^10 || ^11",
+    "pestphp/pest": "^5.0",
+    "pestphp/pest-plugin-laravel": "^5.0",
+    "pestphp/pest-plugin-type-coverage": "^5.0",
     "phpstan/phpstan": "^2.2",
     "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpstan/phpstan-strict-rules": "^2.0"

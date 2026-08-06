@@ -3,12 +3,17 @@
          colors="true" processIsolation="false" stopOnFailure="false"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.0/phpunit.xsd" cacheDirectory=".phpunit.cache"
          backupStaticProperties="false">
-    <coverage/>
     <testsuites>
         <testsuite name="LSNepomuceno/LaravelA1PdfSign Test Suite">
             <directory>./tests/</directory>
         </testsuite>
     </testsuites>
+    <!-- Drives both line coverage and Pest's type coverage. -->
+    <source>
+        <include>
+            <directory>./src</directory>
+        </include>
+    </source>
     <php>
         <env name="APP_KEY" value="testing"/>
         <env name="DB_CONNECTION" value="testing"/>

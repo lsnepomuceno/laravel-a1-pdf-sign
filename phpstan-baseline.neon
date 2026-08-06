@@ -625,302 +625,86 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '#^Cannot call method assertFailed\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:expect\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot access property \$not on mixed\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot call method ignoring\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot call method toBeUsed\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot call method toExtend\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot call method toImplement\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Cannot call method toOnlyBeUsedIn\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/ArchTest.php
+
+		-
+			message: '#^Call to an undefined method Pest\\PendingCalls\\TestCall\:\:artisan\(\)\.$#'
+			identifier: method.notFound
+			count: 4
 			path: tests/CommandsTest.php
 
 		-
-			message: '#^Cannot call method assertSuccessful\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			message: '#^Cannot call method assertFailed\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 2
 			path: tests/CommandsTest.php
 
 		-
-			message: '#^Cannot call method expectsOutput\(\) on Illuminate\\Testing\\PendingCommand\|int\.$#'
+			message: '#^Cannot call method assertSuccessful\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
-			identifier: offsetAccess.nonArray
 			count: 2
 			path: tests/CommandsTest.php
 
 		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Method CommandsTest\:\:testWhenASignedPdfIsSuccessfullyValidated\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Method CommandsTest\:\:testWhenAnUnsignedDocumentThrowsAnErrorWhenRunningAValidationCommand\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Method CommandsTest\:\:testWhenTheSignatureCommandDoesNotFinishSuccessfully\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Method CommandsTest\:\:testWhenTheSignatureCommandIsSuccessfullyCompleted\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/CommandsTest.php
-
-		-
-			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
-			identifier: offsetAccess.nonArray
+			message: '#^Cannot call method expectsOutput\(\) on mixed\.$#'
+			identifier: method.nonObject
 			count: 6
-			path: tests/HelpersTest.php
+			path: tests/CommandsTest.php
 
 		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 9
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromFileHelper\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromFileHelperUsingPathEnv\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromUploadHelper\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenAFileIsSignedByTheSignPdfFromUploadHelperUsingPathEnv\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenASignedPdfFileIsCorrectlyValidatedByTheValidatePdfSignatureHelper\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenCertificateDataIsEncrypted\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\HelpersTest\:\:testWhenTheA1TempDirHelperCreatesTheFilesCorrectly\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#1 \$path of class Illuminate\\Http\\UploadedFile constructor expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^Cannot call method expectsOutputToContain\(\) on mixed\.$#'
+			identifier: method.nonObject
 			count: 2
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#1 \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#1 \$uploadedOrPfxPath of function encryptCertData expects Illuminate\\Http\\UploadedFile\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#2 \$password of function encryptCertData expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#2 \$password of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \#2 \$password of function signPdfFromUpload expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \$password of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \$password of function signPdfFromUpload expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Parameter \$pfxPath of function signPdfFromFile expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/HelpersTest.php
-
-		-
-			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with array will always evaluate to true\.$#'
-			identifier: method.alreadyNarrowedType
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with string will always evaluate to true\.$#'
-			identifier: method.alreadyNarrowedType
-			count: 1
-			path: tests/ManageCertTest.php
+			path: tests/CommandsTest.php
 
 		-
 			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
 			identifier: offsetAccess.nonArray
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
 			count: 1
 			path: tests/ManageCertTest.php
 
 		-
 			message: '#^Dynamic call to static method Illuminate\\Encryption\\Encrypter\:\:supported\(\)\.$#'
 			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertIsResource\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertStringContainsStringIgnoringCase\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateCertificateStructureFromPfxFile\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateEncryperInstanceAndResources\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateNotFoundPfxFileException\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidatePfxFileExtensionException\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidateProcessRunTimeException\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\ManageCertTest\:\:testValidatesIfThePfxFileWillBeDeletedAfterBeingPreserved\(\) has no return type specified\.$#'
-			identifier: missingType.return
 			count: 1
 			path: tests/ManageCertTest.php
 
@@ -955,61 +739,19 @@ parameters:
 			path: tests/ManageCertTest.php
 
 		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
+			message: '#^Function debugCertificate\(\) should return array\{string, string\} but returns array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'
+			identifier: return.type
 			count: 1
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEquals\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 2
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertEqualsIgnoringCase\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 3
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\SealImageTest\:\:testGenerateImageFromCertFile\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\SealImageTest\:\:testInsertSealImageOnPdfFile\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/SealImageTest.php
-
-		-
-			message: '#^Dynamic call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
-
-		-
-			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Tests\\Sign\\ValidatePdfSignature\\ProcessDataInfoFunctionTest\:\:stringsDataProvider\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
+			path: tests/Pest.php
 
 		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php
 
 		-
 			message: '#^Parameter \#1 \$string of function trim expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: tests/Sign/ValidatePdfSignature/ProcessDataInfoFunctionTest.php

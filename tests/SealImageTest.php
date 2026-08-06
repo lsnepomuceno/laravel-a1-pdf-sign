@@ -1,83 +1,38 @@
 <?php
 
-namespace LSNepomuceno\LaravelA1PdfSign\Tests;
-
 use Illuminate\Support\Facades\File;
 use Intervention\Image\Drivers\Gd\Driver as GDDriver;
 use Intervention\Image\ImageManager as IMG;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfSignModeTypeException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 use LSNepomuceno\LaravelA1PdfSign\Sign\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Sign\SignaturePdf;
-use Throwable;
 
-class SealImageTest extends TestCase
-{
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throw \Intervention\Image\ImageManager\Exception\NotReadableException
-     */
-    public function testGenerateImageFromCertFile()
-    {
-        $cert = new ManageCert();
-        $cert->makeDebugCertificate();
+it('renders a seal image from a certificate', function () {
+    $cert = new ManageCert();
+    $cert->makeDebugCertificate();
 
-        $image = SealImage::fromCert($cert);
+    $image = (new IMG(driver: new GDDriver()))->read(SealImage::fromCert($cert));
 
-        $interventionImg = new IMG(driver: new GDDriver());
-        $interventionImg = $interventionImg->read($image);
+    expect($image->toPng()->mediaType())->toBe('image/png')
+        ->and($image->width())->toBe(590)
+        ->and($image->height())->toBe(295);
+});
 
-        $this->assertEqualsIgnoringCase('image/png', $interventionImg->toPng()->mediaType());
-        $this->assertEquals(590, $interventionImg->width());
-        $this->assertEquals(295, $interventionImg->height());
-    }
+it('stamps the seal onto a signed pdf', function () {
+    $cert = new ManageCert();
+    $cert->makeDebugCertificate();
 
-    /**
-     * @throws CertificateOutputNotFoundException
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws Invalidx509PrivateKeyException
-     * @throws ProcessRunTimeException
-     * @throws InvalidPdfSignModeTypeException
-     * @throws Throwable
-     * @throw \Intervention\Image\ImageManager\Exception\NotReadableException
-     */
-    public function testInsertSealImageOnPdfFile()
-    {
-        $cert = new ManageCert();
-        $cert->makeDebugCertificate();
+    $imagePath = a1TempDir(true, '.png');
+    File::put($imagePath, SealImage::fromCert($cert));
 
-        $image = SealImage::fromCert($cert);
-        $imagePath = a1TempDir(true, '.png');
-        File::put($imagePath, $image);
-        $this->assertTrue(File::exists($imagePath));
+    expect(File::exists($imagePath))->toBeTrue();
 
-        $pdfPath = a1TempDir(true, '.pdf');
-        try {
-            $pdf = new SignaturePdf(__DIR__ . '/Resources/test.pdf', $cert);
-            $resource = $pdf->setImage($imagePath)->signature();
-            File::put($pdfPath, $resource);
-        } catch (Throwable $e) {
-            throw new $e();
-        }
+    $pdfPath = a1TempDir(true, '.pdf');
+    $signed = (new SignaturePdf(resource('test.pdf'), $cert))->setImage($imagePath)->signature();
+    File::put($pdfPath, $signed);
 
-        $this->assertTrue(File::exists($pdfPath));
+    expect(File::exists($pdfPath))->toBeTrue()
+        ->and(validatePdfSignature($pdfPath)->isValidated)->toBeTrue();
 
-        $validation = validatePdfSignature($pdfPath);
-        $this->assertTrue($validation->isValidated);
-
-        File::delete([$imagePath, $pdfPath]);
-    }
-}
+    File::delete([$imagePath, $pdfPath]);
+});
