@@ -377,9 +377,64 @@ The BC shims (§4) route to the **new driver** by default — the public API is 
 engine changes. Anyone needing output identical to v1 selects `signer => 'legacy'` in config
 and installs the optional dependencies. This goes into `UPGRADE.md`.
 
-> **Not verified:** none of this has been executed. The table above is source reading, not an
-> integration test. PR 0 must sign, validate in an external reader (Adobe Reader / ITI
-> Validar) and confirm LTV and TSA in practice — **before** any refactor that depends on it.
+#### g.1) PoC result — and a version gap that changes the argument
+
+PR 0 has been executed. Code and full report in **`poc/tc-lib-pdf-ltv-tsa/`**.
+**15/15 checks pass**, including a live RFC 3161 round-trip against a public TSA that grew
+the embedded CMS from 1476 to 6135 bytes. LTV emits `/DSS`, `/VRI` and `/Certs`; PEM strings
+are accepted for `privkey`/`signcert`, confirming the "key in memory" claim.
+
+**But the table above was read against the wrong version.** The lock file pinned
+**8.0.85**; the current release is **8.67.2** — 67 minor versions of drift. On the current
+release the upgrade also pulls in **`tecnickcom/tc-lib-pdf-sign` 1.1.1** transitively, which
+did not exist at 8.0.85 and provides the full PAdES ladder:
+
+| Profile | `/SubFilter` | Adds |
+|---|---|---|
+| Legacy | `adbe.pkcs7.detached` | ISO 32000-1 detached CMS with ESS `signing-certificate-v2` |
+| PAdES B-B | `ETSI.CAdES.detached` | CAdES signed attributes |
+| PAdES B-T | `ETSI.CAdES.detached` | B-B + RFC 3161 signature timestamp |
+| PAdES B-LT | `ETSI.CAdES.detached` | B-T + `/DSS` and `/VRI` validation material |
+| PAdES B-LTA | + `ETSI.RFC3161` | B-LT + `/Type /DocTimeStamp` archive timestamp |
+
+Upstream reports these validated against the EU DSS reference validator. **That, not plain
+LTV, is the real argument for the migration** — and it matters disproportionately for this
+package's audience, since PAdES B-LT/B-LTA is what long-term legal validity actually
+requires.
+
+Consequence for PR 1: the floor bump must be accompanied by
+`composer update tecnickcom/tc-lib-pdf`, and the constraint reviewed — `^8` silently spans
+8.0 to 8.67.
+
+> **Still not verified:** no external reader (Adobe / ITI Validar) was used; checks are
+> structural plus one TSA round-trip. OCSP and CRL were disabled because the self-signed test
+> certificate has neither endpoint, so only certificate embedding in the DSS is exercised.
+> B-LTA was not exercised end to end.
+
+#### g.2) Fonts — an unplanned blocker
+
+**tc-lib-pdf cannot emit any PDF without a generated font definition**, not even a
+signature-only document containing no text:
+
+```
+Com\Tecnick\Pdf\Font\Exception: unable to read file: helvetica.json
+```
+
+A plain `composer install` ships none — the font data is built by `make fonts` upstream.
+TCPDF 6 bundles 165 fonts, but in PHP format, while tc-lib-pdf-font expects JSON. Not
+interchangeable.
+
+Path proven in the PoC: convert the core-14 AFM metrics that `tecnickcom/tc-font-mirror`
+ships.
+
+```bash
+php vendor/tecnickcom/tc-lib-pdf-font/util/convert.php -i Helvetica.afm -t Core -o resources/fonts
+```
+
+`-t Core` matters: `-t Type1` demands a binary `.pfb`, which the mirror does not carry for
+the core family. **PR 7 must ship the generated JSON under `resources/fonts/` and define
+`K_PATH_FONTS` from the service provider**, so consumers never encounter this. That is new
+scope the plan did not account for.
 
 ### h) Multiple signatures: our own incremental update
 
@@ -499,7 +554,19 @@ comes from tc-lib-pdf. Survey of the installed code:
 | Placeholder and ByteRange | `Base::BYTERANGE`, `Base::SIGMAXLEN` (= 11742) | ✅ `protected const` |
 | Visual seal appearance (Form XObject) | `tc-lib-pdf-graph`, `-image`, `-font` | ✅ public |
 | Detached CMS | `openssl_pkcs7_sign()` with `PKCS7_DETACHED \| PKCS7_BINARY` | ✅ native, no shell-out (§3a) |
-| **Revision appending / xref `/Prev`** | — | ❌ **does not exist: this is what we write** |
+| Revision appending / xref `/Prev` | `appendIncrementalRevision()`, `buildIncrementalXref()`, `buildIncrementalTrailer()`, `previousStartxref()` | ⚠️ `protected`, **added after 8.0.85** — see the note below |
+| **Signing an externally supplied PDF** | — | ❌ **does not exist: this is what we write** |
+
+> **Revised after PR 0.** The original survey ran against tc-lib-pdf 8.0.85 and concluded
+> that no incremental machinery existed. On **8.67.2** it does — `appendIncrementalRevision()`
+> and friends back the post-signing `/DSS` (B-LT) and `/DocTimeStamp` (B-LTA) revisions.
+>
+> This does **not** make PoC 0b redundant: there is still no public API that signs an
+> *externally supplied* PDF, which is precisely this package's core use case. What changes is
+> the build-versus-reuse call — **PR 7b must first attempt to drive
+> `appendIncrementalRevision()` from the adapter class**, and only fall back to the PoC 0b
+> writer if the inherited path cannot accept foreign document bytes. That decision belongs to
+> PR 7b, on evidence, not to this document.
 
 `Com\Tecnick\Pdf\Tcpdf` is a concrete **non-final** class, and every member above is
 `protected` — so inheriting grants legitimate access to all of it:
@@ -595,16 +662,17 @@ Independent PRs on the `v2.x-dev` branch.
 
 | # | PR | Scope | Risk |
 |---|---|---|---|
-| 0 | **tc-lib-pdf PoC** | sign + validate in an external reader, prove LTV and TSA. **Blocks 7 and 8** (§3g) | **high** |
+| 0 | ✅ **tc-lib-pdf PoC** | **done** — 15/15 checks, live TSA round-trip. See `poc/tc-lib-pdf-ltv-tsa/` and §3g.1 | — |
 | 0b | ✅ **Incremental update PoC** | **done** — 3/3 signatures valid. See `poc/incremental-signature/` and §3h.1 | — |
-| 1 | PHP/Laravel floor | `">=8.4 <8.6"` / L12+, 4-job matrix, `README` | low |
+| 1 | PHP/Laravel floor | `">=8.4 <8.6"` / L12+, 4-job matrix, **`composer update tecnickcom/tc-lib-pdf` (8.0.85 → 8.67.2)** and constraint review, `README` | low |
 | 2 | Formatting + static analysis | Pint (PER-CS), PHPStan 2 + Larastan + strict/deprecation rules, baseline, `quality` job, update `CONTRIBUTING.md` | low |
 | 3 | PHPUnit → Pest | `drift` as a one-shot codemod, `pest-plugin-laravel`, PCOV in CI | low |
 | 4 | Data + Enums | VOs with `private(set)`, property hooks, enums carrying behaviour, `Entities\*` as aliases, type-coverage ≥ 95% | low |
 | 5 | Package infrastructure | publishable config, contracts, bindings, facade, **arch tests** (§6.2) | medium |
 | 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, `#[\SensitiveParameter]` on every `$password` | **high** |
-| 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip | **high** |
-| 7b | Multi-signature | `IncrementalSigner` + `Incremental/*` (§3h), `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
+| 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
+| 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
+| 7c | PAdES profiles | expose B-B / B-T / B-LT / B-LTA (§3g.1) — the strongest new capability for the package's audience | medium |
 | 8 | Seal | `SealRenderer` rewritten on the tc-lib-pdf API, in-memory seal, font/colour/background config | medium |
 | 9 | Validation | `PdfSignatureExtractor` + `Pkcs7Reader` with `openssl_x509_parse` | medium |
 | 10 | Mutation | `pest --mutate` over `Certificates/` and `Validation/`, `--covered-min` in CI | low |
