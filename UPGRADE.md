@@ -13,10 +13,12 @@ If you cannot move yet, stay on `^1`, which remains maintained on the
 | | 1.x | 2.0 |
 |---|---|---|
 | PHP | 8.1 – 8.4 | **8.4 – 8.5** |
-| Laravel | 9 – 12 | **12 – 13** |
+| Laravel | 9 – 12 | **13** |
 
 Laravel 10 and 11 are past their security-support windows, and neither supports
-PHP 8.5.
+PHP 8.5. Laravel 12 does support PHP 8.5, but it requires `symfony/process
+^7.2` while Pest 5 requires `^8.1`: the two cannot be installed in the same
+tree, so the cell could never be tested.
 
 ### Global helpers are removed
 
@@ -25,8 +27,8 @@ All six now live on the `A1PdfSign` facade, or on the
 
 | 1.x | 2.0 |
 |---|---|
-| `signPdfFromFile($pfx, $pass, $pdf, $mode, $usePathEnv)` | `A1PdfSign::signFromFile($pfx, $pass, $pdf, $mode, $usePathEnv)` |
-| `signPdfFromUpload($upload, $pass, $pdf, $mode, $usePathEnv)` | `A1PdfSign::signFromUpload($upload, $pass, $pdf, $mode, $usePathEnv)` |
+| `signPdfFromFile($pfx, $pass, $pdf, $mode, $usePathEnv)` | `A1PdfSign::signFromFile($pfx, $pass, $pdf, $usePathEnv)` |
+| `signPdfFromUpload($upload, $pass, $pdf, $mode, $usePathEnv)` | `A1PdfSign::signFromUpload($upload, $pass, $pdf, $usePathEnv)` |
 | `encryptCertData($pfx, $pass, $usePathEnv)` | `A1PdfSign::encryptCertificate($pfx, $pass, $usePathEnv)` |
 | `decryptCertData($hash, $cert, $pass, $isBase64, $usePathEnv)` | `A1PdfSign::decryptCertificate($hash, $cert, $pass, $isBase64, $usePathEnv)` |
 | `validatePdfSignature($pdf)` | `A1PdfSign::validate($pdf)` |
@@ -70,11 +72,16 @@ array yourself.
 | `SealImage::FONT_SIZE_LARGE` | `Enums\FontSize::Large` |
 | `SealImage::IMAGE_DRIVER_GD` | `Enums\ImageDriver::Gd` |
 | `SealImage::IMAGE_DRIVER_IMAGICK` | `Enums\ImageDriver::Imagick` |
-| `SignaturePdf::MODE_RESOURCE` | `Enums\SignatureMode::Resource` |
-| `SignaturePdf::MODE_DOWNLOAD` | `Enums\SignatureMode::Download` |
+| `SignaturePdf::MODE_RESOURCE` | removed — see below |
+| `SignaturePdf::MODE_DOWNLOAD` | removed — see below |
 
 Every entry point accepts either the enum case or its backing value
-(`'large'`, `'gd'`, `'resource'`), so configuration can stay as plain strings.
+(`'large'`, `'gd'`), so configuration can stay as plain strings.
+
+**The signing mode has no replacement, by design.** `sign()` returns a
+`SignedPdf` and no longer decides how the result is delivered — the same result
+answers `contents()`, `save()`, `download()` and `toResponse()`. Drop the mode
+argument and call the method you want.
 
 ### The signing classes are gone
 
