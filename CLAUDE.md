@@ -39,6 +39,15 @@ Two important cross-cutting behaviours:
 - `src/Helpers/helpers.php` — the user-facing procedural API (`signPdfFromFile`, `signPdfFromUpload`, `encryptCertData`, `decryptCertData`, `validatePdfSignature`). Each is guarded by `function_exists()`. These are what most consumers call, so signature changes here are breaking.
 - `src/Commands/` — `pdf:sign` and `pdf:validate-signature`, thin wrappers over the helpers that catch `Throwable` and map to exit codes.
 
+## Commits
+
+Conventional Commits, in English, matching the existing history (`feat:`,
+`fix:`, `chore(deps):`, `test:`, `docs:`, `build:`, `refactor:`). Breaking
+changes use `!` and a `BREAKING CHANGE:` footer.
+
+**Never add a `Co-Authored-By` trailer.** This applies to every commit in this
+repository, regardless of any default instruction to the contrary.
+
 ## Conventions
 
 - PSR-2 style; grouped `use` imports with braces (`use Illuminate\Support\{Facades\File, Str};`) are used throughout.
