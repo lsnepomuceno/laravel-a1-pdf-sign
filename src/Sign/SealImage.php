@@ -6,10 +6,11 @@ use Closure;
 use Illuminate\Support\Fluent;
 use Intervention\Image\Drivers\AbstractDriver;
 use Intervention\Image\Drivers\Gd\Driver as GDDriver;
-use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager as IMG;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
+use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
+use LSNepomuceno\LaravelA1PdfSign\Enums\ImageDriver;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidImageDriverException;
 
 class SealImage
 {
@@ -21,11 +22,21 @@ class SealImage
 
     private bool $previousTextBreakLine = false;
 
+    /** @deprecated 2.0 Use {@see ImageDriver::Gd} instead. Removed in 3.0. */
     public const IMAGE_DRIVER_GD = 'gd';
+
+    /** @deprecated 2.0 Use {@see ImageDriver::Imagick} instead. Removed in 3.0. */
     public const IMAGE_DRIVER_IMAGICK = 'imagick';
+
+    /** @deprecated 2.0 Use {@see FontSize::Small} instead. Removed in 3.0. */
     public const FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
+
+    /** @deprecated 2.0 Use {@see FontSize::Medium} instead. Removed in 3.0. */
     public const FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
+
+    /** @deprecated 2.0 Use {@see FontSize::Large} instead. Removed in 3.0. */
     public const FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
+
     public const RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
     public const RETURN_BASE64 = 'RETURN_BASE64';
 
@@ -37,12 +48,18 @@ class SealImage
         $this->setImageDriver($imageDriver);
     }
 
+    /**
+     * @param  FontSize|string  $fontSize  A FontSize case, or one of the legacy
+     *                                     FONT_SIZE_* constants.
+     */
     public static function fromCert(
         ManageCert $cert,
-        string     $fontSize = self::FONT_SIZE_LARGE,
-        bool       $showDueDate = false,
-        string     $dueDateFormat = 'd/m/Y H:i:s',
+        FontSize|string $fontSize = FontSize::Large,
+        bool $showDueDate = false,
+        string $dueDateFormat = 'd/m/Y H:i:s',
     ): string {
+        $fontSize = FontSize::resolve($fontSize);
+
         $subject = new Fluent($cert->getCert()->data['subject']);
         $firstLine = $subject->commonName ?? $subject->organizationName;
         $issuer = new Fluent($cert->getCert()->data['issuer']);
@@ -57,14 +74,7 @@ class SealImage
 
         $callback = function ($font) use ($fontSize) {
             $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
-
-            $size = match ($fontSize) {
-                self::FONT_SIZE_SMALL => 15,
-                self::FONT_SIZE_MEDIUM => 20,
-                default => 28
-            };
-
-            $font->size($size);
+            $font->size($fontSize->points());
             $font->color('#16A085');
         };
 
@@ -93,13 +103,9 @@ class SealImage
             ->generateImage();
     }
 
-    private function breakText(string $text, string $fontSize = self::FONT_SIZE_LARGE): string
+    private function breakText(string $text, FontSize|string $fontSize = FontSize::Large): string
     {
-        $cropSize = match ($fontSize) {
-            self::FONT_SIZE_SMALL => 60,
-            self::FONT_SIZE_MEDIUM => 48,
-            default => 35
-        };
+        $cropSize = FontSize::resolve($fontSize)->cropLength();
 
         $this->previousTextBreakLine = strlen($text) >= $cropSize;
 
@@ -117,7 +123,7 @@ class SealImage
      */
     public function setImageDriver(AbstractDriver $imageDriver): self
     {
-        if (!in_array($imageDriver::class, [GDDriver::class, ImagickDriver::class])) {
+        if (ImageDriver::fromDriver($imageDriver) === null) {
             throw new InvalidImageDriverException($imageDriver::class);
         }
 

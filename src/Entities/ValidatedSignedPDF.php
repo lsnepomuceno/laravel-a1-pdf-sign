@@ -2,11 +2,9 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Entities;
 
-class ValidatedSignedPDF extends BaseEntity
-{
-    public function __construct(
-        public bool  $isValidated,
-        public array $data,
-    ) {}
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 
-}
+/**
+ * @deprecated 2.0 Use {@see SignatureReport} instead. Removed in 3.0.
+ */
+readonly class ValidatedSignedPDF extends SignatureReport {}

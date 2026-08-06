@@ -19,3 +19,19 @@ parameters:
         - poc
 
     treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Pest's fluent API — arch(), expect()->and()->not, dataset chains — is
+        # runtime magic that PHPStan cannot type without a dedicated extension.
+        # These are limits of the tooling, not defects, so they are ignored
+        # rather than baselined: the baseline must only track debt that can
+        # actually be paid down.
+        -
+            identifier: method.notFound
+            path: tests/*
+        -
+            identifier: method.nonObject
+            path: tests/*
+        -
+            identifier: property.nonObject
+            path: tests/*

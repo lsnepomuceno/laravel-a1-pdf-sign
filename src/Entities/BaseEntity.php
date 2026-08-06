@@ -2,12 +2,9 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Entities;
 
-use Illuminate\Contracts\Support\Arrayable;
+use LSNepomuceno\LaravelA1PdfSign\Data\BaseData;
 
-class BaseEntity implements Arrayable
-{
-    public function toArray(): array
-    {
-        return get_object_vars($this);
-    }
-}
+/**
+ * @deprecated 2.0 Use {@see BaseData} instead. Removed in 3.0.
+ */
+readonly class BaseEntity extends BaseData {}

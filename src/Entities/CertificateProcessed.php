@@ -2,13 +2,12 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Entities;
 
-class CertificateProcessed extends BaseEntity
-{
-    public function __construct(
-        public string                   $original,
-        public \OpenSSLCertificate|bool $openssl,
-        public array                    $data,
-        public string                   $password,
-    ) {}
+use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 
-}
+/**
+ * @deprecated 2.0 Use {@see Certificate} instead. Removed in 3.0.
+ *
+ * Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
+ * passing while new code can type-hint the parent.
+ */
+readonly class CertificateProcessed extends Certificate {}

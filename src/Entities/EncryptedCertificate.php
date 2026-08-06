@@ -2,11 +2,9 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Entities;
 
-class EncryptedCertificate extends BaseEntity
-{
-    public function __construct(
-        public string $certificate,
-        public string $password,
-        public string $hash,
-    ) {}
-}
+use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate as EncryptedCertificateData;
+
+/**
+ * @deprecated 2.0 Use {@see EncryptedCertificateData} instead. Removed in 3.0.
+ */
+readonly class EncryptedCertificate extends EncryptedCertificateData {}

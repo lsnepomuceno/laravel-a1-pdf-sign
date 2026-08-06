@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\{Facades\File, Str};
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException, InvalidPdfSignModeTypeException};
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidCertificateContentException, Invalidx509PrivateKeyException};
 use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
@@ -16,7 +17,10 @@ use Throwable;
 
 class SignaturePdf
 {
+    /** @deprecated 2.0 Use {@see SignatureMode::Download} instead. Removed in 3.0. */
     public const MODE_DOWNLOAD = 'MODE_DOWNLOAD';
+
+    /** @deprecated 2.0 Use {@see SignatureMode::Resource} instead. Removed in 3.0. */
     public const MODE_RESOURCE = 'MODE_RESOURCE';
 
     private Fpdi $pdf;
@@ -24,7 +28,7 @@ class SignaturePdf
     private ManageCert $cert;
 
     private string $pdfPath;
-    private string $mode;
+    private SignatureMode $mode;
     private string $fileName;
 
     private ?array $image = null;
@@ -35,6 +39,9 @@ class SignaturePdf
     private bool $hasSealImgOnEveryPages;
 
     /**
+     * @param  SignatureMode|string  $mode  A SignatureMode case, or one of the
+     *                                      legacy MODE_* constants.
+     *
      * @throws InvalidPdfSignModeTypeException
      * @throws FileNotFoundException
      * @throws InvalidCertificateContentException
@@ -42,11 +49,11 @@ class SignaturePdf
      * @throws Invalidx509PrivateKeyException
      */
     public function __construct(
-        string     $pdfPath,
+        string $pdfPath,
         ManageCert $cert,
-        string     $mode = self::MODE_RESOURCE,
-        string     $fileName = '',
-        bool       $hasSignedSuffix = true,
+        SignatureMode|string $mode = SignatureMode::Resource,
+        string $fileName = '',
+        bool $hasSignedSuffix = true,
     ) {
         /**
          * @throws FileNotFoundException
@@ -55,11 +62,13 @@ class SignaturePdf
             throw new FileNotFoundException($pdfPath);
         }
 
+        $resolvedMode = SignatureMode::resolve($mode);
+
         /**
          * @throws InvalidPdfSignModeTypeException
          */
-        if (!in_array($mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) {
-            throw new InvalidPdfSignModeTypeException($mode);
+        if ($resolvedMode === null) {
+            throw new InvalidPdfSignModeTypeException(is_string($mode) ? $mode : $mode->value);
         }
 
         $this->cert = $cert;
@@ -75,7 +84,7 @@ class SignaturePdf
              ->setHasSignedSuffix($hasSignedSuffix)
              ->setSealImgOnEveryPages(false);
 
-        $this->mode    = $mode;
+        $this->mode    = $resolvedMode;
         $this->pdfPath = $pdfPath;
         $this->setPdf();
     }
@@ -221,17 +230,12 @@ class SignaturePdf
             File::put($output, $this->pdf->output($this->fileName, 'S'));
         }
 
-        switch ($this->mode) {
-            case self::MODE_RESOURCE:
-                $content = File::get($output);
-                File::delete([$output]);
-                return $content;
-                break;
-
-            case self::MODE_DOWNLOAD:
-            default:
-                return response()->download($output)->deleteFileAfterSend();
-                break;
-        }
+        return match ($this->mode) {
+            SignatureMode::Resource => tap(
+                File::get($output),
+                fn() => File::delete([$output]),
+            ),
+            SignatureMode::Download => response()->download($output)->deleteFileAfterSend(),
+        };
     }
 }
