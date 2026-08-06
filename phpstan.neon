@@ -1,0 +1,38 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+
+parameters:
+    # No baseline: src/ and tests/ are clean at the strictest level. The gate is
+    # "no errors", not "no new errors" (ARCHITECTURE-V2.md §7, decision 13).
+    level: max
+
+    paths:
+        - src
+        - tests
+
+    # poc/ holds throwaway spikes (ARCHITECTURE-V2.md §5), not production code.
+    excludePaths:
+        - poc
+
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Pest's fluent API — arch(), expect()->and()->not, dataset chains — is
+        # runtime magic that PHPStan cannot type without a dedicated extension.
+        # These are limits of the tooling, not defects, so they are ignored
+        # rather than baselined: the baseline must only track debt that can
+        # actually be paid down.
+        -
+            identifier: method.notFound
+            path: tests/*
+        -
+            identifier: method.nonObject
+            path: tests/*
+        -
+            identifier: property.nonObject
+            path: tests/*
+        -
+            identifier: property.notFound
+            path: tests/*

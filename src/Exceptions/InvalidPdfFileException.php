@@ -7,7 +7,7 @@ use Stringable;
 
 class InvalidPdfFileException extends Exception implements Stringable
 {
-    public function __construct(string $currentFile, int $code = 0, Exception $previous = null)
+    public function __construct(string $currentFile, int $code = 0, ?Exception $previous = null)
     {
         $message = "Invalid file extension, accept only \".pdf\" extension files. Current file: {$currentFile}.";
         parent::__construct($message, $code, $previous);
@@ -15,6 +15,6 @@ class InvalidPdfFileException extends Exception implements Stringable
 
     public function __toString(): string
     {
-        return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+        return __CLASS__ . ": [{$this->getCode()}]: {$this->getMessage()}\n";
     }
 }

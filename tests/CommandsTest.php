@@ -2,102 +2,53 @@
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\Invalidx509PrivateKeyException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
-use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use LSNepomuceno\LaravelA1PdfSign\Tests\TestCase;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 
-class CommandsTest extends TestCase
-{
-    /**
-     * @throws FileNotFoundException
-     * @throws InvalidCertificateContentException
-     * @throws InvalidPFXException
-     * @throws CertificateOutputNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     */
-    public function testWhenTheSignatureCommandIsSuccessfullyCompleted()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
-        $pdfPath = __DIR__ . '/Resources/test.pdf';
-        $fileName = a1TempDir(true, '.pdf');
-        $parameters = [
-            'pdfPath' => $pdfPath,
-            'pfxPath' => $pfxPath,
-            'password' => $pass,
-            'fileName' => $fileName
-        ];
+it('signs a pdf through the pdf:sign command', function () {
+    [$pfxPath, $pass] = debugCertificate();
 
-        $this->artisan('pdf:sign', $parameters)
-            ->assertSuccessful()
-            ->expectsOutput('Your PDF file is being signed!')
-            ->expectsOutput("Your file has been signed and is available at: \"{$fileName}\"");
-    }
+    $fileName = A1PdfSign::tempPath(true, '.pdf');
 
-    public function testWhenTheSignatureCommandDoesNotFinishSuccessfully()
-    {
-        $parameters = [
-            'pdfPath' => a1TempDir(true, '.pdf'),
-            'pfxPath' => a1TempDir(true, '.pfx'),
-            'password' => Str::random(32),
-            'fileName' => a1TempDir(true, '.pdf')
-        ];
+    $this->artisan('pdf:sign', [
+        'pdfPath' => resource('test.pdf'),
+        'pfxPath' => $pfxPath,
+        'password' => $pass,
+        'fileName' => $fileName,
+    ])
+        ->assertSuccessful()
+        ->expectsOutput('Your PDF file is being signed!')
+        ->expectsOutput("Your file has been signed and is available at: \"{$fileName}\"");
+});
 
-        $this->artisan('pdf:sign', $parameters)
-//             ->assertFailed()
-            ->expectsOutput('Your PDF file is being signed!')
-            ->expectsOutputToContain('Could not sign your file, error occurred:');
+it('reports failure from the pdf:sign command when the inputs are invalid', function () {
+    $this->artisan('pdf:sign', [
+        'pdfPath' => A1PdfSign::tempPath(true, '.pdf'),
+        'pfxPath' => A1PdfSign::tempPath(true, '.pfx'),
+        'password' => Str::random(32),
+        'fileName' => A1PdfSign::tempPath(true, '.pdf'),
+    ])
+        ->assertFailed()
+        ->expectsOutput('Your PDF file is being signed!')
+        ->expectsOutputToContain('Could not sign your file, error occurred:');
+});
 
-    }
+it('validates a signed pdf through the pdf:validate-signature command', function () {
+    [$pfxPath, $pass] = debugCertificate();
 
-    /**
-     * @throws FileNotFoundException
-     * @throws ProcessRunTimeException
-     * @throws Invalidx509PrivateKeyException
-     * @throws Throwable
-     * @throws InvalidCertificateContentException
-     * @throws CertificateOutputNotFoundException
-     * @throws InvalidPFXException
-     */
-    public function testWhenASignedPdfIsSuccessfullyValidated()
-    {
-        $cert = new ManageCert;
-        list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
+    $pdfPath = A1PdfSign::tempPath(true, '.pdf');
+    A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf'))->save($pdfPath);
 
-        $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
-        $pdfPath = a1TempDir(true, '.pdf');
+    expect(File::exists($pdfPath))->toBeTrue();
 
-        File::put($pdfPath, $signed);
-        $fileExists = File::exists($pdfPath);
+    $this->artisan('pdf:validate-signature', ['pdfPath' => $pdfPath])
+        ->assertSuccessful()
+        ->expectsOutput('Your PDF document is being validated.')
+        ->expectsOutput('Your PDF document is VALID');
+});
 
-        $this->assertTrue($fileExists);
-
-        $parameters = [
-            'pdfPath' => $pdfPath
-        ];
-
-        $this->artisan('pdf:validate-signature', $parameters)
-            ->assertSuccessful()
-            ->expectsOutput('Your PDF document is being validated.')
-            ->expectsOutput('Your PDF document is VALID');
-    }
-
-    public function testWhenAnUnsignedDocumentThrowsAnErrorWhenRunningAValidationCommand()
-    {
-        $pdfPath = __DIR__ . '/Resources/test.pdf';
-        $parameters = [
-            'pdfPath' => $pdfPath
-        ];
-
-        $this->artisan('pdf:validate-signature', $parameters)
-            ->assertFailed()
-            ->expectsOutput('Your PDF document is being validated.')
-            ->expectsOutputToContain('Unable to validate your file signature, an error occurred:');
-    }
-}
+it('fails validation for an unsigned document', function () {
+    $this->artisan('pdf:validate-signature', ['pdfPath' => resource('test.pdf')])
+        ->assertFailed()
+        ->expectsOutput('Your PDF document is being validated.')
+        ->expectsOutputToContain('Unable to validate your file signature, an error occurred:');
+});

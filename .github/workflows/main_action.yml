@@ -1,11 +1,17 @@
-name: A1 Pdf Sign Tests
+name: CI
 
+# Pull requests targeting main only. Branch pushes are not built: every change
+# reaches main through a pull request, so building both duplicated each run.
 on:
   pull_request:
-    branches: [ main, dev, v1.x-dev ]
+    branches: [ main ]
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -14,38 +20,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Laravel 9 supports PHP 8.1–8.2
-          - php: 8.1
-            laravel: 9.*
-          - php: 8.2
-            laravel: 9.*
+        # Laravel 13 supports PHP 8.3-8.5 and the package floor is 8.4.
+        # Laravel 12 is not supported: it requires symfony/process ^7.2 while
+        # Pest 5 requires ^8.1, so the two cannot be installed together, and
+        # Laravel 12 leaves support in 2027 anyway. See ARCHITECTURE-V2.md §3e.
+        php: [ '8.4', '8.5' ]
 
-          # Laravel 10 supports PHP 8.1–8.3
-          - php: 8.1
-            laravel: 10.*
-          - php: 8.2
-            laravel: 10.*
-          - php: 8.3
-            laravel: 10.*
-
-          # Laravel 11 supports PHP 8.2–8.4
-          - php: 8.2
-            laravel: 11.*
-          - php: 8.3
-            laravel: 11.*
-          - php: 8.4
-            laravel: 11.*
-
-          # Laravel 12 supports PHP 8.2–8.4
-          - php: 8.2
-            laravel: 12.*
-          - php: 8.3
-            laravel: 12.*
-          - php: 8.4
-            laravel: 12.*
-
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php }} - Laravel 13
 
     steps:
       - name: Checkout
@@ -55,25 +36,58 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, dom, fileinfo, openssl, json, imagick, swoole, sqlite3
-          coverage: none
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: pcov
 
       - name: Validate PHP and Composer
         run: |
           php -v
           composer -V
-          composer validate
-
-      - name: Configure Laravel Version
-        run: |
-          composer require "illuminate/support:${{ matrix.laravel }}" \
-                           "illuminate/encryption:${{ matrix.laravel }}" \
-                           "illuminate/http:${{ matrix.laravel }}" \
-                           --no-interaction --no-update
+          composer validate --strict
 
       - name: Install dependencies
-        run: |
-          composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
       - name: Run tests
-        run: composer test
+        run: composer test -- --exclude-group=network
+
+      # These reach a live timestamp authority, so an outage on their side is
+      # not a defect in this package. Reported, never blocking.
+      - name: Run tests against a live timestamp authority
+        continue-on-error: true
+        run: vendor/bin/pest --group=network
+
+  quality:
+    name: Code style and static analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
+
+      - name: Check code style
+        run: vendor/bin/pint --test
+
+      - name: Check dependencies
+        run: vendor/bin/composer-dependency-analyser
+
+      - name: Check composer.json formatting
+        run: composer normalize --dry-run
+
+      - name: Run static analysis
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      # src/ is fully typed as of PR 5; the gate keeps it that way.
+      - name: Check type coverage
+        run: vendor/bin/pest --type-coverage --min=100
