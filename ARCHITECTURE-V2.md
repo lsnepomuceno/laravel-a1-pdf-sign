@@ -219,6 +219,16 @@ So the CLI **cannot be removed** — it is demoted to a fallback driver behind t
 the CLI. This keeps `setIsLegacy()` working while making the majority of cases stop touching
 disk and `proc_open`.
 
+**Revised in PR 12 — the remaining shell-out runs through Laravel, not Symfony.**
+`Support\ProcessRunner` was built on `Symfony\Component\Process` directly; it now takes
+`Illuminate\Process\Factory`. This does **not** remove Symfony from the tree —
+`illuminate/process` requires `symfony/process` — so the honest framing is not "one less
+dependency" but two concrete gains: the direct require becomes an Illuminate one, matching
+every other dependency the package declares, and a host application can `Process::fake()` the
+call in its own suite, which is impossible against a class instantiated inline. The arch rule
+that confines shell-out was widened to cover `Illuminate\Process` as well, so the audit
+boundary did not move.
+
 ### b) PKCS#7 parsing
 
 There is no clean native replacement: `openssl_pkcs7_verify()` needs the signed message
@@ -288,6 +298,14 @@ versions still under security support. Therefore:
 > **Floor: Laravel 12.** Not because of PHP 8.3, but because it is the oldest version that
 > reaches PHP 8.5 — and, as it happens, the oldest one still alive.
 
+> **Revised during PR 12 — floor raised to Laravel 13.** The analysis above weighs the
+> framework alone; it misses the test stack. **Pest 5 requires `symfony/process ^8.1` and
+> Laravel 12 requires `^7.2`**, so the two cannot be installed in the same tree: the Laravel 12
+> cell of the matrix fails at `composer update`, before a single test runs. Supporting it means
+> either keeping Pest 4 for that cell — the split stack §3e.2 rejects below — or shipping
+> support that CI never exercises. Laravel 12 leaves security support in 2027, so the cost of
+> carrying it outweighs the remaining year of life. **Final floor: Laravel 13, PHP 8.4.**
+
 ### e.2) What is the PHP floor?
 
 PHP lifecycle (`php.net/supported-versions.php`, retrieved 2026-08-05):
@@ -311,12 +329,14 @@ Dec 2027), but it forces keeping two Pest majors in parallel for the rest of v2 
 exactly what brings the features the proposed architecture uses (§6.6). Final matrix, with no
 exclusions:
 
-| | Laravel 12 | Laravel 13 |
-|---|:---:|:---:|
-| **PHP 8.4** | ✓ | ✓ |
-| **PHP 8.5** | ✓ | ✓ |
+| | Laravel 13 |
+|---|:---:|
+| **PHP 8.4** | ✓ |
+| **PHP 8.5** | ✓ |
 
-**4 jobs against the current 11**, and every cell under active support from both vendors.
+**2 jobs against the current 11**, and every cell under active support from both vendors.
+(The table originally carried a Laravel 12 column; it was dropped for the reason recorded in
+§3e.1.)
 `composer.json` constraint: `">=8.4 <8.6"` — today it reads `">=8.1 <8.5"`, which **actively
 blocks PHP 8.5**.
 
@@ -697,7 +717,7 @@ Two bugs from the spike become mandatory test cases in the production implementa
   are replaced outright by the new engine in PRs 6-9 rather than proxied.
 
 **Consequence:** upgrading from `^1` to `^2` requires a code change. That is already true —
-v2 demands PHP 8.4 and Laravel 12, so nobody upgrades without touching their project — and
+v2 demands PHP 8.4 and Laravel 13, so nobody upgrades without touching their project — and
 `UPGRADE.md` carries the full mapping table. Anyone who cannot move stays on `^1`.
 
 **Rollout:** the removals land alongside the PR that rewrites each area, not in one sweep,
@@ -797,7 +817,8 @@ v2 establishes the stack below.
 | Architecture | Pest Arch (§6.2) | architectural rules as tests |
 | Type coverage | `pest-plugin-type-coverage` | `--min=100` over `src/` |
 | Line coverage | PCOV + Codecov | informational, no hard gate |
-| Mutation | `pest-plugin-mutate` (§6.3) | `--covered-min` |
+| Mutation | `pest-plugin-mutate` (§6.3) | `--min` |
+| Git hooks | `husky` (§6.9) | pre-commit `pint` on staged files |
 | Automated refactoring | `rector/rector` + `driftingly/rector-laravel` | `--dry-run` |
 | Dependencies | `shipmonk/composer-dependency-analyser` + `ergebnis/composer-normalize` | unused deps and *shadow deps* |
 | Compatibility | `roave/backward-compatibility-check` | public API break without a major |
@@ -830,7 +851,7 @@ arch('nothing writes to disk outside Support')
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Support');
 
 arch('no shell-out outside the CLI driver')
-    ->expect(['Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open'])
+    ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open'])
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Certificates\OpenSslCliCertificateReader');
 
 arch('legacy stays contained')
@@ -853,8 +874,11 @@ the stack: one runner, one config file, one report format, and no PHPUnit↔Infe
 to maintain.
 
 ```bash
-pest --mutate --covered-min=85 --path=src/Certificates,src/Validation
+pest --mutate --min=70 --path=src/Certificates,src/Signing,src/Validation
 ```
+
+> **The flag is `--min`, not `--covered-min`.** Pest 5 removed the latter; the script shipped
+> with it and failed with `Unknown option` the first time CI ran the job. Corrected in PR 12.
 
 For a digital-signature package this is genuinely valuable: tests that only assert "it did not
 throw" keep passing with broken validation — and that is exactly where the risk lives.
@@ -862,8 +886,15 @@ throw" keep passing with broken validation — and that is exactly where the ris
 - **Initial scope:** `src/Certificates/` and `src/Validation/`. Running mutation over the
   whole package would be slow — part of the suite generates real certificates and, on the CLI
   driver, spawns an `openssl` process per call. Widen it once stable.
-- **Gate:** `--covered-min`, starting at the value measured on the first run and rising
-  gradually. Never fix the target before having the measurement.
+  **Widened in PR 12 to `src/Signing/`**, the namespace holding both bugs poppler caught
+  (§3h). It is also the slowest to mutate, for the same reason: every covering test signs a
+  real PDF. `--parallel` is what makes it bearable.
+- **Gate:** `--min`, starting at the value measured on the first run and rising gradually.
+  Never fix the target before having the measurement. **Measured in PR 12 over the three
+  namespaces: 69.93%** (152 untested, 204 uncovered, 239 timeout, 589 tested). The gate is set
+  at **65**, deliberately under the measurement: 239 timeouts is a large share, and a timeout
+  depends on machine load, so a gate pinned exactly to the measured value goes red on a slow
+  runner rather than on a real regression.
 - **Prerequisite:** a coverage driver. CI currently runs `coverage: none`; adopt **PCOV**,
   much faster than Xdebug for this purpose.
 
@@ -939,7 +970,7 @@ disguised as modernization, and it costs one line per signature.
 #### Deliberately excluded
 
 - **Pipe operator `|>` (8.5)** and **`clone with` (8.5)** — would require an 8.5 floor, which
-  would cut Laravel 12. Revisit in v3.
+  cuts every host still on PHP 8.4. Revisit in v3.
 - **Lazy objects (8.4)** — no use case here; nothing in the package is expensive enough to
   justify lazy initialization.
 
@@ -989,7 +1020,7 @@ Scripts in `composer.json` to reproduce CI locally with a single command:
         "test:cov": "pest --coverage --min=90",
         "test:types": "pest --type-coverage --min=100",
         "test:arch": "pest --group=arch",
-        "test:mutate": "pest --mutate --covered-min=85",
+        "test:mutate": "pest --mutate --min=70",
         "lint": "pint",
         "analyse": "phpstan analyse",
         "refactor": "rector",
@@ -998,8 +1029,27 @@ Scripts in `composer.json` to reproduce CI locally with a single command:
 }
 ```
 
-Git hooks (CaptainHook/GrumPHP) are **out** of scope: a well-defined `composer check`
-delivers the same value without imposing tooling on contributors.
+### 6.9 Git hooks — Husky
+
+> The original plan ruled hooks **out**, on the grounds that a well-defined `composer check`
+> delivers the same value without imposing tooling on contributors. Revised in PR 12: it holds
+> for the heavy gates, not for formatting. Style is the one check that is both trivially
+> automatic and the most common reason a pull request goes red, and a contributor who forgets
+> `composer lint` learns about it only after a full CI round-trip.
+
+**`husky` runs Pint on the staged PHP files before the commit is created**, then re-stages the
+result — so the formatting a contributor pushes is already the formatting CI expects.
+
+| Decision | Rationale |
+|---|---|
+| Husky over CaptainHook/GrumPHP | Both PHP alternatives install into `require-dev` and therefore into the resolver the package has to keep unblocked across Laravel majors. Husky lives in `package.json`, entirely outside Composer, and cannot constrain a single PHP dependency. |
+| Only Pint, not `composer check` | A pre-commit hook must be fast. PHPStan and the suite take minutes and belong in CI; formatting takes under a second. |
+| Formats and re-stages, rather than failing | Failing on a fixable difference makes the contributor run the fixer and commit again. Fixing it is the same outcome, one step earlier. |
+| Falls back to Docker | Pint requires PHP 8.2 and the package floor is 8.4; a maintainer on an older host still needs the hook to work. It detects that the local binary cannot run and routes through the `php` service (§6.7). |
+
+Node is **not** a dependency of the package: `package.json` is private, `export-ignore`d, and
+nothing in `src/` or the CI pipeline touches it. A contributor without Node loses the hook and
+nothing else — CI still enforces `pint --test`.
 
 ---
 
@@ -1009,7 +1059,7 @@ delivers the same value without imposing tooling on contributors.
 
 | # | Question | Decision |
 |---|---|---|
-| 1 | Laravel floor | **Laravel 12** — the only version besides 13 that reaches PHP 8.5, and the oldest still under security support (§3e.1) |
+| 1 | Laravel floor | **Laravel 13** — revised in PR 12. Laravel 12 reaches PHP 8.5 and is still supported, but it pins `symfony/process ^7.2` while Pest 5 needs `^8.1`, so the cell cannot even be installed (§3e.1) |
 | 2 | Mutation: Infection or Pest? | **`pest-plugin-mutate`** — one tool fewer, one runner, one report (§6.3) |
 | 3 | Attributes and modern features | **Adopt**, under the criterion "removes code or removes a class of bug" (§6.6). `#[\SensitiveParameter]` enters as a security fix |
 | 4 | PDF engine | **Migrate to `tc-lib-pdf`** — TCPDF 6 is officially deprecated; the migration unlocks LTV and TSA (§3g). Legacy driver kept as optional |
@@ -1025,7 +1075,7 @@ delivers the same value without imposing tooling on contributors.
 | 9 | `IncrementalSigner` as the default, or only for the 2nd signature? | **Default** — preserving the original bytes from the 1st signature onward removes the silent destruction of annotations and form fields (§3h) |
 | 10 | Keep the legacy driver? | **Yes, as optional** — guarantees byte-for-byte fidelity for anyone depending on v1 output, without carrying deprecated deps in the default install |
 | 11 | phpseclib now or later? | **Later (v2.1)** — v2.0 is already a large refactor. Revisit: tc-lib-pdf may already cover part of the validation |
-| 12 | Full BC layer or a clean v2? | ✅ **Clean break**, decided during PR 5. A 3.0 is far enough out that a shim kept "until then" is kept indefinitely, and each one constrains the design it wraps. The PHP 8.4 / Laravel 12 floor already forces a deliberate upgrade, so the marginal cost of also renaming call sites is small — and `UPGRADE.md` carries the mapping (§4) |
+| 12 | Full BC layer or a clean v2? | ✅ **Clean break**, decided during PR 5. A 3.0 is far enough out that a shim kept "until then" is kept indefinitely, and each one constrains the design it wraps. The PHP 8.4 / Laravel 13 floor already forces a deliberate upgrade, so the marginal cost of also renaming call sites is small — and `UPGRADE.md` carries the mapping (§4) |
 | 13 | PHPStan `level: max` from the start, or a baseline? | ✅ **Both, applied in PR 2.** `level: max` with a 216-entry baseline. Measured: 95 errors at level 5, 159 at level 8, 216 at max — so max costs only 57 extra baseline entries over level 8 and gates all new code at the strictest setting |
 | 14 | Line-coverage gate? | **No** — type coverage (100%) and mutation are more honest gates; line coverage stays informational |
 
