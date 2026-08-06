@@ -102,7 +102,7 @@ const watchRouteChanges = async (
             if (newValue && !route.params.version) {
                 await router.push({
                     name: "docs-versioned",
-                    params: { version: "1.x", page: "home" },
+                    params: { version: "2.x", page: "home" },
                 });
             }
         }
