@@ -18,7 +18,7 @@
     <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
   </a>
   <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml">
-    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml/badge.svg?branch=main" alt="Tests">
+    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml/badge.svg" alt="Tests">
   </a>
 </p>
 
@@ -68,7 +68,7 @@
     <td>^13</td>
     <td>^8.4 || ^8.5</td>
     <td>^2</td>
-    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
+    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/release-notes">Official Doc</a></td>
   </tr>
 </table>
 
