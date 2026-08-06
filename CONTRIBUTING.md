@@ -46,5 +46,23 @@ The package targets PHP 8.4+ and Laravel 12+. If your machine runs an older PHP,
 $ docker compose -f .docker/compose.yaml run --rm php composer check
 ```
 
+### Keeping your IDE in sync
+
+Each Docker service keeps `vendor/` in its own named volume, so switching PHP
+versions does not clobber the other install. The trade-off is that the
+`vendor/` your editor indexes — the one on your machine — is never touched by
+those runs, and it goes stale as dependencies change. Classes then show up as
+"not found" even though the suite is green.
+
+Refresh it after any dependency change:
+
+``` bash
+$ composer install --ignore-platform-reqs
+```
+
+`--ignore-platform-reqs` is what lets this work on a host running an older PHP
+than the package requires: the files land for indexing, and nothing executes
+them there.
+
 
 **Happy coding**!
