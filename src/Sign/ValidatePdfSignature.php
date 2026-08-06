@@ -108,7 +108,11 @@ class ValidatePdfSignature
         $content      = preg_replace('/(-----BEGIN .+?-----(?s).+?-----END .+?-----)/mi', $delimiter, $content);
         $content      = preg_replace('/(\s\s+|\\n|\\r)/', ' ', $content);
         $content      = array_filter(explode($delimiter, $content), 'trim');
-        $content      = (array)array_map(fn($data) => $this->processDataToInfo($data), $content)[0];
+        $content      = array_map(fn($data) => $this->processDataToInfo($data), $content);
+
+        // array_filter() preserves keys, so the first element is not necessarily
+        // at index 0.
+        $content      = (array)(reset($content) ?: []);
 
         foreach ($content as $value) {
             $val = $value[key($value)];
@@ -130,7 +134,18 @@ class ValidatePdfSignature
 
         foreach ($data as $info) {
             $infoTemp = explode(' = ', trim($info));
-            if (isset($infoTemp[0]) && $infoTemp[1]) {
+
+            /**
+             * OpenSSL up to 3.4 prints "key = value"; 3.5 dropped the spaces and
+             * prints "key=value". Only fall back to the compact separator when the
+             * spaced one is absent, so output from older releases keeps parsing
+             * exactly as before.
+             */
+            if (!isset($infoTemp[1])) {
+                $infoTemp = preg_split('/\s*=\s*/', trim($info), 2) ?: [];
+            }
+
+            if (isset($infoTemp[0], $infoTemp[1]) && $infoTemp[1] !== '') {
                 $finalData[] = [$infoTemp[0] => $infoTemp[1]];
             }
         }
