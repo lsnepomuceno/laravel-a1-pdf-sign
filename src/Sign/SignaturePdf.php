@@ -3,8 +3,8 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\{Facades\File, Str};
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidCertificateContentException, Invalidx509PrivateKeyException};
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException, InvalidPdfSignModeTypeException};
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidCertificateContentException, Invalidx509PrivateKeyException};
 use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
 use setasign\Fpdi\PdfParser\Filter\FilterException;
 use setasign\Fpdi\PdfParser\PdfParserException;
@@ -16,21 +16,23 @@ use Throwable;
 
 class SignaturePdf
 {
-    const
-        MODE_DOWNLOAD = 'MODE_DOWNLOAD',
-        MODE_RESOURCE = 'MODE_RESOURCE';
+    public const MODE_DOWNLOAD = 'MODE_DOWNLOAD';
+    public const MODE_RESOURCE = 'MODE_RESOURCE';
 
     private Fpdi $pdf;
 
     private ManageCert $cert;
 
-    private string $pdfPath, $mode, $fileName;
+    private string $pdfPath;
+    private string $mode;
+    private string $fileName;
 
     private ?array $image = null;
 
     private array $info = [];
 
-    private bool $hasSignedSuffix, $hasSealImgOnEveryPages;
+    private bool $hasSignedSuffix;
+    private bool $hasSealImgOnEveryPages;
 
     /**
      * @throws InvalidPdfSignModeTypeException
@@ -44,17 +46,21 @@ class SignaturePdf
         ManageCert $cert,
         string     $mode = self::MODE_RESOURCE,
         string     $fileName = '',
-        bool       $hasSignedSuffix = true)
-    {
+        bool       $hasSignedSuffix = true,
+    ) {
         /**
          * @throws FileNotFoundException
          */
-        if (!File::exists($pdfPath)) throw new FileNotFoundException($pdfPath);
+        if (!File::exists($pdfPath)) {
+            throw new FileNotFoundException($pdfPath);
+        }
 
         /**
          * @throws InvalidPdfSignModeTypeException
          */
-        if (!in_array($mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) throw new InvalidPdfSignModeTypeException($mode);
+        if (!in_array($mode, [self::MODE_RESOURCE, self::MODE_DOWNLOAD])) {
+            throw new InvalidPdfSignModeTypeException($mode);
+        }
 
         $this->cert = $cert;
 
@@ -62,7 +68,7 @@ class SignaturePdf
         try {
             $this->cert->validate();
         } catch (Throwable $th) {
-            throw new $th;
+            throw new $th();
         }
 
         $this->setFileName($fileName)
@@ -78,9 +84,8 @@ class SignaturePdf
         ?string $name = null,
         ?string $location = null,
         ?string $reason = null,
-        ?string $contactInfo = null
-    ): SignaturePdf
-    {
+        ?string $contactInfo = null,
+    ): SignaturePdf {
         $info = [];
         $name && ($info['Name'] = $name);
         $location && ($info['Location'] = $location);
@@ -100,9 +105,8 @@ class SignaturePdf
         string $unit = 'mm',
         string $pageFormat = 'A4',
         bool   $unicode = true,
-        string $encoding = 'UTF-8'
-    ): SignaturePdf
-    {
+        string $encoding = 'UTF-8',
+    ): SignaturePdf {
         $this->pdf = new Fpdi($orientation, $unit, $pageFormat, $unicode, $encoding);
         return $this;
     }
@@ -113,9 +117,8 @@ class SignaturePdf
         float  $pageY = 250,
         float  $imageW = 50,
         float  $imageH = 0,
-        int    $page = -1
-    ): SignaturePdf
-    {
+        int    $page = -1,
+    ): SignaturePdf {
         $this->image = compact('imagePath', 'pageX', 'pageY', 'imageW', 'imageH', 'page');
         return $this;
     }
@@ -181,9 +184,9 @@ class SignaturePdf
             $this->pdf->useTemplate($pageIndex);
 
             $insertImageOnLastPage = !empty($this->image['page']) && $this->image['page'] === -1 && $i === $pageCount;
-            if ($this->hasSealImgOnEveryPages ||
-                $i === ($this->image['page'] ?? 0) ||
-                $insertImageOnLastPage
+            if ($this->hasSealImgOnEveryPages
+                || $i === ($this->image['page'] ?? 0)
+                || $insertImageOnLastPage
             ) {
                 $this->implementSignatureImage($i);
             }
@@ -199,18 +202,24 @@ class SignaturePdf
             '',
             3,
             $this->info,
-            'A' // Authorize certificate
+            'A', // Authorize certificate
         );
 
-        if (empty($this->fileName)) $this->fileName = Str::orderedUuid();
-        if ($this->hasSignedSuffix) $this->fileName .= '_signed';
+        if (empty($this->fileName)) {
+            $this->fileName = Str::orderedUuid();
+        }
+        if ($this->hasSignedSuffix) {
+            $this->fileName .= '_signed';
+        }
 
         $this->fileName .= '.pdf';
 
         $output = "{$this->cert->getTempDir()}{$this->fileName}";
 
         // Required to receive data from the server, such as timestamp and allocation hash.
-        if (!File::exists($output)) File::put($output, $this->pdf->output($this->fileName, 'S'));
+        if (!File::exists($output)) {
+            File::put($output, $this->pdf->output($this->fileName, 'S'));
+        }
 
         switch ($this->mode) {
             case self::MODE_RESOURCE:

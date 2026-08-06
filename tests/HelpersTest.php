@@ -27,7 +27,7 @@ class HelpersTest extends TestCase
      */
     public function testWhenAFileIsSignedByTheSignPdfFromFileHelper()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
@@ -51,14 +51,14 @@ class HelpersTest extends TestCase
      */
     public function testWhenAFileIsSignedByTheSignPdfFromFileHelperUsingPathEnv()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $signed = signPdfFromFile(
             pfxPath: $pfxPath,
             password: $pass,
             pdfPath: __DIR__ . '/Resources/test.pdf',
-            usePathEnv: true
+            usePathEnv: true,
         );
         $pdfPath = a1TempDir(true, '.pdf');
 
@@ -80,7 +80,7 @@ class HelpersTest extends TestCase
      */
     public function testWhenAFileIsSignedByTheSignPdfFromUploadHelper()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
@@ -105,7 +105,7 @@ class HelpersTest extends TestCase
      */
     public function testWhenAFileIsSignedByTheSignPdfFromUploadHelperUsingPathEnv()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $uploadedFile = new UploadedFile($pfxPath, 'testCertificate.pfx', null, null, true);
@@ -113,7 +113,7 @@ class HelpersTest extends TestCase
             uploadedPfx: $uploadedFile,
             password: $pass,
             pdfPath: __DIR__ . '/Resources/test.pdf',
-            usePathEnv: true
+            usePathEnv: true,
         );
         $pdfPath = a1TempDir(true, '.pdf');
 
@@ -134,7 +134,7 @@ class HelpersTest extends TestCase
      */
     public function testWhenCertificateDataIsEncrypted()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $encryptedData = encryptCertData($pfxPath, $pass);
@@ -147,18 +147,18 @@ class HelpersTest extends TestCase
     public function testWhenTheA1TempDirHelperCreatesTheFilesCorrectly()
     {
         $this->assertTrue(
-            File::isDirectory(a1TempDir())
+            File::isDirectory(a1TempDir()),
         );
 
         $this->assertTrue(
-            Str::endsWith(a1TempDir(true), '.pfx')
+            Str::endsWith(a1TempDir(true), '.pfx'),
         );
 
         $this->assertTrue(
             Str::endsWith(
                 a1TempDir(true, '.pdf'),
-                '.pdf'
-            )
+                '.pdf',
+            ),
         );
     }
 
@@ -173,7 +173,7 @@ class HelpersTest extends TestCase
      */
     public function testWhenASignedPdfFileIsCorrectlyValidatedByTheValidatePdfSignatureHelper()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');

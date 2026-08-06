@@ -23,7 +23,7 @@ class CommandsTest extends TestCase
      */
     public function testWhenTheSignatureCommandIsSuccessfullyCompleted()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
         $pdfPath = __DIR__ . '/Resources/test.pdf';
         $fileName = a1TempDir(true, '.pdf');
@@ -31,7 +31,7 @@ class CommandsTest extends TestCase
             'pdfPath' => $pdfPath,
             'pfxPath' => $pfxPath,
             'password' => $pass,
-            'fileName' => $fileName
+            'fileName' => $fileName,
         ];
 
         $this->artisan('pdf:sign', $parameters)
@@ -46,7 +46,7 @@ class CommandsTest extends TestCase
             'pdfPath' => a1TempDir(true, '.pdf'),
             'pfxPath' => a1TempDir(true, '.pfx'),
             'password' => Str::random(32),
-            'fileName' => a1TempDir(true, '.pdf')
+            'fileName' => a1TempDir(true, '.pdf'),
         ];
 
         $this->artisan('pdf:sign', $parameters)
@@ -67,7 +67,7 @@ class CommandsTest extends TestCase
      */
     public function testWhenASignedPdfIsSuccessfullyValidated()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $signed = signPdfFromFile($pfxPath, $pass, __DIR__ . '/Resources/test.pdf');
@@ -79,7 +79,7 @@ class CommandsTest extends TestCase
         $this->assertTrue($fileExists);
 
         $parameters = [
-            'pdfPath' => $pdfPath
+            'pdfPath' => $pdfPath,
         ];
 
         $this->artisan('pdf:validate-signature', $parameters)
@@ -92,7 +92,7 @@ class CommandsTest extends TestCase
     {
         $pdfPath = __DIR__ . '/Resources/test.pdf';
         $parameters = [
-            'pdfPath' => $pdfPath
+            'pdfPath' => $pdfPath,
         ];
 
         $this->artisan('pdf:validate-signature', $parameters)

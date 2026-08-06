@@ -6,11 +6,10 @@ use Illuminate\Console\Command;
 
 class ValidatePdfSignatureCommand extends Command
 {
-    protected
-        $signature = 'pdf:validate-signature
+    protected $signature = 'pdf:validate-signature
                                 {pdfPath : The path to the PDF file}
-        ',
-        $description = 'Validates whether the signature of the PDF file is valid';
+        ';
+    protected $description = 'Validates whether the signature of the PDF file is valid';
 
     public function handle(): int
     {

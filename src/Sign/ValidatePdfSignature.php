@@ -13,14 +13,16 @@ use Throwable;
 
 class ValidatePdfSignature
 {
-    private string $pdfPath, $plainTextContent, $pkcs7Path = '';
+    private string $pdfPath;
+    private string $plainTextContent;
+    private string $pkcs7Path = '';
 
     /**
      * @throws Throwable
      */
     public static function from(string $pdfPath): ValidatedSignedPDF
     {
-        return (new static)->setPdfPath($pdfPath)
+        return (new static())->setPdfPath($pdfPath)
                            ->extractSignatureData()
                            ->convertSignatureDataToPlainText()
                            ->convertPlainTextToObject();
@@ -112,7 +114,7 @@ class ValidatePdfSignature
 
         // array_filter() preserves keys, so the first element is not necessarily
         // at index 0.
-        $content      = (array)(reset($content) ?: []);
+        $content      = (array) (reset($content) ?: []);
 
         foreach ($content as $value) {
             $val = $value[key($value)];

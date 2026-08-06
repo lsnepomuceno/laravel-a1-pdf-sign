@@ -17,7 +17,7 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 SignPdfCommand::class,
-                ValidatePdfSignatureCommand::class
+                ValidatePdfSignatureCommand::class,
             ]);
         }
     }

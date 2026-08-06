@@ -30,12 +30,12 @@ class SealImageTest extends TestCase
      */
     public function testGenerateImageFromCertFile()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->makeDebugCertificate();
 
         $image = SealImage::fromCert($cert);
 
-        $interventionImg = new IMG(driver: new GDDriver);
+        $interventionImg = new IMG(driver: new GDDriver());
         $interventionImg = $interventionImg->read($image);
 
         $this->assertEqualsIgnoringCase('image/png', $interventionImg->toPng()->mediaType());
@@ -56,7 +56,7 @@ class SealImageTest extends TestCase
      */
     public function testInsertSealImageOnPdfFile()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->makeDebugCertificate();
 
         $image = SealImage::fromCert($cert);
@@ -70,7 +70,7 @@ class SealImageTest extends TestCase
             $resource = $pdf->setImage($imagePath)->signature();
             File::put($pdfPath, $resource);
         } catch (Throwable $e) {
-            throw new $e;
+            throw new $e();
         }
 
         $this->assertTrue(File::exists($pdfPath));

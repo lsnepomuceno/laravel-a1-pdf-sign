@@ -18,13 +18,12 @@ if (!function_exists('signPdf')) {
         string $password,
         string $pdfPath,
         string $mode = SignaturePdf::MODE_RESOURCE,
-        bool   $usePathEnv = false
-    ): BinaryFileResponse|string
-    {
+        bool   $usePathEnv = false,
+    ): BinaryFileResponse|string {
         return (new SignaturePdf(
             $pdfPath,
-            (new ManageCert)->fromPfx($pfxPath, $password, $usePathEnv),
-            $mode
+            (new ManageCert())->fromPfx($pfxPath, $password, $usePathEnv),
+            $mode,
         ))->signature();
     }
 }
@@ -38,13 +37,12 @@ if (!function_exists('signPdfFromUpload')) {
         string       $password,
         string       $pdfPath,
         string       $mode = SignaturePdf::MODE_RESOURCE,
-        bool         $usePathEnv = false
-    ): BinaryFileResponse|string
-    {
+        bool         $usePathEnv = false,
+    ): BinaryFileResponse|string {
         return (new SignaturePdf(
             $pdfPath,
-            (new ManageCert)->fromUpload($uploadedPfx, $password, $usePathEnv),
-            $mode
+            (new ManageCert())->fromUpload($uploadedPfx, $password, $usePathEnv),
+            $mode,
         ))->signature();
     }
 }
@@ -56,10 +54,9 @@ if (!function_exists('encryptCertData')) {
     function encryptCertData(
         UploadedFile|string $uploadedOrPfxPath,
         string              $password,
-        bool                $usePathEnv = false
-    ): EncryptedCertificate
-    {
-        $cert = new ManageCert;
+        bool                $usePathEnv = false,
+    ): EncryptedCertificate {
+        $cert = new ManageCert();
 
         if ($uploadedOrPfxPath instanceof UploadedFile) {
             $cert->fromUpload($uploadedOrPfxPath, $password, $usePathEnv);
@@ -70,7 +67,7 @@ if (!function_exists('encryptCertData')) {
         return new EncryptedCertificate(
             certificate: $cert->getEncrypter()->encryptString($cert->getCert()->original),
             password: $cert->getEncrypter()->encryptString($password),
-            hash: $cert->getHashKey() // IMPORTANT, USE ON DECRYPT HELPER
+            hash: $cert->getHashKey(), // IMPORTANT, USE ON DECRYPT HELPER
         );
     }
 }
@@ -85,9 +82,8 @@ if (!function_exists('decryptCertData')) {
         string $password,
         bool   $isBase64 = false,
         bool   $usePathEnv = false,
-    ): ManageCert
-    {
-        $cert = (new ManageCert)->setHashKey($hashKey);
+    ): ManageCert {
+        $cert = (new ManageCert())->setHashKey($hashKey);
         $uuid = Str::orderedUuid();
         $pfxName = "{$cert->getTempDir()}{$uuid}.pfx";
 
@@ -97,7 +93,7 @@ if (!function_exists('decryptCertData')) {
         return $cert->fromPfx(
             $pfxName,
             $cert->getEncrypter()->decryptString($password),
-            $usePathEnv
+            $usePathEnv,
         );
     }
 }
@@ -139,16 +135,18 @@ if (!function_exists('runCliCommandProcesses')) {
 
         if ($usePathEnv) {
             $env = [
-                'PATH' => getenv('PATH')
+                'PATH' => getenv('PATH'),
             ];
         }
 
         $process = Process::fromShellCommandline(
             command: $command,
-            env: $env
+            env: $env,
         );
         $process->run();
-        while ($process->isRunning()) continue;
+        while ($process->isRunning()) {
+            continue;
+        }
 
         if (!$process->isSuccessful()) {
             throw new ProcessRunTimeException($process->getErrorOutput());

@@ -29,8 +29,8 @@ class ManageCert
 
     private OpenSSLCertificate|bool $certContent;
 
-    const CIPHER = 'aes-128-cbc';
-    const LEGACY_FLAG = '-legacy';
+    public const CIPHER = 'aes-128-cbc';
+    public const LEGACY_FLAG = '-legacy';
 
     private Encrypter $encrypter;
 
@@ -85,7 +85,7 @@ class ManageCert
         runCliCommandProcesses($openSslCommand, $usePathEnv);
 
         if (!File::exists($output)) {
-            throw new CertificateOutputNotFoundException;
+            throw new CertificateOutputNotFoundException();
         }
 
         $content = File::get($output);
@@ -146,12 +146,12 @@ class ManageCert
     {
         if (!$this->certContent) {
             $this->invalidate();
-            throw new InvalidCertificateContentException;
+            throw new InvalidCertificateContentException();
         }
 
         if (!openssl_x509_check_private_key(certificate: $this->certContent, private_key: $this->originalCertContent)) {
             $this->invalidate();
-            throw new Invalidx509PrivateKeyException;
+            throw new Invalidx509PrivateKeyException();
         }
     }
 
@@ -169,7 +169,7 @@ class ManageCert
             original: $this->originalCertContent,
             openssl: $this->certContent,
             data: $this->parsedData,
-            password: $this->password
+            password: $this->password,
         );
     }
 
@@ -240,7 +240,7 @@ class ManageCert
 
         $genCommands = [
             "openssl req -x509 -newkey rsa:4096 -sha256 -keyout {$name}.key -out {$name}.crt -subj \"/CN=Test Certificate /OU=LucasNepomuceno\" -days 600 -passout pass:{$shellArgPassword}",
-            "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$shellArgPassword} -passout pass:{$shellArgPassword}"
+            "openssl pkcs12 -export -name test.com -out {$name}.pfx -inkey {$name}.key -in {$name}.crt -passin pass:{$shellArgPassword} -passout pass:{$shellArgPassword}",
         ];
 
         foreach ($genCommands as $command) {

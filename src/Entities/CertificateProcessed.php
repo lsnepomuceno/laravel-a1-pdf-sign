@@ -8,9 +8,7 @@ class CertificateProcessed extends BaseEntity
         public string                   $original,
         public \OpenSSLCertificate|bool $openssl,
         public array                    $data,
-        public string                   $password
-    )
-    {
-    }
+        public string                   $password,
+    ) {}
 
 }

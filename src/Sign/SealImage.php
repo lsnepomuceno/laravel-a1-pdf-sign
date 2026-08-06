@@ -21,18 +21,18 @@ class SealImage
 
     private bool $previousTextBreakLine = false;
 
-    const IMAGE_DRIVER_GD = 'gd';
-    const IMAGE_DRIVER_IMAGICK = 'imagick';
-    const FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
-    const FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
-    const FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
-    const RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
-    const RETURN_BASE64 = 'RETURN_BASE64';
+    public const IMAGE_DRIVER_GD = 'gd';
+    public const IMAGE_DRIVER_IMAGICK = 'imagick';
+    public const FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
+    public const FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
+    public const FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
+    public const RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
+    public const RETURN_BASE64 = 'RETURN_BASE64';
 
     /**
      * @throws InvalidImageDriverException
      */
-    public function __construct(AbstractDriver $imageDriver = new GDDriver)
+    public function __construct(AbstractDriver $imageDriver = new GDDriver())
     {
         $this->setImageDriver($imageDriver);
     }
@@ -41,9 +41,8 @@ class SealImage
         ManageCert $cert,
         string     $fontSize = self::FONT_SIZE_LARGE,
         bool       $showDueDate = false,
-        string     $dueDateFormat = 'd/m/Y H:i:s'
-    ): string
-    {
+        string     $dueDateFormat = 'd/m/Y H:i:s',
+    ): string {
         $subject = new Fluent($cert->getCert()->data['subject']);
         $firstLine = $subject->commonName ?? $subject->organizationName;
         $issuer = new Fluent($cert->getCert()->data['issuer']);
@@ -52,7 +51,7 @@ class SealImage
         $certDueDate = $showDueDate
             ? now()
                 ->createFromTimestamp(
-                    $cert->getCert()->data['validTo_time_t']
+                    $cert->getCert()->data['validTo_time_t'],
                 )->format($dueDateFormat)
             : null;
 
@@ -69,7 +68,7 @@ class SealImage
             $font->color('#16A085');
         };
 
-        $selfObj = new static;
+        $selfObj = new static();
 
         return $selfObj
             ->setImagePath()
@@ -77,19 +76,20 @@ class SealImage
                 text: $selfObj->breakText($firstLine ?? $secondLine ?? '', $fontSize),
                 textX: 160,
                 textY: 80,
-                callback: $callback
+                callback: $callback,
             )
             ->addTextField(
                 text: $selfObj->breakText($firstLine ? $secondLine : '', $fontSize),
                 textX: 160,
                 textY: 150,
-                callback: $callback
+                callback: $callback,
             )
             ->addTextField(
                 text: $certDueDate ?? '',
                 textX: 160,
                 textY: 250,
-                callback: $callback)
+                callback: $callback,
+            )
             ->generateImage();
     }
 
@@ -140,14 +140,13 @@ class SealImage
         string  $text,
         float   $textX,
         float   $textY,
-        ?Closure $callback = null
-    ): self
-    {
+        ?Closure $callback = null,
+    ): self {
         $newText = [
             'text' => $text,
             'x' => $textX,
             'y' => $textY,
-            'callback' => $callback ?? fn() => null
+            'callback' => $callback ?? fn() => null,
         ];
 
         $this->textFieldsDefinitions[] = $newText;
@@ -169,9 +168,9 @@ class SealImage
         }
 
         if ($returnType === self::RETURN_IMAGE_CONTENT) {
-            return $image->encode(encoder: new JpegEncoder)->toString();
+            return $image->encode(encoder: new JpegEncoder())->toString();
         }
 
-        return $image->encode(encoder: new JpegEncoder)->toDataUri();
+        return $image->encode(encoder: new JpegEncoder())->toDataUri();
     }
 }

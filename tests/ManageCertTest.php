@@ -27,7 +27,7 @@ class ManageCertTest extends TestCase
      */
     public function testValidateCertificateStructureFromPfxFile()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->makeDebugCertificate();
 
         $this->assertInstanceOf(CertificateProcessed::class, $cert->getCert());
@@ -58,7 +58,7 @@ class ManageCertTest extends TestCase
     {
         $this->expectException(FileNotFoundException::class);
 
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->fromPfx('imaginary/path/to/file.pfx', '12345');
     }
 
@@ -73,7 +73,7 @@ class ManageCertTest extends TestCase
     {
         $this->expectException(InvalidPFXException::class);
 
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->fromPfx('imaginary/path/to/file.pfz', '12345');
     }
 
@@ -87,12 +87,12 @@ class ManageCertTest extends TestCase
      */
     public function testValidateEncryperInstanceAndResources()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->makeDebugCertificate();
 
         $this->assertInstanceOf(Encrypter::class, $cert->getEncrypter());
         $this->assertTrue(
-            $cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER)
+            $cert->getEncrypter()->supported($cert->getHashKey(), $cert::CIPHER),
         );
     }
 
@@ -107,7 +107,7 @@ class ManageCertTest extends TestCase
     {
         $this->expectException(ProcessRunTimeException::class);
 
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         $cert->makeDebugCertificate(false, true);
     }
 
@@ -121,7 +121,7 @@ class ManageCertTest extends TestCase
      */
     public function testValidatesIfThePfxFileWillBeDeletedAfterBeingPreserved()
     {
-        $cert = new ManageCert;
+        $cert = new ManageCert();
         list($pfxPath, $pass) = $cert->makeDebugCertificate(true);
 
         $cert->setPreservePfx()->fromPfx($pfxPath, $pass);

@@ -9,7 +9,6 @@ use ReflectionMethod;
 
 class ProcessDataInfoFunctionTest extends TestCase
 {
-
     public static function stringsDataProvider()
     {
         /** info of cert from SAT (México) certificates for Testing porpouse */
@@ -39,10 +38,10 @@ class ProcessDataInfoFunctionTest extends TestCase
     {
         $method = new ReflectionMethod(
             '\LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature',
-            'processDataToInfo'
+            'processDataToInfo',
         );
         $method->setAccessible(true);
-    
+
         $data = $method->invoke(new ValidatePdfSignature(), $content);
         $this->assertSame($expectedResponse, $data);
     }

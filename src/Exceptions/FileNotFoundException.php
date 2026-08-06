@@ -1,10 +1,10 @@
 <?php
+
 /**
  * __toString
  *
  * @return string
  */
-
 
 namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 

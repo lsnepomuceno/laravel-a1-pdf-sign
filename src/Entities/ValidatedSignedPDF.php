@@ -6,9 +6,7 @@ class ValidatedSignedPDF extends BaseEntity
 {
     public function __construct(
         public bool  $isValidated,
-        public array $data
-    )
-    {
-    }
+        public array $data,
+    ) {}
 
 }
