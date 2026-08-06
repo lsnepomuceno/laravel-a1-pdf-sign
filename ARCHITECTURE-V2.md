@@ -457,6 +457,12 @@ Consequence for PR 1: the floor bump must be accompanied by
 
 #### g.2) Fonts — an unplanned blocker
 
+> **Moot as of PR 7c.** tc-lib-pdf left the dependency list along with the rendering it was
+> brought in for: the package appends revisions to bytes it already has and never emits a
+> document, so no font definition is ever loaded. Nothing under `resources/fonts/` shipped,
+> and `K_PATH_FONTS` must stay **undefined** — tc-lib-pdf and TCPDF 6 read it in different
+> formats, and defining it kills TCPDF silently. The analysis below is kept for the record.
+
 **tc-lib-pdf cannot emit any PDF without a generated font definition**, not even a
 signature-only document containing no text:
 
@@ -694,6 +700,177 @@ Two bugs from the spike become mandatory test cases in the production implementa
 | Linearized PDF | Appending invalidates linearization; acceptable and standard, but document it |
 | Previous signature invalidated by accident | Mandatory regression test: sign 3×, validate all 3 in an external reader |
 
+### i) PEM certificates — a second entry point, one pipeline
+
+The package accepts PKCS#12 (`.pfx` / `.p12`) and nothing else. Every public entry — the
+builder's `certificate()`, `certificateFromUpload()`, `signFromFile()`, `signFromUpload()`,
+`encryptCertificate()` and the `pdf:sign` command — funnels into `CertificateReader::read()`,
+whose two implementations call `openssl_pkcs12_read()` or `openssl pkcs12`. The contract's
+own docblock says "the raw bytes of a .pfx / .p12 file".
+
+#### The pipeline is already PEM
+
+That closed door hides how little has to change. **PKCS#12 is not a peer of PEM here — it is
+a container that gets converted into PEM**, by `NativeCertificateReader::toPem()`, before
+anything else runs. PEM is the destination format, not a sibling:
+
+| Component | What it already handles |
+|---|---|
+| `Data\Certificate::$original` | The combined certificate and private key, in PEM |
+| `CertificateParser::parse()` | Takes a PEM bundle and a password; the single "is this usable" answer |
+| `CertificateVault::open()` | Reparses the stored PEM directly — no PKCS#12 round-trip (§1.14) |
+| `Cades\CadesBuilder` | Extracts the chain with a PEM regex, and reads the key from `$original` |
+
+A caller can already reach this by hand — `app(CertificateParser::class)->parse($pem, $pw)`
+into `usingCertificate()` — which is an undocumented back door, and a broken one for the
+common case below.
+
+#### The defect this uncovered
+
+`CertificateParser` passes the bundle to `openssl_x509_check_private_key()` as a **string**.
+That form cannot decrypt a passphrase-protected private key, which is what a real `.pem`
+usually carries. Measured against ext-openssl:
+
+| Call | Result |
+|---|---|
+| `check_private_key($x509, $pem)` — encrypted key | **FAIL** — what the code does today |
+| `check_private_key($x509, [$pem, $password])` — encrypted key | OK |
+| `check_private_key($x509, [$pem, 'wrong'])` | FAIL — a wrong passphrase still fails, as it must |
+| `check_private_key($x509, [$pem, $password])` — **unencrypted** key | OK |
+| `x509_read()` on a bundle with the key written before the certificate | OK — order is irrelevant |
+| `x509_read()` on DER bytes | FAIL — detectable, so it can be reported as a format error |
+| `pkey_get_private($plainPem, 'anything')` | OK — a passphrase on an unencrypted key is ignored |
+
+The array form is correct for encrypted *and* unencrypted keys, so the fix is uniform and
+needs no branch. It is a prerequisite: without it any PEM carrying a protected key fails with
+`InvalidX509PrivateKeyException`, which points at the wrong cause.
+
+Note the asymmetry — `CadesBuilder::privateKey()` already passes the password correctly. Only
+the parser does not, which is why PKCS#12 never exposed the bug: `openssl_pkcs12_read()`
+hands back a *decrypted* key, so the string form was always enough.
+
+#### The decision: diverge at the entry, converge at the reader
+
+A parallel PEM hierarchy — its own contract, its own DTO, its own pipeline — was considered
+and rejected. `CertificateParser` already states the principle it would contradict: *"Both
+readers converge here, so 'is this certificate usable' is answered in one place rather than
+once per driver."* Two contracts that both take `(bytes, password)` and both return
+`Certificate` are one contract written twice.
+
+The blast radius of forking the DTO is what settles it:
+
+| Would have to fork | Because |
+|---|---|
+| `Cades\CadesBuilder` | `certificates()` and `privateKey()` both read `Certificate::$original` |
+| `Certificates\CertificateVault` | `seal()` and `open()` are typed on `Certificate` |
+| `Seal\InterventionSealRenderer` | `render()` is typed on `Certificate` |
+| `Signing\PendingSignature` | Would carry both readers, on top of its three dependencies |
+| `tests/ArchTest.php` | The `Data` rules — final, readonly, extends `BaseData` — would govern a second DTO |
+| The public API | `Data\*` are public return types; the shape would change in two places, permanently |
+
+Where the separation is real is **at the entry point**, and only there:
+
+1. **Arity.** PEM may arrive as two files, a certificate and a key. PKCS#12 is always one.
+   That is a genuinely different signature, so it gets its own method rather than an
+   overloaded one.
+2. **Diagnostics.** "wrong password or unsupported encryption" does not describe "these are
+   DER bytes, not PEM" or "the certificate does not match the key".
+3. **Security posture.** A PKCS#12 bundle is always encrypted. A PEM private key frequently
+   is not, and the documentation has to say so.
+
+```
+certificate()      certificateFromUpload()      certificatePem()
+      │                     │                          │
+      └──────── CertificateReader::read() ─────────────┘
+         Native / OpenSslCli          Pem (no conversion step)
+                        │                     │
+                        └──► CertificateParser::parse($pem, $password)
+                                        │
+                                   Data\Certificate
+                                        │
+                     CadesBuilder · CertificateVault · SealRenderer
+```
+
+`PemCertificateReader` implements the existing `CertificateReader`, so it stays swappable and
+mockable, and it is the degenerate case of that contract: the reader whose conversion step is
+empty. It does **not** belong to `ReaderFactory`, whose axis is *how to read PKCS#12* —
+native, or the CLI for legacy RC2/40-bit bundles (§3a). That axis does not apply to a format
+that needs no conversion, and the reader's only dependency is `CertificateParser`, so it
+autowires.
+
+Format is detected **by content**, not by extension. PEM ships as `.pem`, `.crt`, `.cer`,
+`.key` and `.txt`; gating on extension would reproduce the rigidity of the existing
+`InvalidPFXException` check, which rejects a valid bundle for having the wrong suffix.
+
+#### Scope
+
+| File | Change |
+|---|---|
+| `Certificates/CertificateParser.php` | The array form of `check_private_key`. **Prerequisite** |
+| `Certificates/PemCertificateReader.php` | New. Combined bundle or separate cert + key; format diagnostics |
+| `Exceptions/InvalidPemContentException.php` | New. Only what is decidable *before* parsing: no certificate block, no private key block, binary DER/PKCS#12 bytes handed to the PEM entry. A certificate and key that are both present but unrelated keeps `InvalidX509PrivateKeyException`, whose message already says exactly that — a second class for it would be a synonym |
+| `Contracts/CertificateReader.php` | `$pfxContents` → `$contents`, and a format-agnostic docblock. Verified safe: every call site is positional, none uses named arguments |
+| `Signing/PendingSignature.php` | `certificatePem()` and `certificateFromPem()` |
+| `Contracts/A1PdfSign.php` + `A1PdfSignManager.php` | `signFromPem()`; `encryptCertificate()` accepting PEM |
+| `Commands/SignPdfCommand.php` | Content sniffing, plus `--key=` for the two-file form |
+| `Testing/DebugCertificate.php` | `makePem()`, in both the encrypted-key and plain-key variants |
+
+Adding a method to `Contracts\A1PdfSign` breaks external implementers. With 2.0.0 unreleased
+this is the moment it costs nothing; afterwards it costs a major.
+
+No new configuration key. Nothing about PEM is an infrastructure decision the host
+application would want to set once — the format is a property of the file in hand.
+
+#### Tests
+
+Beyond the per-class cases, three carry the design:
+
+1. **Convergence.** Read the same key material through both paths — PKCS#12, and the PEM
+   extracted from it — and assert the two `Certificate` objects agree. This is the executable
+   form of "one pipeline"; if it ever fails, the hierarchy has forked in practice.
+2. **End to end.** Sign through `certificatePem()` and validate with
+   `Validation\PdfSignatureValidator`, then confirm the result in poppler's `pdfsig`. The
+   suite shares its assumptions with the code it tests (§5, *Still open*), so the external
+   reader is the one that counts.
+3. **The encrypted key.** Sign with a passphrase-protected PEM, with the correct passphrase
+   and with a wrong one. This is the case that fails today and the reason the parser fix is a
+   prerequisite rather than a cleanup.
+
+Fixtures go through `Testing\DebugCertificate::makePem()`, and the shared helper belongs in
+`tests/Pest.php` — a helper defined inside a test file is invisible to the others under
+`--parallel`.
+
+`src/Certificates` is under the mutation gate at a floor of 58. The floor is a measurement,
+not a target: re-measure after the code lands and only then decide whether to move it (§6.3).
+
+#### Samples
+
+No new sample PDF. The format changes only how the key is loaded; the signature it produces
+is indistinguishable from the PKCS#12 one, so a `pem-signed.pdf` next to the profile samples
+would imply a distinction that does not exist. What is worth shipping is the **input**:
+`samples/certificate.pem` alongside `certificate.pfx`, so the new entry point can be
+exercised against the same throwaway certificate the rest of `samples/` uses.
+
+`poc/sign-samples.php` gains the PEM export and one signing round through `certificatePem()`,
+asserted to validate — the generator is where the two paths are shown to converge on real
+output rather than in a unit test.
+
+**`.gitignore` must be extended first.** It ignores `*.pfx` and negates `/samples/*.pfx`, but
+`*.pem` and `*.key` are not ignored at all. Shipping a PEM sample without that rule leaves a
+repository where a contributor's real private key is one `git add` away from being committed —
+and unlike a `.pfx`, a PEM key is often unencrypted.
+
+#### Concrete risks
+
+| Risk | Mitigation |
+|---|---|
+| An unencrypted private key on disk, which PKCS#12 never permitted | Cannot be prevented by the package; document it plainly and keep `#[\SensitiveParameter]` on every password argument |
+| A PEM whose certificate and key do not match | Already caught by `check_private_key`, once the array form lands — surface it as its own message, not as "invalid content" |
+| DER or PKCS#12 bytes passed to the PEM entry | Detect and name the actual format; `openssl_x509_read()` fails silently on DER |
+| A chain-only PEM, with no private key | Fail before parsing, with a message that says which half is missing |
+| The two-file form given the same path twice | Concatenating a certificate with itself passes `x509_read` and fails `check_private_key` with a misleading message; check for it explicitly |
+| Divergence between the PEM and PKCS#12 paths over time | The convergence test above, which fails the moment the two stop agreeing |
+
 ---
 
 ## 4. Backward compatibility — v2 is a clean break
@@ -742,15 +919,17 @@ Independent PRs on the `v2.x-dev` branch.
 | 5 | ✅ Package infrastructure | **done** — publishable config, `Contracts\A1PdfSign` bound as a singleton, facade, helpers delegating to the container, 4 more arch rules, **type coverage 100%**. Found defect §1.14. The finer-grained contracts land with their implementations in PRs 6-9 | — |
 | 5b | ✅ Remove deprecated API, part 1 | **done** — `Entities\*` and the legacy constants dropped, `Data\*` final, idiomatic enum backing values, arch rule guarding the removal, `UPGRADE.md` (§4) | — |
 | 6 | ✅ Certificates | **done** — `NativeCertificateReader` default, CLI fallback for legacy only, `CertificateVault` (fixes §1.14), `TemporaryFile`, `DebugCertificate` in `Testing/`, global helpers removed. 63 tests, no skips | — |
-| 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
-| 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
+| 7 | ✅ Signing | **done** — `IncrementalSigner` bound to `PdfSigner`, `PendingSignature` + `SignedPdf`, FPDI and TCPDF dropped, disk round-trip gone. **No `TcLibPdfSigner`/`TcpdfSigner` pair**: 7c swapped tc-lib-pdf for tc-lib-pdf-sign, so the package no longer renders PDFs and the core fonts of §3g.2 became moot — `K_PATH_FONTS` is deliberately left undefined | — |
+| 7b | ✅ Multi-signature | **done** — `Incremental/*` from PoC 0b, the fallback path: with tc-lib-pdf gone there was no `appendIncrementalRevision()` left to inherit. Closes TCPDF#430; `samples/` carries a six-signature document. `approval()` / `certify()` / `ltv()` were **not** built — the level is chosen by `profile()`, and `timestamp()` survives as its shorthand | — |
 | 7c | ✅ PAdES profiles | **done** — CAdES builder replaces openssl_pkcs7_sign, B-B/B-T live, tc-lib-pdf swapped for tc-lib-pdf-sign (13 deps → 1) | — |
 | 7d | ✅ DSS | **done** — B-LT, store in its own revision | — |
 | 7e | ✅ DocTimeStamp | **done** — B-LTA, archive timestamp over the whole file | — |
-| 8 | Seal | `SealRenderer` rewritten on the tc-lib-pdf API, in-memory seal, font/colour/background config | medium |
+| 8 | ✅ Seal | **done** — `InterventionSealRenderer` on Intervention Image v3 rather than the tc-lib-pdf API, which left with 7c. In-memory seal, driver/font/colour/background from config, `SealPlacement` + `Incremental\SealAppearance` stamping the widget | — |
 | 9 | ✅ Validation | **done** — signatures verified cryptographically, all of them reported, text parsing gone | — |
 | 10 | ✅ Mutation | **done** — 71.7% covered-MSI, gate at 70; found the ASN.1 boundary gaps | — |
 | 11 | ✅ Cleanup + tooling | **done** — `ManageCert` retired, dependency-analyser and normalize wired in, README. Roave BC check deferred: it compares against a released tag, so it only becomes meaningful from 2.0.0 | — |
+| 12 | ✅ Hardening | **done** — Laravel floor raised to 13, once Pest 5 and Laravel 12 proved uninstallable together (§3e.1); `ProcessRunner` rebuilt on `Illuminate\Process\Factory`, with the shell-out arch rule widened to match (§3a); mutation widened to `src/Signing/` and the `--covered-min` → `--min` flag corrected (§6.3); Husky pre-commit hook adopted for Pint (§6.9) | — |
+| 13 | ✅ PEM certificates | **done** — `certificatePem()` / `certificateFromPem()` / `signFromPem()` onto the existing pipeline, `PemCertificateReader`, and the `check_private_key` fix they depended on. `pdf:sign` routes by content and takes `--key`; the vault detects the encoding; `.gitignore` covers `*.pem` / `*.key` and `samples/certificate.pem` is the PFX's own identity re-encoded. Verified in poppler (§3i) | — |
 
 **PR 0 comes before everything else** and is a throwaway proof of concept, not production
 code. It answers the one question that could invalidate the plan: does tc-lib-pdf deliver LTV
@@ -1090,6 +1269,7 @@ nothing else — CI still enforces `pint --test`.
 | 6 | Use `ddn/sapp`? | **No, under no circumstances** — not `require`, not `require-dev`, not `suggest`. LGPL is incompatible with porting code into an MIT package, and it is a legacy project. **Conceptual** reference only; clean-room implementation over tc-lib-pdf's building blocks, with an arch test enforcing the rule (§3h) |
 | 7 | PHP floor: 8.4 or 8.3? | ✅ **8.4**, applied in PR 1. Keeps the toolchain on one Pest major and unlocks property hooks, `private(set)` and `#[\Deprecated]` |
 | 8 | Multi-signature in v2.0 or v2.1? | ✅ **v2.0.** PR 0b closed with 3/3 valid signatures (§3h.1) — the risk that would justify deferring did not materialize |
+| 15 | PEM: parallel pipeline, or a second entry onto the existing one? | ✅ **Second entry, one pipeline.** A separate contract and DTO would fork `CadesBuilder`, `CertificateVault`, `SealRenderer` and the public `Data\*` shape to gain nothing: PKCS#12 is *converted into* PEM before anything downstream runs, so the two are not peers. Divergence is confined to the entry point, where it is real — PEM may be two files, and its key is often unencrypted (§3i) |
 
 ### Open
 
