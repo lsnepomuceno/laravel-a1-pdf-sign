@@ -82,3 +82,8 @@ jobs:
 
       - name: Run static analysis
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      # The floor is the value measured when Pest landed. It rises to 100 in
+      # PR 4, once the value objects carry full type declarations.
+      - name: Check type coverage
+        run: vendor/bin/pest --type-coverage --min=94
