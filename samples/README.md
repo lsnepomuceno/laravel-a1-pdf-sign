@@ -23,6 +23,20 @@ generates. Its password is:
 example's password with special chars: $ & * ? " '
 ```
 
+`certificate.pem` is **the same certificate**, not a second one — same serial,
+same subject, same password. It is here so the PEM entry point can be exercised
+against the identity the rest of this directory already uses:
+
+```php
+A1PdfSign::newSignature()
+    ->certificatePem('samples/certificate.pem', password: $password)
+    ->pdf($path)
+    ->sign();
+```
+
+Its private key is encrypted under that same password. A PEM key is frequently
+shipped unencrypted, and this sample deliberately does not model that.
+
 **Every reader will report the signer as untrusted.** That is the certificate's
 provenance, not the signature's integrity: it is self-signed and chains to
 nothing. Everything else validates normally — document hash, sub-filter,
@@ -43,6 +57,12 @@ ICP-Brasil certificate.
 | `pades-b-lt.pdf` | B-T plus a Document Security Store |
 | `pades-b-lta.pdf` | B-LT plus an archive timestamp — a second `/ByteRange`, of type `ETSI.RFC3161`, covering the whole file |
 | `six-signatures.pdf` | Six signatures on one document |
+
+There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
+is loaded, so a document signed through `certificatePem()` is indistinguishable
+from `pades-b-b.pdf` — a separate sample would imply a distinction that does not
+exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
+the two entry points are shown to converge on real output.
 
 ## What `six-signatures.pdf` proves
 

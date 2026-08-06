@@ -97,6 +97,31 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 fields are preserved and a document can carry more than one signature — the request in
 [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
 
+### PEM certificates
+
+PKCS#12 (`.pfx` / `.p12`) is not the only accepted encoding. A PEM certificate is read through its own entry point,
+with the private key in the same file or in one of its own:
+
+```php
+A1PdfSign::newSignature()
+    ->certificatePem($certificatePath, $keyPath, $password)   // $keyPath null when combined
+    ->pdf($pdfPath)
+    ->sign();
+
+A1PdfSign::signFromPem($pemPath, $password, $pdfPath);        // one-shot
+A1PdfSign::newSignature()->certificateFromPem($bytes);        // from an upload or a secret store
+```
+
+The format is decided by content, not by extension — PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`. The
+`pdf:sign` command detects it the same way, and takes `--key` for the two-file form:
+
+```bash
+php artisan pdf:sign contract.pdf certificate.pem "" signed.pdf --key=private.key
+```
+
+Pass an empty password when the private key is unencrypted. **PEM permits that and PKCS#12 does not** — an unprotected
+key on disk is readable by anything that can read the file, so prefer an encrypted one where you have the choice.
+
 Signed samples for every profile, including a document carrying six signatures, live in
 [`samples/`](samples/README.md) — open them in any reader to see what the package produces.
 

@@ -13,6 +13,7 @@
  *   docker compose -f .docker/compose.yaml run --rm php php poc/sign-samples.php
  */
 
+use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\LaravelA1PdfSignServiceProvider;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
@@ -33,9 +34,22 @@ if (! is_dir($output)) {
 file_put_contents("{$output}/certificate.pfx", $pfx);
 
 $pfxPath = "{$output}/certificate.pfx";
+$pemPath = "{$output}/certificate.pem";
 $source = __DIR__ . '/../tests/Resources/test.pdf';
 
 $manager = $app->make(LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign::class);
+
+// The same certificate as PEM, derived from the PFX rather than generated
+// afresh, so samples/ carries one identity in two encodings instead of two
+// unrelated certificates. The key is re-encrypted under the same password: a
+// sample should not model shipping a naked private key, throwaway or not.
+$bundle = $app->make(NativeCertificateReader::class)->read($pfx, $password)->original;
+
+$privateKey = openssl_pkey_get_private($bundle);
+openssl_pkey_export($privateKey, $encryptedKey, $password);
+preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $bundle, $certificate);
+
+file_put_contents($pemPath, rtrim($certificate[0], "\n") . "\n" . $encryptedKey);
 
 $config = $app->make('config');
 $config->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
@@ -85,4 +99,28 @@ printf(
     "\nvalidate(six-signatures.pdf): %d signatures, valid=%s\n",
     $report->count(),
     $report->isValid() ? 'true' : 'false',
+);
+
+// One round through the PEM entry point. There is no pem-signed.pdf in
+// samples/ on purpose: the encoding only changes how the key is loaded, so the
+// signature is indistinguishable from the PKCS#12 one and a separate sample
+// would imply a distinction that does not exist (§3i). What this proves is that
+// the two entries converge on real output, not only in a unit test.
+$viaPem = $manager->newSignature()
+    ->certificatePem($pemPath, password: $password)
+    ->pdf($source)
+    ->info(name: 'Lucas Nepomuceno', reason: 'Sample', location: 'Brazil')
+    ->seal()
+    ->profile(SignatureProfile::PadesBB)
+    ->sign();
+
+$viaPem->save("{$output}/pem-signed.pdf");
+
+$pemReport = $manager->validate("{$output}/pem-signed.pdf");
+
+printf(
+    "validate(pem-signed.pdf):     %d signature, valid=%s, signer=%s\n",
+    $pemReport->count(),
+    $pemReport->isValid() ? 'true' : 'false',
+    $pemReport->signers()[0]->commonName ?? '?',
 );
