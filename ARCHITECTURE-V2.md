@@ -1,7 +1,7 @@
 # Modernization plan — v2.0
 
 Reference document for the architectural refactor of the package. Baseline: `1.0.9`.
-Status: **in progress** — PRs 0 through 6 delivered; see the roadmap in §5.
+Status: **delivered** — every PR in the roadmap (§5) has landed. Two gaps remain open, recorded at the end of §5.
 
 ---
 
@@ -724,11 +724,13 @@ Independent PRs on the `v2.x-dev` branch.
 | 6 | ✅ Certificates | **done** — `NativeCertificateReader` default, CLI fallback for legacy only, `CertificateVault` (fixes §1.14), `TemporaryFile`, `DebugCertificate` in `Testing/`, global helpers removed. 63 tests, no skips | — |
 | 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
 | 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
-| 7c | PAdES profiles | expose B-B / B-T / B-LT / B-LTA (§3g.1) — the strongest new capability for the package's audience | medium |
+| 7c | ✅ PAdES profiles | **done** — CAdES builder replaces openssl_pkcs7_sign, B-B/B-T live, tc-lib-pdf swapped for tc-lib-pdf-sign (13 deps → 1) | — |
+| 7d | ✅ DSS | **done** — B-LT, store in its own revision | — |
+| 7e | ✅ DocTimeStamp | **done** — B-LTA, archive timestamp over the whole file | — |
 | 8 | Seal | `SealRenderer` rewritten on the tc-lib-pdf API, in-memory seal, font/colour/background config | medium |
-| 9 | Validation | `PdfSignatureExtractor` + `Pkcs7Reader` with `openssl_x509_parse` | medium |
-| 10 | Mutation | `pest --mutate` over `Certificates/` and `Validation/`, `--covered-min` in CI | low |
-| 11 | BC + commands | shims with `#[\Deprecated]`, commands on the new API, Roave BC check, `UPGRADE.md`, docs | low |
+| 9 | ✅ Validation | **done** — signatures verified cryptographically, all of them reported, text parsing gone | — |
+| 10 | ✅ Mutation | **done** — 71.7% covered-MSI, gate at 70; found the ASN.1 boundary gaps | — |
+| 11 | ✅ Cleanup + tooling | **done** — `ManageCert` retired, dependency-analyser and normalize wired in, README. Roave BC check deferred: it compares against a released tag, so it only becomes meaningful from 2.0.0 | — |
 
 **PR 0 comes before everything else** and is a throwaway proof of concept, not production
 code. It answers the one question that could invalidate the plan: does tc-lib-pdf deliver LTV
@@ -744,6 +746,18 @@ case with a real legacy PFX, which the tests do not have today.
 
 PR 10 comes after the refactor on purpose: running mutation over the legacy code would yield
 a low score for structural reasons, not for lack of tests.
+
+### Still open
+
+Two things the plan set out to do are not done, and neither is covered by a passing test:
+
+1. **No validation in a real reader.** Every claim about PAdES conformance rests on structural
+   checks plus `openssl smime -verify` and live TSA round-trips. Adobe Reader and the ITI
+   Validar have never seen the output. For a package that now advertises B-LTA, this is the
+   most serious remaining gap.
+2. **Roave BC check is not wired in.** It compares the public API against a released tag;
+   with 2.0.0 unreleased and everything breaking against `^1`, it would only produce noise.
+   It becomes meaningful — and should be added — once 2.0.0 ships.
 
 ---
 
