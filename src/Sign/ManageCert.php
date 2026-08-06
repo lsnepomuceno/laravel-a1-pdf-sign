@@ -29,8 +29,8 @@ class ManageCert
 
     private OpenSSLCertificate|bool $certContent;
 
-    public const CIPHER = 'aes-128-cbc';
-    public const LEGACY_FLAG = '-legacy';
+    public const string CIPHER = 'aes-128-cbc';
+    public const string LEGACY_FLAG = '-legacy';
 
     private Encrypter $encrypter;
 

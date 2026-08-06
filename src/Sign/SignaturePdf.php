@@ -18,10 +18,10 @@ use Throwable;
 class SignaturePdf
 {
     /** @deprecated 2.0 Use {@see SignatureMode::Download} instead. Removed in 3.0. */
-    public const MODE_DOWNLOAD = 'MODE_DOWNLOAD';
+    public const string MODE_DOWNLOAD = 'MODE_DOWNLOAD';
 
     /** @deprecated 2.0 Use {@see SignatureMode::Resource} instead. Removed in 3.0. */
-    public const MODE_RESOURCE = 'MODE_RESOURCE';
+    public const string MODE_RESOURCE = 'MODE_RESOURCE';
 
     private Fpdi $pdf;
 

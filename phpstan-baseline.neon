@@ -1,6 +1,30 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
+			identifier: function.strict
+			count: 1
+			path: src/A1PdfSignManager.php
+
+		-
+			message: '''
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '''
+				#^Call to deprecated function signPdfFromFile\(\)\:
+				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: src/Commands/SignPdfCommand.php
+
+		-
 			message: '#^Only booleans are allowed in &&, string\|null given on the left side\.$#'
 			identifier: booleanAnd.leftNotBoolean
 			count: 1
@@ -35,6 +59,15 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Commands/SignPdfCommand.php
+
+		-
+			message: '''
+				#^Call to deprecated function validatePdfSignature\(\)\:
+				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: src/Commands/ValidatePdfSignatureCommand.php
 
 		-
 			message: '#^Parameter \#1 \$pdfPath of function validatePdfSignature expects string, array\|bool\|float\|int\|string\|null given\.$#'
@@ -109,46 +142,13 @@ parameters:
 			path: src/Exceptions/ProcessRunTimeException.php
 
 		-
-			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
-			identifier: function.strict
-			count: 1
-			path: src/Helpers/helpers.php
-
-		-
 			message: '''
-				#^Fetching deprecated class constant MODE_RESOURCE of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:
-				2\.0 Use \{@see SignatureMode\:\:Resource\} instead\. Removed in 3\.0\.$#
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
 			'''
-			identifier: classConstant.deprecated
-			count: 2
-			path: src/Helpers/helpers.php
-
-		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\EncryptedCertificate\:
-				2\.0 Use \{@see EncryptedCertificateData\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: src/Helpers/helpers.php
-
-		-
-			message: '''
-				#^Return type of function encryptCertData\(\) has typehint with deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\EncryptedCertificate\:
-				2\.0 Use \{@see EncryptedCertificateData\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: return.deprecatedClass
-			count: 1
-			path: src/Helpers/helpers.php
-
-		-
-			message: '''
-				#^Return type of function validatePdfSignature\(\) has typehint with deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:
-				2\.0 Use \{@see SignatureReport\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: return.deprecatedClass
-			count: 1
-			path: src/Helpers/helpers.php
+			identifier: function.deprecated
+			count: 3
+			path: src/Sign/ManageCert.php
 
 		-
 			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
@@ -261,24 +261,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$organizationalUnitName\.$#'
 			identifier: property.notFound
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Cannot call method color\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Cannot call method file\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Cannot call method size\(\) on mixed\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: src/Sign/SealImage.php
 
@@ -559,6 +541,15 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
+			message: '''
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: src/Sign/ValidatePdfSignature.php
+
+		-
 			message: '#^Call to function in_array\(\) requires parameter \#3 to be set\.$#'
 			identifier: function.strict
 			count: 1
@@ -701,6 +692,24 @@ parameters:
 
 		-
 			message: '''
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 5
+			path: tests/CommandsTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function signPdfFromFile\(\)\:
+				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/CommandsTest.php
+
+		-
+			message: '''
 				#^Access to constant on deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
 				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
 
@@ -806,6 +815,51 @@ parameters:
 
 		-
 			message: '''
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 8
+			path: tests/HelpersTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function encryptCertData\(\)\:
+				2\.0 Use A1PdfSign\:\:encryptCertificate\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function signPdfFromFile\(\)\:
+				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 3
+			path: tests/HelpersTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function signPdfFromUpload\(\)\:
+				2\.0 Use A1PdfSign\:\:signFromUpload\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: tests/HelpersTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function validatePdfSignature\(\)\:
+				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/HelpersTest.php
+
+		-
+			message: '''
 				#^Access to constant on deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
 				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
 
@@ -847,12 +901,6 @@ parameters:
 			path: tests/ManageCertTest.php
 
 		-
-			message: '#^Parameter \#2 \$cipher of method Illuminate\\Encryption\\Encrypter\:\:supported\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/ManageCertTest.php
-
-		-
 			message: '#^Parameter \#2 \$password of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:fromPfx\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -863,6 +911,66 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: tests/Pest.php
+
+		-
+			message: '''
+				#^Call to deprecated function a1TempDir\(\)\:
+				2\.0 Use A1PdfSign\:\:tempPath\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 2
+			path: tests/SealImageTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function validatePdfSignature\(\)\:
+				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/SealImageTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function signPdfFromFile\(\)\:
+				2\.0 Use A1PdfSign\:\:signFromFile\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/ServiceTest.php
+
+		-
+			message: '''
+				#^Call to deprecated function validatePdfSignature\(\)\:
+				2\.0 Use A1PdfSign\:\:validate\(\) instead\. Removed in 3\.0\.$#
+			'''
+			identifier: function.deprecated
+			count: 1
+			path: tests/ServiceTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:encryptCertificate\(\) has parameter \$path with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/ServiceTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromFile\(\) has parameter \$mode with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/ServiceTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromUpload\(\) has parameter \$mode with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/ServiceTest.php
+
+		-
+			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:74\:\:signFromUpload\(\) has parameter \$upload with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: tests/ServiceTest.php
 
 		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, string\|false given\.$#'

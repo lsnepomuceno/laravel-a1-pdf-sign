@@ -110,7 +110,7 @@ class ValidatePdfSignature
         $content      = preg_replace('/(-----BEGIN .+?-----(?s).+?-----END .+?-----)/mi', $delimiter, $content);
         $content      = preg_replace('/(\s\s+|\\n|\\r)/', ' ', $content);
         $content      = array_filter(explode($delimiter, $content), 'trim');
-        $content      = array_map(fn($data) => $this->processDataToInfo($data), $content);
+        $content      = array_map(fn(string $data) => $this->processDataToInfo($data), $content);
 
         // array_filter() preserves keys, so the first element is not necessarily
         // at index 0.

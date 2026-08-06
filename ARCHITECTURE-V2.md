@@ -51,6 +51,30 @@ Real problems imposed by the current architecture — not matters of taste.
     author on 2026-05-30. See §3g — the highest-impact change in this plan.
 13. No Pint, no PHPStan. `CONTRIBUTING.md` still asks for PSR-2 (deprecated since 2019).
 
+### Defects found while executing the plan
+
+14. **`encryptCertData()` and `decryptCertData()` do not round-trip.** Discovered in PR 5.
+    `encryptCertData()` stores `$cert->getCert()->original`, the PEM produced by
+    `openssl pkcs12 -nodes`. `decryptCertData()` writes that PEM to a `.pfx` file and feeds
+    it to `openssl pkcs12 -in`, which expects binary PKCS#12 and fails:
+
+    ```
+    asn1 encoding routines:asn1_check_tlen:wrong tag ... Type=PKCS12
+    ```
+
+    Half of the certificate-storage API has therefore never worked. It went unnoticed because
+    the v1 suite covered `encryptCertData()` only, asserting the shape of its return value and
+    never reading it back.
+
+    The fix belongs to **PR 6**: `ManageCert` needs a path that ingests already-decrypted PEM
+    content instead of shelling out to `pkcs12`, which also removes a temp file and a process
+    spawn. It carries a compatibility question that needs an explicit decision — the
+    `$isBase64` flag suggests some callers may be storing the raw PFX binary rather than the
+    PEM, and those callers are served correctly by the current code path.
+
+    A skipped test in `tests/ServiceTest.php` documents the defect so it stays visible on
+    every run rather than living only in this document.
+
 ---
 
 ## 2. Proposed architecture

@@ -55,6 +55,23 @@ arch('enums are backed, so legacy string constants keep resolving')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Enums')
     ->toBeStringBackedEnums();
 
+arch('contracts are interfaces')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Contracts')
+    ->toBeInterfaces();
+
+arch('facades only proxy contracts')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Facades')
+    ->toExtend('Illuminate\Support\Facades\Facade')
+    ->toBeFinal();
+
+/**
+ * Everything that opens an external process has to go through the single
+ * audited helper. See ARCHITECTURE-V2.md §3a and §6.2.
+ */
+arch('only the shell helper opens processes')
+    ->expect(['Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Helpers');
+
 arch('console commands stay in Commands')
     ->expect('Illuminate\Console\Command')
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Commands');

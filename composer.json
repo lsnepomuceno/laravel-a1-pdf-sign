@@ -56,7 +56,7 @@
   "scripts": {
     "test": "vendor/bin/pest",
     "test:cov": "vendor/bin/pest --coverage",
-    "test:types": "vendor/bin/pest --type-coverage --min=95",
+    "test:types": "vendor/bin/pest --type-coverage --min=100",
     "test:mutate": "vendor/bin/pest --mutate",
     "lint": "vendor/bin/pint",
     "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
@@ -79,7 +79,10 @@
     "laravel": {
       "providers": [
         "LSNepomuceno\\LaravelA1PdfSign\\LaravelA1PdfSignServiceProvider"
-      ]
+      ],
+      "aliases": {
+        "A1PdfSign": "LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign"
+      }
     }
   },
   "suggest": {

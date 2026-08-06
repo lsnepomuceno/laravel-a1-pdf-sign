@@ -8,6 +8,7 @@ use Intervention\Image\Drivers\AbstractDriver;
 use Intervention\Image\Drivers\Gd\Driver as GDDriver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager as IMG;
+use Intervention\Image\Typography\FontFactory;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\ImageDriver;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidImageDriverException;
@@ -23,22 +24,22 @@ class SealImage
     private bool $previousTextBreakLine = false;
 
     /** @deprecated 2.0 Use {@see ImageDriver::Gd} instead. Removed in 3.0. */
-    public const IMAGE_DRIVER_GD = 'gd';
+    public const string IMAGE_DRIVER_GD = 'gd';
 
     /** @deprecated 2.0 Use {@see ImageDriver::Imagick} instead. Removed in 3.0. */
-    public const IMAGE_DRIVER_IMAGICK = 'imagick';
+    public const string IMAGE_DRIVER_IMAGICK = 'imagick';
 
     /** @deprecated 2.0 Use {@see FontSize::Small} instead. Removed in 3.0. */
-    public const FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
+    public const string FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
 
     /** @deprecated 2.0 Use {@see FontSize::Medium} instead. Removed in 3.0. */
-    public const FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
+    public const string FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
 
     /** @deprecated 2.0 Use {@see FontSize::Large} instead. Removed in 3.0. */
-    public const FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
+    public const string FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
 
-    public const RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
-    public const RETURN_BASE64 = 'RETURN_BASE64';
+    public const string RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
+    public const string RETURN_BASE64 = 'RETURN_BASE64';
 
     /**
      * @throws InvalidImageDriverException
@@ -72,7 +73,7 @@ class SealImage
                 )->format($dueDateFormat)
             : null;
 
-        $callback = function ($font) use ($fontSize) {
+        $callback = function (FontFactory $font) use ($fontSize): void {
             $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
             $font->size($fontSize->points());
             $font->color('#16A085');

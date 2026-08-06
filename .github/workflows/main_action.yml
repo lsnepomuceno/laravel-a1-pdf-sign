@@ -83,7 +83,6 @@ jobs:
       - name: Run static analysis
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
-      # The floor tracks the measured value and only ever goes up. It reaches
-      # 100 once the legacy signing classes are rewritten in PRs 6-9.
+      # src/ is fully typed as of PR 5; the gate keeps it that way.
       - name: Check type coverage
-        run: vendor/bin/pest --type-coverage --min=95
+        run: vendor/bin/pest --type-coverage --min=100
