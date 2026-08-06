@@ -585,12 +585,24 @@ comes from tc-lib-pdf. Survey of the installed code:
 > that no incremental machinery existed. On **8.67.2** it does — `appendIncrementalRevision()`
 > and friends back the post-signing `/DSS` (B-LT) and `/DocTimeStamp` (B-LTA) revisions.
 >
-> This does **not** make PoC 0b redundant: there is still no public API that signs an
-> *externally supplied* PDF, which is precisely this package's core use case. What changes is
-> the build-versus-reuse call — **PR 7b must first attempt to drive
-> `appendIncrementalRevision()` from the adapter class**, and only fall back to the PoC 0b
-> writer if the inherited path cannot accept foreign document bytes. That decision belongs to
-> PR 7b, on evidence, not to this document.
+> **Resolved in PR 7 — the inherited path cannot be reused.** `appendIncrementalRevision()`
+> is `protected` and its docblock accepts "the complete PDF", but the two methods it delegates
+> to are `private`, and `buildIncrementalTrailer()` writes `/Root $this->objid['catalog']`,
+> `/Info $this->objid['info']` and its own `/ID` — the identifiers of a document *tc-lib-pdf
+> itself built*.
+>
+> Probed against `tests/Resources/test.pdf`, whose catalog is object 14:
+>
+> ```
+> trailer << /Size 100 /Root 0 0 R /Info 0 0 R /Prev 8605 /ID [ <b004…> <b004…> ] >>
+> ```
+>
+> `/Root 0 0 R` points at an object that does not exist in that document. The output is a
+> broken PDF, and because the trailer builder is private a subclass cannot correct it.
+>
+> The machinery therefore serves only post-signing DSS (B-LT) and DocTimeStamp (B-LTA)
+> revisions on tc-lib-pdf's own output. **PR 7b ships the PoC 0b writer**, as originally
+> designed.
 
 `Com\Tecnick\Pdf\Tcpdf` is a concrete **non-final** class, and every member above is
 `protected` — so inheriting grants legitimate access to all of it:
