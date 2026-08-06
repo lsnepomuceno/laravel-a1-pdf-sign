@@ -8,9 +8,6 @@ use Intervention\Image\Interfaces\DriverInterface;
 
 /**
  * Image backend used to render the seal.
- *
- * The backing values match the string constants this replaces
- * (SealImage::IMAGE_DRIVER_*).
  */
 enum ImageDriver: string
 {

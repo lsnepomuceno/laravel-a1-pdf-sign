@@ -163,18 +163,6 @@ parameters:
 			path: src/Sign/ManageCert.php
 
 		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
-				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
-
-				Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
-				passing while new code can type\-hint the parent\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
 			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:makeDebugCertificate\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -217,7 +205,7 @@ parameters:
 			path: src/Sign/ManageCert.php
 
 		-
-			message: '#^Parameter \$data of class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed constructor expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter \$data of class LSNepomuceno\\LaravelA1PdfSign\\Data\\Certificate constructor expects array\<string, mixed\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sign/ManageCert.php
@@ -231,18 +219,6 @@ parameters:
 		-
 			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:\$parsedData type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: src/Sign/ManageCert.php
-
-		-
-			message: '''
-				#^Return type of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:\:getCert\(\) has typehint with deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
-				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
-
-				Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
-				passing while new code can type\-hint the parent\.$#
-			'''
-			identifier: return.deprecatedClass
 			count: 1
 			path: src/Sign/ManageCert.php
 
@@ -568,15 +544,6 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:
-				2\.0 Use \{@see SignatureReport\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: src/Sign/ValidatePdfSignature.php
-
-		-
 			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ValidatePdfSignature\:\:processDataToInfo\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -619,7 +586,7 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '#^Parameter \#2 \$data of class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF constructor expects array\<string, array\<int, string\>\>, array given\.$#'
+			message: '#^Parameter \#2 \$data of class LSNepomuceno\\LaravelA1PdfSign\\Data\\SignatureReport constructor expects array\<string, array\<int, string\>\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sign/ValidatePdfSignature.php
@@ -661,24 +628,6 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
-			message: '''
-				#^Return type of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ValidatePdfSignature\:\:convertPlainTextToObject\(\) has typehint with deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:
-				2\.0 Use \{@see SignatureReport\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: return.deprecatedClass
-			count: 1
-			path: src/Sign/ValidatePdfSignature.php
-
-		-
-			message: '''
-				#^Return type of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\ValidatePdfSignature\:\:from\(\) has typehint with deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:
-				2\.0 Use \{@see SignatureReport\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: return.deprecatedClass
-			count: 1
-			path: src/Sign/ValidatePdfSignature.php
-
-		-
 			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
 			identifier: ternary.shortNotAllowed
 			count: 2
@@ -707,111 +656,6 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: tests/CommandsTest.php
-
-		-
-			message: '''
-				#^Access to constant on deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
-				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
-
-				Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
-				passing while new code can type\-hint the parent\.$#
-			'''
-			identifier: classConstant.deprecatedClass
-			count: 1
-			path: tests/DataTest.php
-
-		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
-				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
-
-				Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
-				passing while new code can type\-hint the parent\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: tests/DataTest.php
-
-		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\EncryptedCertificate\:
-				2\.0 Use \{@see EncryptedCertificateData\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: tests/DataTest.php
-
-		-
-			message: '''
-				#^Instantiation of deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\ValidatedSignedPDF\:
-				2\.0 Use \{@see SignatureReport\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: new.deprecatedClass
-			count: 1
-			path: tests/DataTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant FONT_SIZE_LARGE of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:
-				2\.0 Use \{@see FontSize\:\:Large\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant FONT_SIZE_MEDIUM of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:
-				2\.0 Use \{@see FontSize\:\:Medium\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant FONT_SIZE_SMALL of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:
-				2\.0 Use \{@see FontSize\:\:Small\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant IMAGE_DRIVER_GD of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:
-				2\.0 Use \{@see ImageDriver\:\:Gd\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant IMAGE_DRIVER_IMAGICK of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:
-				2\.0 Use \{@see ImageDriver\:\:Imagick\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant MODE_DOWNLOAD of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:
-				2\.0 Use \{@see SignatureMode\:\:Download\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
-
-		-
-			message: '''
-				#^Fetching deprecated class constant MODE_RESOURCE of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:
-				2\.0 Use \{@see SignatureMode\:\:Resource\} instead\. Removed in 3\.0\.$#
-			'''
-			identifier: classConstant.deprecated
-			count: 1
-			path: tests/EnumsTest.php
 
 		-
 			message: '''
@@ -857,18 +701,6 @@ parameters:
 			identifier: function.deprecated
 			count: 1
 			path: tests/HelpersTest.php
-
-		-
-			message: '''
-				#^Access to constant on deprecated class LSNepomuceno\\LaravelA1PdfSign\\Entities\\CertificateProcessed\:
-				2\.0 Use \{@see Certificate\} instead\. Removed in 3\.0\.
-
-				Kept as a subclass so existing `instanceof CertificateProcessed` checks keep
-				passing while new code can type\-hint the parent\.$#
-			'''
-			identifier: classConstant.deprecatedClass
-			count: 1
-			path: tests/ManageCertTest.php
 
 		-
 			message: '#^Cannot use array destructuring on array\|LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\.$#'

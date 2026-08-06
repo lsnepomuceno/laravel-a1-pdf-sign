@@ -4,15 +4,12 @@ namespace LSNepomuceno\LaravelA1PdfSign\Enums;
 
 /**
  * Font size of the seal's text.
- *
- * The backing values match the string constants this replaces
- * (SealImage::FONT_SIZE_*), so the legacy values still resolve through from().
  */
 enum FontSize: string
 {
-    case Small = 'FONT_SIZE_SMALL';
-    case Medium = 'FONT_SIZE_MEDIUM';
-    case Large = 'FONT_SIZE_LARGE';
+    case Small = 'small';
+    case Medium = 'medium';
+    case Large = 'large';
 
     /**
      * Point size passed to the image driver.
@@ -41,7 +38,8 @@ enum FontSize: string
     }
 
     /**
-     * Accepts either an instance or one of the legacy string constants.
+     * Accepts an instance or its backing value, so configuration can express
+     * the size as a plain string.
      */
     public static function resolve(self|string $value): self
     {

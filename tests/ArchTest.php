@@ -37,21 +37,26 @@ arch('value objects are immutable')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Data')
     ->toBeReadonly();
 
-/**
- * Not toBeFinal(): the deprecated Entities subclasses need to extend these
- * until 3.0 drops them. See ARCHITECTURE-V2.md §4.
- */
+// BaseData is abstract, so it is exempt from both rules below.
+arch('value objects are closed for extension')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Data')
+    ->toBeFinal()
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Data\BaseData');
+
 arch('value objects stay on the shared base')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Data')
     ->toExtend('LSNepomuceno\LaravelA1PdfSign\Data\BaseData')
     ->ignoring('LSNepomuceno\LaravelA1PdfSign\Data\BaseData');
 
-arch('the deprecated entities only alias the value objects')
+/**
+ * v2 is a clean break: no deprecation layer survives into the release.
+ * See ARCHITECTURE-V2.md §4.
+ */
+arch('no deprecated namespace lingers')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Entities')
-    ->toExtend('LSNepomuceno\LaravelA1PdfSign\Data\BaseData')
-    ->toBeReadonly();
+    ->not->toBeUsed();
 
-arch('enums are backed, so legacy string constants keep resolving')
+arch('enums are string-backed, so configuration can express them as plain strings')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Enums')
     ->toBeStringBackedEnums();
 

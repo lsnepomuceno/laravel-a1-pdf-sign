@@ -23,20 +23,10 @@ class SealImage
 
     private bool $previousTextBreakLine = false;
 
-    /** @deprecated 2.0 Use {@see ImageDriver::Gd} instead. Removed in 3.0. */
-    public const string IMAGE_DRIVER_GD = 'gd';
 
-    /** @deprecated 2.0 Use {@see ImageDriver::Imagick} instead. Removed in 3.0. */
-    public const string IMAGE_DRIVER_IMAGICK = 'imagick';
 
-    /** @deprecated 2.0 Use {@see FontSize::Small} instead. Removed in 3.0. */
-    public const string FONT_SIZE_SMALL = 'FONT_SIZE_SMALL';
 
-    /** @deprecated 2.0 Use {@see FontSize::Medium} instead. Removed in 3.0. */
-    public const string FONT_SIZE_MEDIUM = 'FONT_SIZE_MEDIUM';
 
-    /** @deprecated 2.0 Use {@see FontSize::Large} instead. Removed in 3.0. */
-    public const string FONT_SIZE_LARGE = 'FONT_SIZE_LARGE';
 
     public const string RETURN_IMAGE_CONTENT = 'RETURN_IMAGE_CONTENT';
     public const string RETURN_BASE64 = 'RETURN_BASE64';

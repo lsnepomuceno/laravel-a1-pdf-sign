@@ -52,7 +52,7 @@ return [
 
         'font' => [
             'path' => null,
-            'size' => 'FONT_SIZE_LARGE',
+            'size' => 'large',
             'color' => '#16A085',
         ],
 

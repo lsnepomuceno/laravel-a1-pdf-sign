@@ -6,7 +6,7 @@ use Illuminate\Contracts\Encryption\{DecryptException, EncryptException};
 use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\{Facades\File, Str};
-use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
+use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{CertificateOutputNotFoundException,
     FileNotFoundException,
     InvalidCertificateContentException,
@@ -163,9 +163,9 @@ class ManageCert
         $this->password = '';
     }
 
-    public function getCert(): CertificateProcessed
+    public function getCert(): Certificate
     {
-        return new CertificateProcessed(
+        return new Certificate(
             original: $this->originalCertContent,
             openssl: $this->certContent,
             data: $this->parsedData,

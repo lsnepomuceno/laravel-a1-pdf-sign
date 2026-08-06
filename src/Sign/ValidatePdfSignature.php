@@ -3,7 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Sign;
 
 use Illuminate\Support\{Arr, Facades\File, Str};
-use LSNepomuceno\LaravelA1PdfSign\Entities\ValidatedSignedPDF;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{FileNotFoundException,
     HasNoSignatureOrInvalidPkcs7Exception,
     InvalidPdfFileException,
@@ -20,7 +20,7 @@ class ValidatePdfSignature
     /**
      * @throws Throwable
      */
-    public static function from(string $pdfPath): ValidatedSignedPDF
+    public static function from(string $pdfPath): SignatureReport
     {
         return (new static())->setPdfPath($pdfPath)
                            ->extractSignatureData()
@@ -102,7 +102,7 @@ class ValidatePdfSignature
         return $this;
     }
 
-    private function convertPlainTextToObject(): ValidatedSignedPDF
+    private function convertPlainTextToObject(): SignatureReport
     {
         $finalContent = [];
         $delimiter    = '|CROP|';
@@ -124,7 +124,7 @@ class ValidatePdfSignature
         }
 
         $finalContent['validated'] = !!count(array_intersect_key(array_flip(['OU', 'CN']), $finalContent));
-        return new ValidatedSignedPDF($finalContent['validated'], Arr::except($finalContent, 'validated'));
+        return new SignatureReport($finalContent['validated'], Arr::except($finalContent, 'validated'));
     }
 
     private function processDataToInfo(string $data): array

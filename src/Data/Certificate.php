@@ -8,7 +8,7 @@ use SensitiveParameter;
 /**
  * A PKCS#12 certificate after conversion and parsing.
  */
-readonly class Certificate extends BaseData
+final readonly class Certificate extends BaseData
 {
     /**
      * @param  string  $original  The combined certificate and private key, in PEM.

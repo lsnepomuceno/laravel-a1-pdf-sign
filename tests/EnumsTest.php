@@ -5,8 +5,6 @@ use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\ImageDriver;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
-use LSNepomuceno\LaravelA1PdfSign\Sign\SealImage;
-use LSNepomuceno\LaravelA1PdfSign\Sign\SignaturePdf;
 
 it('carries the point size for each font size', function (FontSize $size, int $points) {
     expect($size->points())->toBe($points);
@@ -22,10 +20,10 @@ it('wraps shorter lines as the type gets larger', function () {
         ->and(FontSize::Large->cropLength())->toBe(35);
 });
 
-it('resolves the legacy font size constants', function () {
-    expect(FontSize::resolve(SealImage::FONT_SIZE_SMALL))->toBe(FontSize::Small)
-        ->and(FontSize::resolve(SealImage::FONT_SIZE_MEDIUM))->toBe(FontSize::Medium)
-        ->and(FontSize::resolve(SealImage::FONT_SIZE_LARGE))->toBe(FontSize::Large)
+it('resolves a font size from its backing value, as configuration supplies it', function () {
+    expect(FontSize::resolve('small'))->toBe(FontSize::Small)
+        ->and(FontSize::resolve('medium'))->toBe(FontSize::Medium)
+        ->and(FontSize::resolve('large'))->toBe(FontSize::Large)
         ->and(FontSize::resolve(FontSize::Medium))->toBe(FontSize::Medium);
 });
 
@@ -43,13 +41,8 @@ it('maps a driver instance back to its case', function () {
         ->and(ImageDriver::fromDriver(new ImagickDriver()))->toBe(ImageDriver::Imagick);
 });
 
-it('matches the legacy image driver constants', function () {
-    expect(ImageDriver::Gd->value)->toBe(SealImage::IMAGE_DRIVER_GD)
-        ->and(ImageDriver::Imagick->value)->toBe(SealImage::IMAGE_DRIVER_IMAGICK);
-});
-
-it('resolves the legacy signature mode constants', function () {
-    expect(SignatureMode::resolve(SignaturePdf::MODE_RESOURCE))->toBe(SignatureMode::Resource)
-        ->and(SignatureMode::resolve(SignaturePdf::MODE_DOWNLOAD))->toBe(SignatureMode::Download)
+it('resolves a signature mode from its backing value', function () {
+    expect(SignatureMode::resolve('resource'))->toBe(SignatureMode::Resource)
+        ->and(SignatureMode::resolve('download'))->toBe(SignatureMode::Download)
         ->and(SignatureMode::resolve('nonsense'))->toBeNull();
 });

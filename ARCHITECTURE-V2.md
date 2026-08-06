@@ -664,19 +664,34 @@ Two bugs from the spike become mandatory test cases in the production implementa
 
 ---
 
-## 4. Backward compatibility
+## 4. Backward compatibility — v2 is a clean break
+
+> **Revised during PR 5.** The original plan kept a full deprecation layer until 3.0. That is
+> reversed: **deprecated API is removed in 2.0, not carried.** A 3.0 is far enough out that a
+> shim living until then is a shim maintained indefinitely, and every one of them constrains
+> the design it wraps — `Entities\*` cannot be `final`, enums carry legacy backing values,
+> helpers keep the global namespace occupied.
 
 `^1` stays maintained on the `v1.x-dev` branch, fixes only. In v2:
 
-- The six global helpers **remain**, rewritten as thin shells over the new API, marked
-  `@deprecated` and emitting `E_USER_DEPRECATED`. Removal only in v3.
+- The six global helpers are **removed**. `A1PdfSign` — the facade or the injected contract —
+  replaces all of them.
+- `Entities\*` is **removed**. `Data\*` is the only namespace for value objects, which lets
+  them be `final readonly`.
+- The legacy string constants (`SealImage::FONT_SIZE_*`, `IMAGE_DRIVER_*`,
+  `SignaturePdf::MODE_*`) are **removed** in favour of the enums, whose backing values are
+  free to be idiomatic (`large`, `resource`) instead of mirroring the old constants.
 - `Sign\ManageCert`, `Sign\SignaturePdf`, `Sign\ValidatePdfSignature` and `Sign\SealImage`
-  become deprecated *proxies* to the new core, keeping their public signatures.
-- `Entities\*` kept as aliases of `Data\*`.
-- `UPGRADE.md` with a mapping table; Artisan commands keep identical signatures.
+  are replaced outright by the new engine in PRs 6-9 rather than proxied.
 
-**Consequence:** a project on `^1` that only uses the helpers moves to `^2` without editing
-code — provided it runs PHP ≥ 8.4 and Laravel ≥ 12.
+**Consequence:** upgrading from `^1` to `^2` requires a code change. That is already true —
+v2 demands PHP 8.4 and Laravel 12, so nobody upgrades without touching their project — and
+`UPGRADE.md` carries the full mapping table. Anyone who cannot move stays on `^1`.
+
+**Rollout:** the removals land alongside the PR that rewrites each area, not in one sweep,
+so no PR is left half-migrated. `Entities\*` and the constants go in PR 5b; the global
+helpers go in PR 6, once `ManageCert` and `ValidatePdfSignature` stop calling `a1TempDir()`
+and `runCliCommandProcesses()` internally.
 
 ---
 
@@ -693,7 +708,8 @@ Independent PRs on the `v2.x-dev` branch.
 | 3 | ✅ PHPUnit → Pest | **done** — Pest 5, `tests/Pest.php`, named datasets, **arch tests**, type coverage 94.3% gated in CI. `drift` tried and discarded (§6.4) | — |
 | 4 | ✅ Data + Enums | **done** — `Data/` readonly VOs, `Enums/` carrying behaviour, `Entities\*` as deprecated subclasses, `#[\SensitiveParameter]` on passwords, type coverage 95.7%. `SignatureInfo`, `SealPlacement` and `SignedPdf` deferred to PR 7, where they gain consumers | — |
 | 5 | ✅ Package infrastructure | **done** — publishable config, `Contracts\A1PdfSign` bound as a singleton, facade, helpers delegating to the container, 4 more arch rules, **type coverage 100%**. Found defect §1.14. The finer-grained contracts land with their implementations in PRs 6-9 | — |
-| 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, `#[\SensitiveParameter]` on every `$password` | **high** |
+| 5b | Remove deprecated API, part 1 | drop `Entities\*` and the legacy string constants, make `Data\*` final, idiomatic enum backing values (§4) | low |
+| 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, fix §1.14, **drop the six global helpers** (§4) | **high** |
 | 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
 | 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
 | 7c | PAdES profiles | expose B-B / B-T / B-LT / B-LTA (§3g.1) — the strongest new capability for the package's audience | medium |
@@ -963,7 +979,7 @@ delivers the same value without imposing tooling on contributors.
 | 9 | `IncrementalSigner` as the default, or only for the 2nd signature? | **Default** — preserving the original bytes from the 1st signature onward removes the silent destruction of annotations and form fields (§3h) |
 | 10 | Keep the legacy driver? | **Yes, as optional** — guarantees byte-for-byte fidelity for anyone depending on v1 output, without carrying deprecated deps in the default install |
 | 11 | phpseclib now or later? | **Later (v2.1)** — v2.0 is already a large refactor. Revisit: tc-lib-pdf may already cover part of the validation |
-| 12 | Full BC layer or a clean v2? | **Full** — the package has enough downloads for a hard break to be costly |
+| 12 | Full BC layer or a clean v2? | ✅ **Clean break**, decided during PR 5. A 3.0 is far enough out that a shim kept "until then" is kept indefinitely, and each one constrains the design it wraps. The PHP 8.4 / Laravel 12 floor already forces a deliberate upgrade, so the marginal cost of also renaming call sites is small — and `UPGRADE.md` carries the mapping (§4) |
 | 13 | PHPStan `level: max` from the start, or a baseline? | ✅ **Both, applied in PR 2.** `level: max` with a 216-entry baseline. Measured: 95 errors at level 5, 159 at level 8, 216 at max — so max costs only 57 extra baseline entries over level 8 and gates all new code at the strictest setting |
 | 14 | Line-coverage gate? | **No** — type coverage (100%) and mutation are more honest gates; line coverage stays informational |
 

@@ -10,7 +10,7 @@ use SensitiveParameter;
  * The hash is the key both values were encrypted with, and is required to
  * decrypt them again.
  */
-readonly class EncryptedCertificate extends BaseData
+final readonly class EncryptedCertificate extends BaseData
 {
     public function __construct(
         public string $certificate,

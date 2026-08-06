@@ -1,28 +1,14 @@
 <?php
 
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Entities\CertificateProcessed;
-use LSNepomuceno\LaravelA1PdfSign\Entities\EncryptedCertificate as EncryptedCertificateEntity;
-use LSNepomuceno\LaravelA1PdfSign\Entities\ValidatedSignedPDF;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 
-it('keeps the deprecated entities usable as the new value objects', function () {
-    $cert = new CertificateProcessed('pem', false, [], 'secret');
-
-    expect($cert)->toBeInstanceOf(Certificate::class)
-        ->and(new EncryptedCertificateEntity('c', 'p', 'h'))->toBeInstanceOf(EncryptedCertificate::class)
-        ->and(new ValidatedSignedPDF(true, []))->toBeInstanceOf(SignatureReport::class);
-});
-
-it('still returns a CertificateProcessed from ManageCert', function () {
+it('returns a Certificate from ManageCert', function () {
     $cert = new ManageCert();
     $cert->makeDebugCertificate();
 
-    // The v1 contract: callers doing instanceof CertificateProcessed keep working.
-    expect($cert->getCert())->toBeInstanceOf(CertificateProcessed::class)
-        ->and($cert->getCert())->toBeInstanceOf(Certificate::class);
+    expect($cert->getCert())->toBeInstanceOf(Certificate::class);
 });
 
 it('reports the certificate expiry from the parsed data', function () {
