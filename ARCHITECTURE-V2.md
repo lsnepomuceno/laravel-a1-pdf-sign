@@ -1,7 +1,7 @@
 # Modernization plan — v2.0
 
 Reference document for the architectural refactor of the package. Baseline: `1.0.9`.
-Status: **proposal** — no decision implemented yet, except the PoC in §3h.1.
+Status: **in progress** — PRs 0 through 6 delivered; see the roadmap in §5.
 
 ---
 
@@ -72,8 +72,8 @@ Real problems imposed by the current architecture — not matters of taste.
     `$isBase64` flag suggests some callers may be storing the raw PFX binary rather than the
     PEM, and those callers are served correctly by the current code path.
 
-    A skipped test in `tests/ServiceTest.php` documents the defect so it stays visible on
-    every run rather than living only in this document.
+    ✅ **Fixed in PR 6.** `CertificateVault::open()` parses the stored PEM directly, which
+    also removes a temporary file and a process spawn. The round-trip test passes.
 
 ---
 
@@ -709,7 +709,7 @@ Independent PRs on the `v2.x-dev` branch.
 | 4 | ✅ Data + Enums | **done** — `Data/` readonly VOs, `Enums/` carrying behaviour, `Entities\*` as deprecated subclasses, `#[\SensitiveParameter]` on passwords, type coverage 95.7%. `SignatureInfo`, `SealPlacement` and `SignedPdf` deferred to PR 7, where they gain consumers | — |
 | 5 | ✅ Package infrastructure | **done** — publishable config, `Contracts\A1PdfSign` bound as a singleton, facade, helpers delegating to the container, 4 more arch rules, **type coverage 100%**. Found defect §1.14. The finer-grained contracts land with their implementations in PRs 6-9 | — |
 | 5b | ✅ Remove deprecated API, part 1 | **done** — `Entities\*` and the legacy constants dropped, `Data\*` final, idiomatic enum backing values, arch rule guarding the removal, `UPGRADE.md` (§4) | — |
-| 6 | Certificates | `NativeCertificateReader` + CLI fallback, `CertificateVault`, `TemporaryFile`, `DebugCertificate` moved to `Testing/`, fix §1.14, **drop the six global helpers** (§4) | **high** |
+| 6 | ✅ Certificates | **done** — `NativeCertificateReader` default, CLI fallback for legacy only, `CertificateVault` (fixes §1.14), `TemporaryFile`, `DebugCertificate` in `Testing/`, global helpers removed. 63 tests, no skips | — |
 | 7 | Signing | `TcLibPdfSigner` (default) + `TcpdfSigner` (legacy, optional deps) + `PendingSignature` + `SignedPdf`, drop FPDI, end the disk round-trip, **ship generated core fonts + `K_PATH_FONTS` (§3g.2)** | **high** |
 | 7b | Multi-signature | first try inheriting `appendIncrementalRevision()`; fall back to `Incremental/*` from PoC 0b (§3h). `approval()` / `certify()` / `timestamp()` / `ltv()` — closes TCPDF#430 | **high** |
 | 7c | PAdES profiles | expose B-B / B-T / B-LT / B-LTA (§3g.1) — the strongest new capability for the package's audience | medium |
