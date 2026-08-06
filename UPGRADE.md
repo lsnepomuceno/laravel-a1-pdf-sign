@@ -76,6 +76,35 @@ array yourself.
 Every entry point accepts either the enum case or its backing value
 (`'large'`, `'gd'`, `'resource'`), so configuration can stay as plain strings.
 
+### The signing classes are gone
+
+`Sign\SignaturePdf` and `Sign\SealImage` are removed. Signing now goes through
+the fluent builder, and the seal is rendered by the `SealRenderer` contract:
+
+```php
+$signed = A1PdfSign::newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($pdfPath)
+    ->info(name: 'Lucas', reason: 'Contract')
+    ->seal()                 // omit for an invisible signature
+    ->sign();                // → SignedPdf
+
+$signed->contents();         // string
+$signed->save($path);        // path
+$signed->download();         // BinaryFileResponse
+$signed->toResponse();       // inline
+```
+
+`setasign/fpdi` and `tecnickcom/tcpdf` are no longer dependencies.
+
+**Signing no longer rebuilds the document.** v1 imported every page into a new
+file, which silently discarded annotations, form fields and any signature
+already present. v2 appends a revision instead, so the original bytes survive
+and a document can carry more than one signature — the request in
+[TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430).
+
+The practical consequence is that output is no longer byte-comparable with 1.x.
+
 ### New: publishable configuration
 
 ```bash

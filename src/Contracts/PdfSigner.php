@@ -3,6 +3,8 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 
@@ -16,6 +18,8 @@ interface PdfSigner
      * @param  string  $fieldName  Name of the signature field. Must be unique
      *                             within the document, so successive signers
      *                             occupy separate fields.
+     * @param  SealImage|null  $seal  Rendered seal; null leaves the signature
+     *                                invisible.
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
      */
@@ -24,5 +28,7 @@ interface PdfSigner
         Certificate $certificate,
         SignatureInfo $info,
         string $fieldName = 'Signature',
+        ?SealImage $seal = null,
+        ?SealPlacement $placement = null,
     ): SignedPdf;
 }

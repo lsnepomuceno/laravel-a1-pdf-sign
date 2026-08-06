@@ -6,9 +6,12 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
 use SensitiveParameter;
@@ -32,9 +35,18 @@ final class PendingSignature
 
     private string $fieldName = 'Signature';
 
+    private ?SealPlacement $placement = null;
+
+    private bool $withSeal = false;
+
+    private FontSize|string|null $sealFontSize = null;
+
+    private bool $sealShowsExpiry = false;
+
     public function __construct(
         private readonly CertificateReader $reader,
         private readonly PdfSigner $signer,
+        private readonly SealRenderer $sealRenderer,
     ) {
         $this->info = new SignatureInfo();
     }
@@ -113,6 +125,36 @@ final class PendingSignature
     }
 
     /**
+     * Makes the signature visible, rendering a seal from the certificate.
+     *
+     * Position and size default to the configured placement; pass a
+     * SealPlacement to override it.
+     */
+    public function seal(
+        ?SealPlacement $placement = null,
+        FontSize|string|null $fontSize = null,
+        bool $showExpiry = false,
+    ): self {
+        $this->withSeal = true;
+        $this->placement = $placement;
+        $this->sealFontSize = $fontSize;
+        $this->sealShowsExpiry = $showExpiry;
+
+        return $this;
+    }
+
+    /**
+     * Stamps a seal image the caller already has, skipping the renderer.
+     */
+    public function sealFrom(string $imagePath, ?SealPlacement $placement = null): self
+    {
+        $this->withSeal = true;
+        $this->placement = ($placement ?? $this->defaultPlacement())->withImagePath($imagePath);
+
+        return $this;
+    }
+
+    /**
      * Names the signature field. Successive signers must not share one.
      */
     public function fieldName(string $fieldName): self
@@ -135,14 +177,25 @@ final class PendingSignature
             throw new FileNotFoundException('no document given; call pdf() first');
         }
 
+        $seal = $this->withSeal
+            ? $this->sealRenderer->render($this->certificate, $this->sealFontSize, $this->sealShowsExpiry)
+            : null;
+
         $signed = $this->signer->sign(
             $this->pdfContents,
             $this->certificate,
             $this->info,
             $this->fieldName,
+            $seal,
+            $seal !== null ? ($this->placement ?? $this->defaultPlacement()) : null,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());
+    }
+
+    private function defaultPlacement(): SealPlacement
+    {
+        return new SealPlacement('');
     }
 
     private function signedFileName(): string

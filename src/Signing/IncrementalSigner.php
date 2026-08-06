@@ -4,6 +4,8 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing;
 
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
@@ -45,6 +47,8 @@ final readonly class IncrementalSigner implements PdfSigner
         Certificate $certificate,
         SignatureInfo $info,
         string $fieldName = 'Signature',
+        ?SealImage $seal = null,
+        ?SealPlacement $placement = null,
     ): SignedPdf {
         $document = $this->reader->read($pdfContents);
 
@@ -54,6 +58,8 @@ final readonly class IncrementalSigner implements PdfSigner
             $info,
             self::CONTENTS_HEX_LENGTH,
             $this->uniqueFieldName($pdfContents, $fieldName),
+            $seal,
+            $placement,
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);

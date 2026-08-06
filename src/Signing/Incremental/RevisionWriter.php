@@ -2,6 +2,8 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
+use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 
@@ -16,7 +18,10 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
  */
 final class RevisionWriter
 {
-    public function __construct(private readonly DocumentReader $reader) {}
+    public function __construct(
+        private readonly DocumentReader $reader,
+        private readonly SealAppearance $appearance = new SealAppearance(),
+    ) {}
 
     /**
      * Appends the signature revision, leaving the /Contents placeholder empty.
@@ -29,9 +34,15 @@ final class RevisionWriter
         SignatureInfo $info,
         int $contentsHexLength,
         string $fieldName,
+        ?SealImage $seal = null,
+        ?SealPlacement $placement = null,
     ): string {
+        $visible = $seal !== null && $placement !== null;
+
         $signatureNumber = $document->nextObjectNumber();
         $widgetNumber = $signatureNumber + 1;
+        $imageNumber = $signatureNumber + 2;
+        $formNumber = $signatureNumber + 3;
 
         $catalogNumber = $document->root;
         $pageNumber = $this->reader->findFirstPage($pdf, $document);
@@ -47,7 +58,22 @@ final class RevisionWriter
         $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength);
 
         $offsets[$widgetNumber] = $base + strlen($body);
-        $body .= $this->widgetObject($widgetNumber, $signatureNumber, $pageNumber, $fieldName);
+        $body .= $this->widgetObject(
+            $widgetNumber,
+            $signatureNumber,
+            $pageNumber,
+            $fieldName,
+            $visible ? $formNumber : null,
+            $visible ? $this->appearance->rectangle($placement, $seal) : null,
+        );
+
+        if ($visible) {
+            $offsets[$imageNumber] = $base + strlen($body);
+            $body .= $this->appearance->imageObject($imageNumber, $seal);
+
+            $offsets[$formNumber] = $base + strlen($body);
+            $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);
+        }
 
         $offsets[$catalogNumber] = $base + strlen($body);
         $body .= "{$catalogNumber} 0 obj\n{$catalog}\nendobj\n";
@@ -81,13 +107,29 @@ final class RevisionWriter
             . ">>\nendobj\n";
     }
 
-    private function widgetObject(int $number, int $signatureNumber, int $pageNumber, string $fieldName): string
-    {
+    /**
+     * @param  array{0: float, 1: float, 2: float, 3: float}|null  $rectangle
+     */
+    private function widgetObject(
+        int $number,
+        int $signatureNumber,
+        int $pageNumber,
+        string $fieldName,
+        ?int $formNumber = null,
+        ?array $rectangle = null,
+    ): string {
+        // A zero rectangle keeps the signature invisible, which is the default
+        // when no seal was supplied.
+        $rect = $rectangle === null
+            ? '/Rect[0 0 0 0]'
+            : sprintf('/Rect[%s %s %s %s]', ...$rectangle);
+
+        $appearance = $formNumber === null ? '' : "/AP<</N {$formNumber} 0 R>>";
+
         return "{$number} 0 obj\n"
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
-            // A zero rectangle makes the signature invisible; the visual seal is
-            // stamped separately.
-            . '/Rect[0 0 0 0]'
+            . $rect
+            . $appearance
             . '/T (' . $this->escape($fieldName) . ')'
             . "/V {$signatureNumber} 0 R"
             . "/P {$pageNumber} 0 R"

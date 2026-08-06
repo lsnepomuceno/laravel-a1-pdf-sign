@@ -26,8 +26,9 @@ use SensitiveParameter;
  * Holds a certificate while it is being read and used.
  *
  * As of PR 6 this delegates: reading is a {@see CertificateReader}, encryption
- * is a {@see CertificateVault}. It survives as the object SignaturePdf and
- * SealImage receive, and is replaced by the fluent builder in PR 7.
+ * is a {@see CertificateVault}. Prefer the fluent builder reached through
+ * A1PdfSign::newSignature(); this class remains for callers holding a
+ * ManageCert already.
  */
 class ManageCert
 {

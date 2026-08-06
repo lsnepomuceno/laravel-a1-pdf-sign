@@ -151,6 +151,24 @@ parameters:
 			path: src/Exceptions/ProcessRunTimeException.php
 
 		-
+			message: '#^Parameter \#1 \$value of static method LSNepomuceno\\LaravelA1PdfSign\\Enums\\FontSize\:\:resolve\(\) expects LSNepomuceno\\LaravelA1PdfSign\\Enums\\FontSize\|string, LSNepomuceno\\LaravelA1PdfSign\\Enums\\FontSize\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Seal/InterventionSealRenderer.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method LSNepomuceno\\LaravelA1PdfSign\\Enums\\ImageDriver\:\:tryFrom\(\) expects int\|string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Seal/InterventionSealRenderer.php
+
+		-
+			message: '#^Parameter \#2 \$length of function str_split expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Seal/InterventionSealRenderer.php
+
+		-
 			message: '#^Call to function base64_decode\(\) requires parameter \#2 to be set\.$#'
 			identifier: function.strict
 			count: 1
@@ -173,294 +191,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Sign/ManageCert.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$commonName\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$organizationName\.$#'
-			identifier: property.notFound
-			count: 2
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Support\\Fluent\<\(int\|string\), mixed\>\:\:\$organizationalUnitName\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Cannot use array destructuring on mixed\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Dynamic call to static method Carbon\\Carbon\:\:createFromTimestamp\(\)\.$#'
-			identifier: staticMethod.dynamicCall
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#1 \$attributes of class Illuminate\\Support\\Fluent constructor expects iterable\<TKey of \(int\|string\), TValue\>, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#1 \$text of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#1 \$text of method LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:\:breakText\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#1 \$timestamp of method Carbon\\Carbon\:\:createFromTimestamp\(\) expects float\|int\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#2 \$x of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#3 \$y of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \#4 \$font of method Intervention\\Image\\Interfaces\\ImageInterface\:\:text\(\) expects \(callable\(\)\: mixed\)\|Intervention\\Image\\Interfaces\\FontInterface, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Parameter \$length of function str_split expects int\<1, max\>, int given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SealImage\:\:\$textFieldsDefinitions type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Unsafe usage of new static\(\)\.$#'
-			identifier: new.static
-			count: 1
-			path: src/Sign/SealImage.php
-
-		-
-			message: '#^Call to method TCPDF\:\:Output\(\) with incorrect case\: output$#'
-			identifier: method.nameCase
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Call to method TCPDF\:\:setPrintFooter\(\) with incorrect case\: SetPrintFooter$#'
-			identifier: method.nameCase
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Call to method TCPDF\:\:setPrintHeader\(\) with incorrect case\: SetPrintHeader$#'
-			identifier: method.nameCase
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Cannot use array destructuring on array\|bool\.$#'
-			identifier: offsetAccess.nonArray
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Class LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\InvalidX509PrivateKeyException referenced with incorrect case\: LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\Invalidx509PrivateKeyException\.$#'
-			identifier: class.nameCase
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Construct empty\(\) is not allowed\. Use more strict comparison\.$#'
-			identifier: empty.notAllowed
-			count: 2
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Only booleans are allowed in &&, string given on the right side\.$#'
-			identifier: booleanAnd.rightNotBoolean
-			count: 4
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Only booleans are allowed in &&, string\|null given on the left side\.$#'
-			identifier: booleanAnd.leftNotBoolean
-			count: 4
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Only booleans are allowed in an if condition, array\|null given\.$#'
-			identifier: if.condNotBoolean
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#1 \$file of method TCPDF\:\:Image\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#1 \$x of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#2 \$x of method TCPDF\:\:Image\(\) expects float\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#2 \$y of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#3 \$w of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#3 \$y of method TCPDF\:\:Image\(\) expects float\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#4 \$h of method TCPDF\:\:setSignatureAppearance\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#4 \$w of method TCPDF\:\:Image\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#5 \$h of method TCPDF\:\:Image\(\) expects float, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Parameter \#5 \$page of method TCPDF\:\:setSignatureAppearance\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:\:\$image type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Property LSNepomuceno\\LaravelA1PdfSign\\Sign\\SignaturePdf\:\:\$info type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imageH in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imageH might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imagePath in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imagePath might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imageW in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$imageW might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$page in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$page might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$pageX in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$pageX might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$pageY in PHPDoc tag @var does not exist\.$#'
-			identifier: varTag.variableNotFound
-			count: 1
-			path: src/Sign/SignaturePdf.php
-
-		-
-			message: '#^Variable \$pageY might not be defined\.$#'
-			identifier: variable.undefined
-			count: 2
-			path: src/Sign/SignaturePdf.php
 
 		-
 			message: '#^Argument of an invalid type list\<string\>\|false supplied for foreach, only iterables are supported\.$#'
@@ -751,13 +481,28 @@ parameters:
 			path: tests/Pest.php
 
 		-
-			message: '''
-				#^Call to deprecated method makeDebugCertificate\(\) of class LSNepomuceno\\LaravelA1PdfSign\\Sign\\ManageCert\:
-				2\.0 Use \{@see DebugCertificate\:\:make\(\)\}\. Removed in 3\.0\.$#
-			'''
-			identifier: method.deprecated
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<mixed\>\:\:\$not\.$#'
+			identifier: property.notFound
 			count: 2
-			path: tests/SealImageTest.php
+			path: tests/SealTest.php
+
+		-
+			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 3
+			path: tests/SealTest.php
+
+		-
+			message: '#^Parameter \#1 \$filename of function unlink expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/SealTest.php
+
+		-
+			message: '#^Parameter \#1 \$pdfPath of static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:validate\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/SealTest.php
 
 		-
 			message: '#^Method LSNepomuceno\\LaravelA1PdfSign\\Contracts\\A1PdfSign@anonymous/tests/ServiceTest\.php\:67\:\:encryptCertificate\(\) has parameter \$path with no type specified\.$#'
