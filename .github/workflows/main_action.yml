@@ -1,16 +1,16 @@
-name: A1 Pdf Sign Tests
+name: CI
 
+# Pull requests targeting main only. Branch pushes are not built: every change
+# reaches main through a pull request, so building both duplicated each run.
 on:
   pull_request:
-    branches: [ main, dev, v1.x-dev, v2.x-dev ]
-  push:
-    branches: [ main, dev, v1.x-dev, v2.x-dev ]
+    branches: [ main ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
@@ -20,13 +20,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Laravel 12 supports PHP 8.2-8.5 and Laravel 13 supports PHP 8.3-8.5.
-        # The package floor is PHP 8.4, so every combination below is valid with
-        # no exclusions. See ARCHITECTURE-V2.md §3e.
+        # Laravel 13 supports PHP 8.3-8.5 and the package floor is 8.4.
+        # Laravel 12 is not supported: it requires symfony/process ^7.2 while
+        # Pest 5 requires ^8.1, so the two cannot be installed together, and
+        # Laravel 12 leaves support in 2027 anyway. See ARCHITECTURE-V2.md §3e.
         php: [ '8.4', '8.5' ]
-        laravel: [ '12.*', '13.*' ]
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php }} - Laravel 13
 
     steps:
       - name: Checkout
@@ -43,20 +43,19 @@ jobs:
         run: |
           php -v
           composer -V
-          composer validate
-
-      - name: Configure Laravel version
-        run: |
-          composer require "illuminate/support:${{ matrix.laravel }}" \
-                           "illuminate/encryption:${{ matrix.laravel }}" \
-                           "illuminate/http:${{ matrix.laravel }}" \
-                           --no-interaction --no-update
+          composer validate --strict
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
       - name: Run tests
-        run: composer test
+        run: composer test -- --exclude-group=network
+
+      # These reach a live timestamp authority, so an outage on their side is
+      # not a defect in this package. Reported, never blocking.
+      - name: Run tests against a live timestamp authority
+        continue-on-error: true
+        run: vendor/bin/pest --group=network
 
   quality:
     name: Code style and static analysis
@@ -75,7 +74,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
       - name: Check code style
         run: vendor/bin/pint --test
@@ -96,8 +95,6 @@ jobs:
   mutation:
     name: Mutation testing
     runs-on: ubuntu-latest
-    # Only when the code it covers changes: a full run takes minutes.
-    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout
@@ -112,7 +109,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
       # The floor is the value measured when mutation testing landed. Raise it
       # as the score improves; never lower it to make a run pass.
