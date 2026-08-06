@@ -5,9 +5,11 @@ use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\OpenSslCliCertificateReader;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
@@ -109,3 +111,123 @@ it('rejects a bundle whose key does not match its certificate', function () {
 
     app(CertificateParser::class)->parse(($cert[0] ?? '') . "\n" . ($key[0] ?? '') . "\n");
 })->throws(InvalidX509PrivateKeyException::class);
+
+/*
+|--------------------------------------------------------------------------
+| PEM bundles
+|--------------------------------------------------------------------------
+|
+| The parser has always accepted PEM — every reader converges on it. What it
+| could not do is validate a passphrase-protected private key, because the
+| bundle was handed to openssl_x509_check_private_key() as a bare string.
+| PKCS#12 never reached that path: openssl_pkcs12_read() returns a key that is
+| already decrypted. See ARCHITECTURE-V2.md §3i.
+|
+*/
+
+it('parses a PEM bundle whose private key is encrypted', function () {
+    [$certificate, $privateKey, $password] = DebugCertificate::makePem();
+
+    expect($privateKey)->toContain('ENCRYPTED');
+
+    $parsed = app(CertificateParser::class)->parse($certificate . $privateKey, $password);
+
+    expect($parsed)->toBeInstanceOf(Certificate::class)
+        ->and($parsed->commonName())->toBe('Test Certificate')
+        ->and($parsed->password)->toBe($password);
+});
+
+it('rejects an encrypted PEM key when the passphrase is wrong', function () {
+    [$certificate, $privateKey] = DebugCertificate::makePem();
+
+    app(CertificateParser::class)->parse($certificate . $privateKey, 'not-the-passphrase');
+})->throws(InvalidX509PrivateKeyException::class);
+
+it('still parses a PEM bundle whose private key is unencrypted', function () {
+    // The array form has to serve both cases, otherwise the fix trades one
+    // broken input for another.
+    [$certificate, $privateKey, $password] = DebugCertificate::makePem(encryptKey: false);
+
+    expect($password)->toBe('')
+        ->and($privateKey)->not->toContain('ENCRYPTED')
+        ->and(app(CertificateParser::class)->parse($certificate . $privateKey, $password))
+        ->toBeInstanceOf(Certificate::class);
+});
+
+it('reads a combined PEM bundle', function () {
+    [$certificate, $privateKey, $password] = DebugCertificate::makePem();
+
+    expect(app(PemCertificateReader::class)->read($certificate . $privateKey, $password))
+        ->toBeInstanceOf(Certificate::class)
+        ->commonName()->toBe('Test Certificate');
+});
+
+it('reads a certificate and a private key that arrived separately', function () {
+    [$certificate, $privateKey, $password] = DebugCertificate::makePem();
+
+    expect(app(PemCertificateReader::class)->readPair($certificate, $privateKey, $password))
+        ->toBeInstanceOf(Certificate::class)
+        ->commonName()->toBe('Test Certificate');
+});
+
+it('does not care whether the key comes before the certificate', function () {
+    [$certificate, $privateKey, $password] = DebugCertificate::makePem();
+
+    $reader = app(PemCertificateReader::class);
+
+    expect($reader->read($privateKey . $certificate, $password))
+        ->toBeInstanceOf(Certificate::class);
+});
+
+it('reads an unencrypted PEM bundle without being given a password', function () {
+    [$certificate, $privateKey] = DebugCertificate::makePem(encryptKey: false);
+
+    expect(app(PemCertificateReader::class)->read($certificate . $privateKey))
+        ->toBeInstanceOf(Certificate::class);
+});
+
+it('tells binary bytes apart from PEM instead of reporting them as malformed', function () {
+    // A .pfx handed to the PEM entry point is the mistake this catches; without
+    // it openssl_x509_read() just fails, and the message blames the content.
+    [$pfx] = DebugCertificate::make();
+
+    app(PemCertificateReader::class)->read($pfx);
+})->throws(InvalidPemContentException::class, 'binary DER or PKCS#12 bytes');
+
+it('rejects a PEM carrying no private key', function () {
+    [$certificate] = DebugCertificate::makePem();
+
+    app(PemCertificateReader::class)->read($certificate);
+})->throws(InvalidPemContentException::class, 'No PEM private key block found in the bundle');
+
+it('names the offending half when the same file is passed twice', function () {
+    [$certificate] = DebugCertificate::makePem();
+
+    app(PemCertificateReader::class)->readPair($certificate, $certificate);
+})->throws(InvalidPemContentException::class, 'No PEM private key block found in the private key');
+
+it('rejects text that is neither PEM nor binary', function () {
+    app(PemCertificateReader::class)->read('this is not a certificate');
+})->throws(InvalidPemContentException::class, 'No PEM certificate block found in the bundle');
+
+it('still reports a key that does not match its certificate as such', function () {
+    // The format is fine here, so this is not a PEM problem — it keeps the
+    // exception that already says exactly this, rather than a second one.
+    [$certificate] = DebugCertificate::makePem();
+    [, $otherKey, $otherPassword] = DebugCertificate::makePem();
+
+    app(PemCertificateReader::class)->readPair($certificate, $otherKey, $otherPassword);
+})->throws(InvalidX509PrivateKeyException::class);
+
+it('agrees with the PKCS#12 path on the same key material', function () {
+    // The executable form of "one pipeline, two entries": if these ever stop
+    // agreeing, the PEM path has forked from the PKCS#12 one in practice.
+    [$pfx, $password] = DebugCertificate::make();
+
+    $viaPkcs12 = app(NativeCertificateReader::class)->read($pfx, $password);
+    $viaPem = app(PemCertificateReader::class)->read($viaPkcs12->original);
+
+    expect($viaPem->original)->toBe($viaPkcs12->original)
+        ->and($viaPem->data['subject'])->toBe($viaPkcs12->data['subject'])
+        ->and($viaPem->data['serialNumber'])->toBe($viaPkcs12->data['serialNumber']);
+});
