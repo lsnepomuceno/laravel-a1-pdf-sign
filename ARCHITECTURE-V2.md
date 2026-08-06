@@ -665,7 +665,7 @@ Independent PRs on the `v2.x-dev` branch.
 | 0 | ✅ **tc-lib-pdf PoC** | **done** — 15/15 checks, live TSA round-trip. See `poc/tc-lib-pdf-ltv-tsa/` and §3g.1 | — |
 | 0b | ✅ **Incremental update PoC** | **done** — 3/3 signatures valid. See `poc/incremental-signature/` and §3h.1 | — |
 | 1 | ✅ PHP/Laravel floor | **done** — `">=8.4 <8.6"` / L12+, 4-job matrix, tc-lib-pdf `^8.67`, `.gitattributes`, PHP 8.4 nullable fixes. Suite green on 8.4 and 8.5 (21 passed) | — |
-| 2 | Formatting + static analysis | Pint (PER-CS), PHPStan 2 + Larastan + strict/deprecation rules, baseline, `quality` job, update `CONTRIBUTING.md` | low |
+| 2 | ✅ Formatting + static analysis | **done** — Pint (PER-CS), PHPStan `level: max` + Larastan + strict/deprecation rules, **216-error baseline**, `quality` job, `composer check`, `CONTRIBUTING.md` | — |
 | 3 | PHPUnit → Pest | `drift` as a one-shot codemod, `pest-plugin-laravel`, PCOV in CI | low |
 | 4 | Data + Enums | VOs with `private(set)`, property hooks, enums carrying behaviour, `Entities\*` as aliases, type-coverage ≥ 95% | low |
 | 5 | Package infrastructure | publishable config, contracts, bindings, facade, **arch tests** (§6.2) | medium |
@@ -932,7 +932,7 @@ delivers the same value without imposing tooling on contributors.
 | 10 | Keep the legacy driver? | **Yes, as optional** — guarantees byte-for-byte fidelity for anyone depending on v1 output, without carrying deprecated deps in the default install |
 | 11 | phpseclib now or later? | **Later (v2.1)** — v2.0 is already a large refactor. Revisit: tc-lib-pdf may already cover part of the validation |
 | 12 | Full BC layer or a clean v2? | **Full** — the package has enough downloads for a hard break to be costly |
-| 13 | PHPStan `level: max` from the start, or a baseline? | **Baseline in PR 2**, driven to zero by the end of v2 — avoids stalling the refactor on day one |
+| 13 | PHPStan `level: max` from the start, or a baseline? | ✅ **Both, applied in PR 2.** `level: max` with a 216-entry baseline. Measured: 95 errors at level 5, 159 at level 8, 216 at max — so max costs only 57 extra baseline entries over level 8 and gates all new code at the strictest setting |
 | 14 | Line-coverage gate? | **No** — type coverage (100%) and mutation are more honest gates; line coverage stays informational |
 
 > **History:** the original plan proposed a PHP 8.2 / Laravel 10 floor. It was invalidated
