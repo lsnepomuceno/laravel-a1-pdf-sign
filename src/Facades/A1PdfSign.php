@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
 
 /**
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf signFromFile(string $pfxPath, string $password, string $pdfPath, ?bool $usePathEnv = null)
+ * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf signFromPem(string $pemPath, string $password, string $pdfPath, ?string $privateKeyPath = null)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf signFromUpload(\Illuminate\Http\UploadedFile $uploadedPfx, string $password, string $pdfPath, ?bool $usePathEnv = null)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate encryptCertificate(\Illuminate\Http\UploadedFile|string $uploadedOrPfxPath, string $password, ?bool $usePathEnv = null)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\Certificate decryptCertificate(string $hashKey, string $encryptedCertificate, string $password, bool $isBase64 = false, ?bool $usePathEnv = null)

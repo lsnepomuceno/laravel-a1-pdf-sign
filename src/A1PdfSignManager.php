@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
@@ -55,6 +56,24 @@ final readonly class A1PdfSignManager implements A1PdfSign
                 ->sign();
     }
 
+    /**
+     * Delegates to the builder rather than reading here: PEM needs no
+     * conversion, so there is no reader selection to make and nothing this
+     * method could add over certificatePem().
+     */
+    public function signFromPem(
+        string $pemPath,
+        #[SensitiveParameter]
+        string $password,
+        string $pdfPath,
+        ?string $privateKeyPath = null,
+    ): SignedPdf {
+        return $this->newSignature()
+                ->certificatePem($pemPath, $privateKeyPath, $password)
+                ->pdf($pdfPath)
+                ->sign();
+    }
+
     public function signFromUpload(
         UploadedFile $uploadedPfx,
         #[SensitiveParameter]
@@ -81,7 +100,7 @@ final readonly class A1PdfSignManager implements A1PdfSign
         // The hash it returns is required by decryptCertificate(); without it
         // the pair cannot be read back.
         return CertificateVault::create()->seal(
-            $this->read($bytes, $password, $usePathEnv),
+            $this->readAnyEncoding($bytes, $password, $usePathEnv),
             $password,
         );
     }
@@ -136,6 +155,28 @@ final readonly class A1PdfSignManager implements A1PdfSign
         ?bool $usePathEnv,
     ): Certificate {
         return $this->readers->make(usePathEnv: $usePathEnv)->read($pfxContents, $password);
+    }
+
+    /**
+     * Reads whichever encoding turned up.
+     *
+     * Signing keeps explicit siblings — signFromFile() and signFromPem() — so
+     * the caller states what it holds. encryptCertificate() has no sibling and
+     * takes "a certificate" generically, so it detects instead. The two
+     * encodings are trivially distinguishable, text marker against binary, so
+     * there is nothing to guess at.
+     */
+    private function readAnyEncoding(
+        string $contents,
+        #[SensitiveParameter]
+        string $password,
+        ?bool $usePathEnv,
+    ): Certificate {
+        if (PemCertificateReader::looksLikePem($contents)) {
+            return $this->container->make(PemCertificateReader::class)->read($contents, $password);
+        }
+
+        return $this->read($contents, $password, $usePathEnv);
     }
 
 

@@ -36,6 +36,22 @@ interface A1PdfSign
     ): SignedPdf;
 
     /**
+     * Signs a PDF with a certificate read from PEM files on disk.
+     *
+     * $privateKeyPath is null when the key sits in the same file as the
+     * certificate. $password is empty when the key is unencrypted, which PEM
+     * permits and PKCS#12 does not. See ARCHITECTURE-V2.md §3i.
+     *
+     * @throws \Throwable
+     */
+    public function signFromPem(
+        string $pemPath,
+        string $password,
+        string $pdfPath,
+        ?string $privateKeyPath = null,
+    ): SignedPdf;
+
+    /**
      * Signs a PDF with a certificate read from an uploaded .pfx file.
      *
      * @throws \Throwable
