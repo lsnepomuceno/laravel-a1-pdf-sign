@@ -664,7 +664,7 @@ Independent PRs on the `v2.x-dev` branch.
 |---|---|---|---|
 | 0 | ✅ **tc-lib-pdf PoC** | **done** — 15/15 checks, live TSA round-trip. See `poc/tc-lib-pdf-ltv-tsa/` and §3g.1 | — |
 | 0b | ✅ **Incremental update PoC** | **done** — 3/3 signatures valid. See `poc/incremental-signature/` and §3h.1 | — |
-| 1 | PHP/Laravel floor | `">=8.4 <8.6"` / L12+, 4-job matrix, **`composer update tecnickcom/tc-lib-pdf` (8.0.85 → 8.67.2)** and constraint review, `README` | low |
+| 1 | ✅ PHP/Laravel floor | **done** — `">=8.4 <8.6"` / L12+, 4-job matrix, tc-lib-pdf `^8.67`, `.gitattributes`, PHP 8.4 nullable fixes. Suite green on 8.4 and 8.5 (21 passed) | — |
 | 2 | Formatting + static analysis | Pint (PER-CS), PHPStan 2 + Larastan + strict/deprecation rules, baseline, `quality` job, update `CONTRIBUTING.md` | low |
 | 3 | PHPUnit → Pest | `drift` as a one-shot codemod, `pest-plugin-laravel`, PCOV in CI | low |
 | 4 | Data + Enums | VOs with `private(set)`, property hooks, enums carrying behaviour, `Entities\*` as aliases, type-coverage ≥ 95% | low |
@@ -921,13 +921,13 @@ delivers the same value without imposing tooling on contributors.
 | 4 | PDF engine | **Migrate to `tc-lib-pdf`** — TCPDF 6 is officially deprecated; the migration unlocks LTV and TSA (§3g). Legacy driver kept as optional |
 | 5 | Multi-signature | **Our own incremental writer**, clean-room from ISO 32000-1 — no dependency delivers this (§3h) |
 | 6 | Use `ddn/sapp`? | **No, under no circumstances** — not `require`, not `require-dev`, not `suggest`. LGPL is incompatible with porting code into an MIT package, and it is a legacy project. **Conceptual** reference only; clean-room implementation over tc-lib-pdf's building blocks, with an arch test enforcing the rule (§3h) |
+| 7 | PHP floor: 8.4 or 8.3? | ✅ **8.4**, applied in PR 1. Keeps the toolchain on one Pest major and unlocks property hooks, `private(set)` and `#[\Deprecated]` |
 | 8 | Multi-signature in v2.0 or v2.1? | ✅ **v2.0.** PR 0b closed with 3/3 valid signatures (§3h.1) — the risk that would justify deferring did not materialize |
 
 ### Open
 
 | # | Question | Recommendation |
 |---|---|---|
-| 7 | PHP floor: 8.4 or 8.3? | **8.4** — unifies the toolchain on Pest 5 and unlocks property hooks, `private(set)` and `#[\Deprecated]`. 8.3 has security until Dec 2027 and is defensible, but forces keeping Pest 4 and 5 in parallel (§3e.2) |
 | 9 | `IncrementalSigner` as the default, or only for the 2nd signature? | **Default** — preserving the original bytes from the 1st signature onward removes the silent destruction of annotations and form fields (§3h) |
 | 10 | Keep the legacy driver? | **Yes, as optional** — guarantees byte-for-byte fidelity for anyone depending on v1 output, without carrying deprecated deps in the default install |
 | 11 | phpseclib now or later? | **Later (v2.1)** — v2.0 is already a large refactor. Revisit: tc-lib-pdf may already cover part of the validation |
