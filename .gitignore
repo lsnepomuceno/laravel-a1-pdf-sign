@@ -19,3 +19,4 @@ Temp
 *.pfx
 node_modules
 dist
+.output
