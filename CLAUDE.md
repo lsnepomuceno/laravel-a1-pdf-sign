@@ -113,7 +113,8 @@ DocTimeStamps are classified separately (`isTimestamp`) and excluded from `isVal
 
 - **PHPStan `level: max`, no baseline.** The baseline was deleted, not shrunk (§7, decision 13); the gate is "no errors", not "no new errors". Only Pest's untypeable fluent API is ignored, scoped to `tests/*`.
 - **Type coverage gated at 100%.**
-- **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`. The flag is `--min` (Pest 5 removed `--covered-min`); the floor is **65**, set below the measured 69.93% because a large share of mutations time out and timeouts track machine load. Raise it only after measuring — never set a target ahead of the measurement.
+- **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`. The flag is `--min` (Pest 5 removed `--covered-min`). It runs **nightly, not on pull requests** (`.github/workflows/mutation.yml`), one runner per namespace with its own floor: Certificates 58, Signing 62, Validation 75. Those floors sit below the measured scores because **the score is not reproducible** — it tracks how many mutations time out, which tracks machine load, and Certificates swings three points between identical runs. Raise a floor only after measuring; never set a target ahead of the measurement.
+- **Do not split mutation runs with `--shard`.** It divides the test suite, and every mutation needs the whole suite: a mutation killed by a test in another shard is reported as uncovered. Split by mutated path instead.
 - `composer-dependency-analyser.php` catches unused and shadow dependencies.
 
 Patches are expected to come with tests (`CONTRIBUTING.md`). `tests/ArchTest.php` enforces structural rules — read it before adding a class.

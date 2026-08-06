@@ -1,0 +1,87 @@
+name: Mutation testing
+
+# Nightly rather than per pull request, for two measured reasons
+# (ARCHITECTURE-V2.md §6.3):
+#
+#   Cost. Timeouts dominate the run — a mutation that breaks a loop condition
+#   burns the full timeout, which the plugin derives from the suite duration
+#   and cannot be configured down. Locally that is ~2600 process-seconds; on a
+#   four-core runner, over ten minutes for a job every other check beats by an
+#   order of magnitude.
+#
+#   Reproducibility. Two consecutive runs over the same unchanged code scored
+#   63.24% and 66.18%, because which mutations time out depends on machine
+#   load. A blocking gate that moves three points on its own eventually fails a
+#   pull request that changed nothing, and a gate contributors learn to re-run
+#   is not a gate.
+#
+# It still fails loudly when the score drops, and workflow_dispatch runs it on
+# demand before a release.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  mutate:
+    name: ${{ matrix.namespace }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # One runner per namespace: wall-clock becomes the slowest namespace
+        # instead of the sum. src/Signing is by far the slowest — every test
+        # covering it signs a real PDF.
+        #
+        # Splitting by mutated path, not by --shard. --shard divides the test
+        # suite, and mutation testing needs the whole suite available for every
+        # mutation: a mutation killed by a test that landed in another shard is
+        # reported as uncovered. Measured on src/Certificates — the full run
+        # scores 64.71% with 8 uncovered, while shard 1/2 reports 61.76% with
+        # 26 uncovered and shard 2/2 reports 69.12%. Faster, and wrong.
+        #
+        # Each floor sits below the lowest of two consecutive measurements of
+        # that namespace, because the score is not reproducible to the point:
+        # it tracks how many mutations time out, which tracks machine load.
+        # Certificates swings the most (~20 timeouts out of 68); Validation
+        # does not move at all (2 timeouts), so its floor can sit close.
+        include:
+          - namespace: Certificates   # measured 64.71% / 61.76%
+            min: 58
+          - namespace: Signing        # measured 66.02% / 67.50%
+            min: 62
+          - namespace: Validation     # measured 77.68% / 77.68%
+            min: 75
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
+
+      # Raise a floor as its score improves; never lower one to make a run
+      # pass.
+      - name: Run mutation testing
+        run: >
+          vendor/bin/pest --mutate
+          --path=src/${{ matrix.namespace }}
+          --exclude-group=network
+          --parallel
+          --min=${{ matrix.min }}

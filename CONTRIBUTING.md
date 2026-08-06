@@ -33,7 +33,7 @@ $ composer lint        # fix code style
 $ composer analyse     # static analysis only
 $ composer test:types  # type coverage across src/
 $ composer test:cov    # line coverage (needs pcov or xdebug)
-$ composer test:mutate # mutation testing
+$ composer test:mutate # mutation testing (slow — runs nightly in CI, not on PRs)
 ```
 
 Tests are written with [Pest](https://pestphp.com). `tests/ArchTest.php` holds

@@ -890,11 +890,34 @@ throw" keep passing with broken validation — and that is exactly where the ris
   (§3h). It is also the slowest to mutate, for the same reason: every covering test signs a
   real PDF. `--parallel` is what makes it bearable.
 - **Gate:** `--min`, starting at the value measured on the first run and rising gradually.
-  Never fix the target before having the measurement. **Measured in PR 12 over the three
-  namespaces: 69.93%** (152 untested, 204 uncovered, 239 timeout, 589 tested). The gate is set
-  at **65**, deliberately under the measurement: 239 timeouts is a large share, and a timeout
-  depends on machine load, so a gate pinned exactly to the measured value goes red on a slow
-  runner rather than on a real regression.
+  Never fix the target before having the measurement. Measured per namespace, twice each:
+
+  | Namespace | Run 1 | Run 2 | Timeouts | Floor |
+  |---|---|---|---|---|
+  | `src/Certificates` | 64.71% | 61.76% | ~20 of 68 | 58 |
+  | `src/Signing` | 66.02% | 67.50% | ~200 of 883 | 62 |
+  | `src/Validation` | 77.68% | 77.68% | 2 of 233 | 75 |
+
+  **The score is not reproducible, and the variance tracks the timeout count.** A mutation
+  that breaks a loop condition burns the full timeout, which the plugin derives from the suite
+  duration and does not expose as an option. `Certificates` shells out to `openssl` and swings
+  three points between identical runs; `Validation` times out twice and does not move at all.
+  Each floor therefore sits below the lowest observed value for that namespace.
+
+- **Not a pull-request gate.** Two consequences of the above put it on a nightly schedule
+  instead (`.github/workflows/mutation.yml`): a run costs ~2600 process-seconds, over ten
+  minutes on a four-core runner against ~30 seconds for every other check; and a blocking gate
+  that moves three points on its own eventually fails a pull request that changed nothing. A
+  gate contributors learn to re-run has stopped being a gate. `workflow_dispatch` runs it on
+  demand before a release.
+
+- **Split by path, not by `--shard`.** `--shard` divides the *test suite*, and mutation
+  testing needs the whole suite available for every mutation — a mutation killed by a test
+  that landed in another shard is reported as uncovered. Measured on `src/Certificates`: the
+  full run scores 64.71% with 8 uncovered, while shard 1/2 reports 61.76% with 26 uncovered
+  and shard 2/2 reports 69.12%. It is faster precisely because it is wrong: the hanging test
+  lands in one shard, so the other never pays its timeout. Splitting by mutated path keeps
+  every score well defined.
 - **Prerequisite:** a coverage driver. CI currently runs `coverage: none`; adopt **PCOV**,
   much faster than Xdebug for this purpose.
 
