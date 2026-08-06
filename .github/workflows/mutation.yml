@@ -24,6 +24,10 @@ on:
 
 permissions:
   contents: read
+  # Only to file the failure. A red job notifies whoever last touched the cron
+  # and nobody else, and a scheduled run nobody watches is discovered whenever
+  # someone next opens the Actions tab.
+  issues: write
 
 concurrency:
   group: ${{ github.workflow }}
@@ -78,10 +82,96 @@ jobs:
 
       # Raise a floor as its score improves; never lower one to make a run
       # pass.
+      #
+      # shell: bash for pipefail — the default shell would let tee's exit code
+      # mask a failing run.
       - name: Run mutation testing
+        id: mutate
+        shell: bash
         run: >
           vendor/bin/pest --mutate
           --path=src/${{ matrix.namespace }}
           --exclude-group=network
           --parallel
           --min=${{ matrix.min }}
+          | tee mutation.log
+
+      # The score lives nowhere but the log, so a red job cannot tell a
+      # three-point timeout wobble from a real regression without someone
+      # opening it — and calibrating a floor means reading two runs by hand.
+      # Both become a glance at the run summary.
+      - name: Record the score
+        id: score
+        if: always()
+        shell: bash
+        run: |
+          plain=$(sed -e 's/\x1b\[[0-9;]*m//g' mutation.log 2>/dev/null || true)
+          score=$(printf '%s\n' "$plain" | grep -oE 'Score:[[:space:]]+[0-9.]+%' | tail -1 | grep -oE '[0-9.]+' || true)
+          mutations=$(printf '%s\n' "$plain" | grep -oE 'Mutations:.*' | tail -1 | sed -e 's/[[:space:]]\+/ /g' || true)
+
+          echo "score=${score:-unknown}" >> "$GITHUB_OUTPUT"
+
+          display="unavailable"
+          [ -n "$score" ] && display="${score}%"
+
+          {
+            echo "### ${{ matrix.namespace }}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Score | ${display} |"
+            echo "| Floor | ${{ matrix.min }} |"
+            echo "| Breakdown | ${mutations:-unavailable} |"
+            echo
+            echo "The timeout count is what moves the score between identical runs."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Scoped to the mutation step: a failure in checkout or composer is not a
+      # score regression, and an issue titled as one would be worse than none.
+      # Those still fall back to the e-mail.
+      - name: Open or update the tracking issue
+        if: failure() && steps.mutate.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          NAMESPACE: ${{ matrix.namespace }}
+          FLOOR: ${{ matrix.min }}
+          SCORE: ${{ steps.score.outputs.score }}
+        with:
+          script: |
+            const { NAMESPACE, FLOOR, SCORE } = process.env
+            const { owner, repo } = context.repo
+
+            const title = `Mutation score below floor: ${NAMESPACE}`
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`
+
+            const body = [
+              `\`src/${NAMESPACE}\` scored **${SCORE}%** against a floor of **${FLOOR}**.`,
+              ``,
+              `Run: ${run}`,
+              ``,
+              `Before acting on it: the score is not reproducible, and the variance tracks how`,
+              `many mutations time out, which tracks machine load. \`Certificates\` swings about`,
+              `three points between identical runs. One or two points is noise; a sustained`,
+              `drop, or one that survives a re-run, is not.`,
+              ``,
+              `**Do not lower the floor to make this pass** — ARCHITECTURE-V2.md §6.3.`,
+            ].join('\n')
+
+            // One open issue per namespace, commented on rather than reopened
+            // nightly: without this the same regression files a fresh issue
+            // every night until someone fixes it.
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              labels: 'mutation',
+            })
+
+            const existing = open.find(issue => issue.title === title)
+
+            if (existing) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: existing.number, body })
+              return
+            }
+
+            await github.rest.issues.create({ owner, repo, title, body, labels: ['mutation'] })
