@@ -96,6 +96,7 @@ final readonly class IncrementalSigner implements PdfSigner
     private function embedSignature(string $pdf, Certificate $certificate, SignatureProfile $profile): string
     {
         [$open, $close, $trailing] = $this->byteRange->readLast($pdf);
+        $open = $this->byteRange->lastContentsOffset($pdf);
 
         $der = $this->cades->build(
             $this->byteRange->signableSpan($pdf, $open, $close, $trailing),

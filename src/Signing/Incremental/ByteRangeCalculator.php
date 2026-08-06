@@ -32,13 +32,7 @@ final class ByteRangeCalculator
      */
     public function apply(string $pdf, int $contentsHexLength): string
     {
-        $contentsPosition = strrpos($pdf, '/Contents <');
-
-        if ($contentsPosition === false) {
-            throw new InvalidPdfFileException('no /Contents placeholder to sign');
-        }
-
-        $open = $contentsPosition + strlen('/Contents ');       // offset of '<'
+        $open = $this->lastContentsOffset($pdf);
         $close = $open + 1 + $contentsHexLength + 1;            // offset just past '>'
 
         $replacement = sprintf(
@@ -61,6 +55,29 @@ final class ByteRangeCalculator
         }
 
         return substr_replace($pdf, $replacement, $position, strlen($placeholder));
+    }
+
+    /**
+     * Offset of the '<' opening the last /Contents placeholder.
+     *
+     * The spacing is not fixed: this package writes "/Contents <" while
+     * tc-lib-pdf-sign writes "/Contents<". Matching a literal meant the
+     * document timestamp revision found the *signature's* placeholder instead
+     * of its own and overwrote it — poppler reported the signer as the
+     * timestamp authority and the digest as mismatched.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function lastContentsOffset(string $pdf): int
+    {
+        if (! preg_match_all('/\/Contents\s*</', $pdf, $matches, PREG_OFFSET_CAPTURE)) {
+            throw new InvalidPdfFileException('no /Contents placeholder to sign');
+        }
+
+        /** @var array{0: string, 1: int} $last */
+        $last = end($matches[0]);
+
+        return $last[1] + strlen($last[0]) - 1;
     }
 
     /**

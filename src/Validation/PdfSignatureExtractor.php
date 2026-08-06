@@ -15,20 +15,20 @@ final class PdfSignatureExtractor
     public function __construct(private readonly DerReader $der = new DerReader()) {}
 
     /**
-     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int}>
+     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int, isTimestamp: bool}>
      */
     public function extract(string $pdf): array
     {
         // ISO 32000-1 allows any whitespace between the four numbers, and a
         // signer must pad them to a fixed width to patch the values in place.
-        if (! preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER)) {
+        if (! preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
             return [];
         }
 
         $signatures = [];
 
         foreach ($matches as $match) {
-            [$open, $close, $trailing] = [(int) $match[1], (int) $match[2], (int) $match[3]];
+            [$open, $close, $trailing] = [(int) $match[1][0], (int) $match[2][0], (int) $match[3][0]];
 
             $cms = $this->contents($pdf, $open, $close);
 
@@ -40,10 +40,28 @@ final class PdfSignatureExtractor
                 'byteRange' => [$open, $close, $trailing],
                 'cms' => $cms,
                 'coverageEnd' => $close + $trailing,
+                'isTimestamp' => $this->isDocumentTimestamp($pdf, (int) $match[0][1]),
             ];
         }
 
         return $signatures;
+    }
+
+    /**
+     * Whether the entry is an archive timestamp rather than a signature.
+     *
+     * A /DocTimeStamp carries an RFC 3161 token, whose SignedData signs the
+     * TSTInfo holding the document's hash — not the document itself. Verifying
+     * it the way a signature is verified always fails, so it has to be told
+     * apart before anything tries.
+     */
+    private function isDocumentTimestamp(string $pdf, int $byteRangeOffset): bool
+    {
+        // The /Type and /SubFilter sit in the same dictionary, just ahead of
+        // the /ByteRange this entry was found at.
+        $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
+
+        return str_contains($dictionary, '/DocTimeStamp') || str_contains($dictionary, 'ETSI.RFC3161');
     }
 
     /**

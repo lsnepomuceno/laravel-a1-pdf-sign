@@ -83,6 +83,7 @@ final readonly class DocTimeStampWriter
     private function embedToken(string $pdf, string $url): string
     {
         [$open, $close, $trailing] = $this->byteRange->readLast($pdf);
+        $open = $this->byteRange->lastContentsOffset($pdf);
 
         $token = $this->requestToken(
             $this->byteRange->signableSpan($pdf, $open, $close, $trailing),

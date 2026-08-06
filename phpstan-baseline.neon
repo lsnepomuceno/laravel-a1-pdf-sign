@@ -213,6 +213,12 @@ parameters:
 		-
 			message: '#^Only booleans are allowed in a negated boolean, int\<0, max\>\|false given\.$#'
 			identifier: booleanNot.exprNotBoolean
+			count: 2
+			path: src/Signing/Incremental/ByteRangeCalculator.php
+
+		-
+			message: '#^PHPDoc tag @var with type array\{string, int\} is not subtype of type array\{string, int\<\-1, max\>\}\.$#'
+			identifier: varTag.type
 			count: 1
 			path: src/Signing/Incremental/ByteRangeCalculator.php
 
@@ -299,6 +305,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/Testing/DebugCertificate.php
+
+		-
+			message: '#^Casting to int something that''s already int\<\-1, max\>\.$#'
+			identifier: cast.useless
+			count: 1
+			path: src/Validation/PdfSignatureExtractor.php
 
 		-
 			message: '#^Only booleans are allowed in a negated boolean, int\<0, max\>\|false given\.$#'

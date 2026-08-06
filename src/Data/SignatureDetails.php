@@ -22,8 +22,19 @@ final readonly class SignatureDetails extends BaseData
         public array $signers,
         public int $coverageEnd,
         public bool $coversWholeDocument,
+        public bool $isTimestamp = false,
         public ?string $error = null,
     ) {}
+
+    /**
+     * An archive timestamp is not a signature over the document, so it is
+     * reported but does not decide whether the document is valid. Its own
+     * cryptographic verification is not implemented yet.
+     */
+    public function countsTowardValidity(): bool
+    {
+        return ! $this->isTimestamp;
+    }
 
     public function signer(): ?Signer
     {

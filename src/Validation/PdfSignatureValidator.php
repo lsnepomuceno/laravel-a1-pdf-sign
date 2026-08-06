@@ -57,7 +57,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
             [$open, $close, $trailing] = $signature['byteRange'];
 
             $signatures[] = new SignatureDetails(
-                verified: $this->verifier->verify(
+                verified: $signature['isTimestamp'] ? false : $this->verifier->verify(
                     $signature['cms'],
                     $this->extractor->coveredBytes($pdfContents, $open, $close, $trailing),
                 ),
@@ -67,6 +67,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                 // earlier ones stop at the revision they were written into,
                 // which is expected rather than a defect.
                 coversWholeDocument: $signature['coverageEnd'] === $size,
+                isTimestamp: $signature['isTimestamp'],
             );
         }
 

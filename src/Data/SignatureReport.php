@@ -36,13 +36,21 @@ final readonly class SignatureReport extends BaseData
             return false;
         }
 
+        $decisive = 0;
+
         foreach ($this->signatures as $signature) {
+            if (! $signature->countsTowardValidity()) {
+                continue;
+            }
+
             if (! $signature->verified) {
                 return false;
             }
+
+            $decisive++;
         }
 
-        return true;
+        return $decisive > 0;
     }
 
     public function isSigned(): bool
@@ -71,6 +79,19 @@ final readonly class SignatureReport extends BaseData
     /**
      * The signature applied last, which is the only one covering the whole file.
      */
+    /**
+     * The archive timestamps, which are reported separately from signatures.
+     *
+     * @return list<SignatureDetails>
+     */
+    public function timestamps(): array
+    {
+        return array_values(array_filter(
+            $this->signatures,
+            static fn(SignatureDetails $signature): bool => $signature->isTimestamp,
+        ));
+    }
+
     public function latest(): ?SignatureDetails
     {
         return $this->signatures === [] ? null : $this->signatures[array_key_last($this->signatures)];

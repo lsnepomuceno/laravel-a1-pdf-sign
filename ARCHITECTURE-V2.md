@@ -751,10 +751,30 @@ a low score for structural reasons, not for lack of tests.
 
 Two things the plan set out to do are not done, and neither is covered by a passing test:
 
-1. **No validation in a real reader.** Every claim about PAdES conformance rests on structural
-   checks plus `openssl smime -verify` and live TSA round-trips. Adobe Reader and the ITI
-   Validar have never seen the output. For a package that now advertises B-LTA, this is the
-   most serious remaining gap.
+1. ✅ **Independently validated with poppler's `pdfsig`** (25.12), which reads the documents
+   with its own PDF and CMS implementation rather than ours. Every profile reports
+   *Signature is Valid*, the sub-filters are recognised, and a three-signature document shows
+   all three valid with correctly progressive coverage.
+
+   It found a real defect no test had caught. `ByteRangeCalculator::apply()` searched for the
+   literal `/Contents <`, but tc-lib-pdf-sign writes `/Contents<` without the space, so the
+   archive timestamp revision located the *signature's* placeholder and overwrote it. poppler
+   reported the signer as `www.freetsa.org` and the digest as mismatched. The lookup is now a
+   regex tolerant of both spellings.
+
+   A second defect surfaced from the same run: our own validator treated the archive timestamp
+   as a signature over the document and reported a valid B-LTA as invalid. A `/DocTimeStamp`
+   signs the TSTInfo holding the document's hash, not the document, so it is now told apart
+   and reported separately.
+
+   The archive timestamp was verified end to end: its imprint equals the SHA-256 of the bytes
+   its own `/ByteRange` covers.
+
+   **Still not done:** Adobe Reader and the ITI Validar. Both need a real ICP-Brasil
+   certificate to say anything meaningful about trust — poppler already reports
+   *Certificate issuer isn't Trusted* for the self-signed test certificate, which is correct
+   and expected. `pdfsig` cannot verify `ETSI.RFC3161` document timestamps either, so that
+   part rests on the OpenSSL check above.
 2. **Roave BC check is not wired in.** It compares the public API against a released tag;
    with 2.0.0 unreleased and everything breaking against `^1`, it would only produce noise.
    It becomes meaningful — and should be added — once 2.0.0 ships.
