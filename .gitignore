@@ -17,6 +17,10 @@ demo.php
 Temp
 *.pdf
 *.pfx
+
+# Committed on purpose — see samples/README.md.
+!/samples/*.pdf
+!/samples/*.pfx
 node_modules
 dist
 .output

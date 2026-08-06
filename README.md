@@ -97,6 +97,9 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 fields are preserved and a document can carry more than one signature — the request in
 [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
 
+Signed samples for every profile, including a document carrying six signatures, live in
+[`samples/`](samples/README.md) — open them in any reader to see what the package produces.
+
 ### PAdES profiles
 
 | Profile       | Adds                                                                               |
