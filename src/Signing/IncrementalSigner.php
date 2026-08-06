@@ -8,11 +8,12 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
-use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
 
 /**
  * Signs by appending a revision, leaving the original bytes untouched.
@@ -40,6 +41,7 @@ final readonly class IncrementalSigner implements PdfSigner
         private DocumentReader $reader,
         private RevisionWriter $writer,
         private ByteRangeCalculator $byteRange,
+        private CadesBuilder $cades,
     ) {}
 
     public function sign(
@@ -49,7 +51,10 @@ final readonly class IncrementalSigner implements PdfSigner
         string $fieldName = 'Signature',
         ?SealImage $seal = null,
         ?SealPlacement $placement = null,
+        ?SignatureProfile $profile = null,
     ): SignedPdf {
+        $profile ??= SignatureProfile::PadesBB;
+
         $document = $this->reader->read($pdfContents);
 
         $withRevision = $this->writer->append(
@@ -60,23 +65,25 @@ final readonly class IncrementalSigner implements PdfSigner
             $this->uniqueFieldName($pdfContents, $fieldName),
             $seal,
             $placement,
+            $profile,
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
 
-        return new SignedPdf($this->embedSignature($withByteRange, $certificate));
+        return new SignedPdf($this->embedSignature($withByteRange, $certificate, $profile));
     }
 
     /**
      * @throws InvalidPdfFileException
      */
-    private function embedSignature(string $pdf, Certificate $certificate): string
+    private function embedSignature(string $pdf, Certificate $certificate, SignatureProfile $profile): string
     {
         [$open, $close, $trailing] = $this->byteRange->readLast($pdf);
 
-        $der = $this->detachedCms(
+        $der = $this->cades->build(
             $this->byteRange->signableSpan($pdf, $open, $close, $trailing),
             $certificate,
+            $profile,
         );
 
         $hex = bin2hex($der);
@@ -97,57 +104,6 @@ final readonly class IncrementalSigner implements PdfSigner
             $open + 1,
             self::CONTENTS_HEX_LENGTH,
         );
-    }
-
-    /**
-     * Produces the detached PKCS#7 blob through ext-openssl — no shell-out.
-     *
-     * @throws InvalidPdfFileException
-     */
-    private function detachedCms(string $data, Certificate $certificate): string
-    {
-        $directory = sys_get_temp_dir();
-
-        return TemporaryFile::with($directory, '.dat', $data, function (TemporaryFile $input) use ($directory, $certificate): string {
-            return TemporaryFile::with($directory, '.p7s', '', function (TemporaryFile $output) use ($input, $certificate): string {
-                $signed = openssl_pkcs7_sign(
-                    $input->path,
-                    $output->path,
-                    $certificate->original,
-                    [$certificate->original, $certificate->password],
-                    [],
-                    PKCS7_BINARY | PKCS7_DETACHED,
-                );
-
-                if (! $signed) {
-                    throw new InvalidPdfFileException('openssl_pkcs7_sign failed: ' . (openssl_error_string() ?: 'unknown error'));
-                }
-
-                return $this->extractDer($output->contents());
-            });
-        });
-    }
-
-    /**
-     * Pulls the DER out of the S/MIME envelope openssl_pkcs7_sign() writes.
-     *
-     * @throws InvalidPdfFileException
-     */
-    private function extractDer(string $smime): string
-    {
-        $pattern = '/Content-Type:\s*application\/x-pkcs7-signature.*?\r?\n\r?\n(.*?)\r?\n-{2,}/s';
-
-        if (! preg_match($pattern, $smime, $matches)) {
-            throw new InvalidPdfFileException('no PKCS#7 block in the S/MIME output');
-        }
-
-        $der = base64_decode((string) preg_replace('/\s+/', '', $matches[1]), true);
-
-        if ($der === false || $der === '') {
-            throw new InvalidPdfFileException('the PKCS#7 payload is not valid base64');
-        }
-
-        return $der;
     }
 
     /**

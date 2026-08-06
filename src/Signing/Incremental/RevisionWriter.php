@@ -5,6 +5,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 
 /**
@@ -36,6 +37,7 @@ final class RevisionWriter
         string $fieldName,
         ?SealImage $seal = null,
         ?SealPlacement $placement = null,
+        SignatureProfile $profile = SignatureProfile::PadesBB,
     ): string {
         $visible = $seal !== null && $placement !== null;
 
@@ -55,7 +57,7 @@ final class RevisionWriter
         $offsets = [];
 
         $offsets[$signatureNumber] = $base + strlen($body);
-        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength);
+        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile);
 
         $offsets[$widgetNumber] = $base + strlen($body);
         $body .= $this->widgetObject(
@@ -90,8 +92,12 @@ final class RevisionWriter
         return $pdf . $body;
     }
 
-    private function signatureObject(int $number, SignatureInfo $info, int $contentsHexLength): string
-    {
+    private function signatureObject(
+        int $number,
+        SignatureInfo $info,
+        int $contentsHexLength,
+        SignatureProfile $profile,
+    ): string {
         $metadata = '';
 
         foreach ($info->toDictionary() as $key => $value) {
@@ -99,7 +105,9 @@ final class RevisionWriter
         }
 
         return "{$number} 0 obj\n"
-            . '<</Type/Sig/Filter/Adobe.PPKLite/SubFilter/adbe.pkcs7.detached '
+            // The /SubFilter must match what the CMS actually is: a PAdES
+            // baseline signature is ETSI.CAdES.detached, not adbe.pkcs7.
+            . '<</Type/Sig/Filter/Adobe.PPKLite/SubFilter/' . $profile->subFilter() . ' '
             . ByteRangeCalculator::placeholder()
             . '/Contents <' . str_repeat('0', $contentsHexLength) . '> '
             . $metadata

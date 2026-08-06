@@ -31,6 +31,38 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Signature profile
+    |--------------------------------------------------------------------------
+    |
+    | legacy     ISO 32000-1 detached CMS. Widest reader support.
+    | pades-b-b  PAdES baseline. The default.
+    | pades-b-t  B-B plus an RFC 3161 timestamp — needs timestamp.url below.
+    | pades-b-lt B-T plus a Document Security Store.
+    | pades-b-lta B-LT plus an archive timestamp.
+    |
+    | Every level above legacy carries the ESS signing-certificate-v2 attribute.
+    |
+    */
+
+    'signature' => [
+        'profile' => env('A1_PDF_SIGN_PROFILE', 'pades-b-b'),
+
+        'digest_algorithm' => env('A1_PDF_SIGN_DIGEST', 'sha256'),
+
+        'timestamp' => [
+            'url' => env('A1_TSA_URL'),
+            'username' => env('A1_TSA_USERNAME'),
+            'password' => env('A1_TSA_PASSWORD'),
+            'timeout' => 20,
+        ],
+
+        'ltv' => [
+            'timeout' => 10,
+        ],
+    ],
+
     'certificate' => [
         'use_path_env' => env('A1_PDF_SIGN_USE_PATH_ENV', false),
         'legacy' => env('A1_PDF_SIGN_LEGACY_CERTIFICATE', false),

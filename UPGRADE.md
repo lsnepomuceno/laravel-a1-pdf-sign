@@ -105,6 +105,30 @@ and a document can carry more than one signature — the request in
 
 The practical consequence is that output is no longer byte-comparable with 1.x.
 
+### New: PAdES signature profiles
+
+Signatures are now PAdES baseline by default, carrying the ESS
+`signing-certificate-v2` attribute that `openssl_pkcs7_sign()` cannot emit.
+
+| Profile | Adds |
+|---|---|
+| `legacy` | ISO 32000-1 detached CMS — the 1.x behaviour |
+| `pades-b-b` | CAdES signed attributes. **The new default** |
+| `pades-b-t` | B-B plus an RFC 3161 timestamp |
+| `pades-b-lt` | B-T plus a Document Security Store |
+| `pades-b-lta` | B-LT plus an archive timestamp |
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($path)
+    ->timestamp()                       // shorthand for pades-b-t
+    ->sign();
+```
+
+Set the default in `config/a1-pdf-sign.php`, and the timestamp authority in
+`A1_TSA_URL`. Choosing `legacy` reproduces the 1.x `/SubFilter`.
+
 ### New: publishable configuration
 
 ```bash

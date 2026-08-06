@@ -34,7 +34,7 @@
     "illuminate/support": "^12 || ^13",
     "illuminate/encryption": "^12 || ^13",
     "illuminate/http": "^12 || ^13",
-    "tecnickcom/tc-lib-pdf": "^8.67",
+    "tecnickcom/tc-lib-pdf-sign": "^1.1",
     "symfony/process": "^7 || ^8",
     "intervention/image": "^3.11"
   },

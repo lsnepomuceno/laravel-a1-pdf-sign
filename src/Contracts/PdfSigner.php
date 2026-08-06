@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 
 /**
  * Signs an existing PDF.
@@ -30,5 +31,6 @@ interface PdfSigner
         string $fieldName = 'Signature',
         ?SealImage $seal = null,
         ?SealPlacement $placement = null,
+        ?SignatureProfile $profile = null,
     ): SignedPdf;
 }

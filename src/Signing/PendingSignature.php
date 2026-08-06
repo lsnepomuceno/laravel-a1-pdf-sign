@@ -12,6 +12,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
 use SensitiveParameter;
@@ -42,6 +43,8 @@ final class PendingSignature
     private FontSize|string|null $sealFontSize = null;
 
     private bool $sealShowsExpiry = false;
+
+    private SignatureProfile|string|null $profile = null;
 
     public function __construct(
         private readonly CertificateReader $reader,
@@ -155,6 +158,27 @@ final class PendingSignature
     }
 
     /**
+     * Chooses the signature profile.
+     *
+     * Defaults to PAdES B-B. B-T and above request an RFC 3161 timestamp and
+     * therefore need a1-pdf-sign.signature.timestamp.url configured.
+     */
+    public function profile(SignatureProfile|string $profile): self
+    {
+        $this->profile = $profile;
+
+        return $this;
+    }
+
+    /**
+     * Shorthand for the timestamped profile, PAdES B-T.
+     */
+    public function timestamp(): self
+    {
+        return $this->profile(SignatureProfile::PadesBT);
+    }
+
+    /**
      * Names the signature field. Successive signers must not share one.
      */
     public function fieldName(string $fieldName): self
@@ -188,9 +212,17 @@ final class PendingSignature
             $this->fieldName,
             $seal,
             $seal !== null ? ($this->placement ?? $this->defaultPlacement()) : null,
+            SignatureProfile::resolve($this->profile ?? $this->configuredProfile()),
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());
+    }
+
+    private function configuredProfile(): ?string
+    {
+        $value = config('a1-pdf-sign.signature.profile');
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     private function defaultPlacement(): SealPlacement

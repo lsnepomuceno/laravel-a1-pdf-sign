@@ -313,6 +313,24 @@ parameters:
 			path: src/Sign/ValidatePdfSignature.php
 
 		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Signing/Cades/CadesBuilder.php
+
+		-
+			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
+			identifier: ternary.shortNotAllowed
+			count: 1
+			path: src/Signing/Cades/CadesBuilder.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 3
+			path: src/Signing/Cades/HttpTransport.php
+
+		-
 			message: '#^Only booleans are allowed in a negated boolean, int\<0, max\>\|false given\.$#'
 			identifier: booleanNot.exprNotBoolean
 			count: 1
@@ -349,20 +367,8 @@ parameters:
 			path: src/Signing/Incremental/RevisionWriter.php
 
 		-
-			message: '#^Only booleans are allowed in a negated boolean, int\|false given\.$#'
-			identifier: booleanNot.exprNotBoolean
-			count: 1
-			path: src/Signing/IncrementalSigner.php
-
-		-
 			message: '#^Only numeric types are allowed in \+, int\<0, max\>\|false given on the left side\.$#'
 			identifier: plus.leftNonNumeric
-			count: 1
-			path: src/Signing/IncrementalSigner.php
-
-		-
-			message: '#^Short ternary operator is not allowed\. Use null coalesce operator if applicable or consider using long ternary\.$#'
-			identifier: ternary.shortNotAllowed
 			count: 1
 			path: src/Signing/IncrementalSigner.php
 
@@ -464,6 +470,42 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: tests/ManageCertTest.php
+
+		-
+			message: '#^Access to an undefined property Pest\\Mixins\\Expectation\<mixed\>\:\:\$not\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/PadesTest.php
+
+		-
+			message: '#^Call to an undefined static method LSNepomuceno\\LaravelA1PdfSign\\Facades\\A1PdfSign\:\:newSignature\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 6
+			path: tests/PadesTest.php
+
+		-
+			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-empty\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 3
+			path: tests/PadesTest.php
+
+		-
+			message: '#^Only booleans are allowed in a ternary operator condition, int\<0, 1\> given\.$#'
+			identifier: ternary.condNotBoolean
+			count: 1
+			path: tests/PadesTest.php
+
+		-
+			message: '#^Parameter \#1 \$pdf of closure expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/PadesTest.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/PadesTest.php
 
 		-
 			message: '''
