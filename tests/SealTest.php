@@ -108,7 +108,7 @@ it('still validates a document signed with a visible seal', function () {
 
     $path = $signed->save(A1PdfSign::tempPath(true, '.pdf'));
 
-    expect(A1PdfSign::validate($path)->isValidated)->toBeTrue();
+    expect(A1PdfSign::validate($path)->isValid())->toBeTrue();
 
     unlink($path);
 });

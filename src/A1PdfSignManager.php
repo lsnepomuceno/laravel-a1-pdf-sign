@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureMode;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use LSNepomuceno\LaravelA1PdfSign\Sign\ValidatePdfSignature;
 use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
 use SensitiveParameter;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -111,7 +111,7 @@ final readonly class A1PdfSignManager implements A1PdfSign
 
     public function validate(string $pdfPath): SignatureReport
     {
-        return ValidatePdfSignature::from($pdfPath);
+        return $this->container->make(SignatureValidator::class)->validateFile($pdfPath);
     }
 
     public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string

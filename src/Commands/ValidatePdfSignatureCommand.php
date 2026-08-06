@@ -19,10 +19,19 @@ class ValidatePdfSignatureCommand extends Command
             $pdfPath = $this->argument(key: 'pdfPath');
 
             $validated = app(A1PdfSign::class)->validate($pdfPath);
-            $validationText = $validated->isValidated ? 'VALID' : 'INVALID';
+            $validationText = $validated->isValid() ? 'VALID' : 'INVALID';
 
             $this->line("Your PDF document is {$validationText}", 'info');
-            return $validated->isValidated ? self::SUCCESS : self::INVALID;
+
+            foreach ($validated->signatures as $index => $signature) {
+                $signer = $signature->signer()?->commonName ?? 'unknown signer';
+                $status = $signature->verified ? 'verified' : 'NOT verified';
+                $scope = $signature->coversWholeDocument ? 'covers the whole file' : 'covers its own revision';
+
+                $this->line(sprintf('  %d. %s — %s, %s', $index + 1, $signer, $status, $scope), 'info');
+            }
+
+            return $validated->isValid() ? self::SUCCESS : self::INVALID;
         } catch (\Throwable $th) {
             $this->line("Unable to validate your file signature, an error occurred: {$th->getMessage()}", 'error');
             return self::FAILURE;

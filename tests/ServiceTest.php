@@ -87,7 +87,7 @@ it('lets the container swap the implementation', function () {
 
         public function validate(string $pdfPath): SignatureReport
         {
-            return new SignatureReport(true, []);
+            return new SignatureReport([]);
         }
 
         public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature
@@ -106,5 +106,5 @@ it('lets the container swap the implementation', function () {
     // The facade and every internal caller resolve the contract, so a swapped
     // implementation reaches all of them.
     expect(A1PdfSign::signFromFile('a.pfx', 'x', 'b.pdf'))->toBe('faked')
-        ->and(A1PdfSign::validate('b.pdf')->isValidated)->toBeTrue();
+        ->and(A1PdfSign::validate('b.pdf')->isSigned())->toBeFalse();
 });

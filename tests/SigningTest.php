@@ -80,5 +80,5 @@ it('validates a signed pdf', function () {
     File::put($pdfPath, A1PdfSign::signFromFile($pfxPath, $pass, resource('test.pdf')));
 
     expect(File::exists($pdfPath))->toBeTrue()
-        ->and(A1PdfSign::validate($pdfPath)->isValidated)->toBeTrue();
+        ->and(A1PdfSign::validate($pdfPath)->isValid())->toBeTrue();
 });

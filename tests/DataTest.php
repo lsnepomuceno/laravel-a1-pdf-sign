@@ -36,6 +36,9 @@ it('reads the common name, falling back to the organisation', function () {
 });
 
 it('exposes its properties through toArray', function () {
-    expect((new SignatureReport(true, ['CN' => ['ACME']]))->toArray())
-        ->toBe(['isValidated' => true, 'data' => ['CN' => ['ACME']]]);
+    $report = new SignatureReport([]);
+
+    expect($report->toArray())->toBe(['signatures' => []])
+        ->and($report->isValid())->toBeFalse()
+        ->and($report->isSigned())->toBeFalse();
 });

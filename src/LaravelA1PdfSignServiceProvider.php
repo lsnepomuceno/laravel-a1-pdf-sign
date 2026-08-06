@@ -10,8 +10,10 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Seal\InterventionSealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
+use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureValidator;
 
 class LaravelA1PdfSignServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,7 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
         // bytes and lets a document carry more than one signature (§3h).
         $this->app->bind(PdfSigner::class, IncrementalSigner::class);
         $this->app->bind(SealRenderer::class, InterventionSealRenderer::class);
+        $this->app->bind(SignatureValidator::class, PdfSignatureValidator::class);
 
         $this->app->bind(
             CertificateReader::class,

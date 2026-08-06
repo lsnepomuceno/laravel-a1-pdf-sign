@@ -139,8 +139,24 @@ It controls the temporary path, the `openssl` PATH and legacy flags, and the
 seal defaults. Nothing is required — the defaults match 1.x behaviour, except
 that temporary files no longer need `vendor/` to be writable.
 
-### Known issue carried from 1.x
+### Validation now verifies the signature
 
-`encryptCertData()` and `decryptCertData()` never round-tripped: the first
-stores a PEM, the second expects binary PKCS#12. The 2.0 equivalents currently
-behave the same. See `ARCHITECTURE-V2.md` §1.14.
+In 1.x, `validatePdfSignature()` returned `isValidated = true` when the
+embedded certificate happened to carry a `CN` or `OU` field. It never checked
+whether the signature matched the document, so a tampered file still reported
+as validated.
+
+`SignatureReport` is therefore reshaped:
+
+| 1.x | 2.0 |
+|---|---|
+| `$report->isValidated` | `$report->isValid()` — every signature verifies |
+| `$report->data` | `$report->signers()`, or `$report->signatures` for detail |
+| — | `$report->count()`, `isSigned()`, `latest()` |
+
+Each entry carries the signer as structured data, whether it verified, and
+whether it covers the whole file. Documents with more than one signature are
+reported in full; 1.x read only the first.
+
+`isValid()` answers "does this signature match these bytes". It does not check
+the issuer against a trust store — that decision stays with your application.
