@@ -1,0 +1,36 @@
+#!/bin/sh
+# Formats the staged PHP files with Pint and stages the result, so style is
+# never what a pull request gets blocked on.
+#
+# Pint requires PHP 8.2 and the package floor is 8.4, so a development machine
+# running an older PHP still needs a way to format: the hook falls back to the
+# Docker service when the local binary cannot run. See CONTRIBUTING.md.
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
+
+if [ -z "$staged" ]; then
+    exit 0
+fi
+
+if [ -x vendor/bin/pint ] && vendor/bin/pint --version >/dev/null 2>&1; then
+    run_pint() { vendor/bin/pint "$@"; }
+elif command -v docker >/dev/null 2>&1; then
+    echo "pre-commit: local PHP cannot run Pint, falling back to Docker."
+    run_pint() { docker compose -f .docker/compose.yaml run --rm -T php vendor/bin/pint "$@"; }
+else
+    echo "pre-commit: Pint is not runnable. Install PHP 8.4+ and run 'composer install', or install Docker." >&2
+    exit 1
+fi
+
+# Split on newlines only, so paths containing spaces survive.
+IFS='
+'
+set -f
+# shellcheck disable=SC2086
+set -- $staged
+set +f
+unset IFS
+
+run_pint "$@" || exit 1
+
+git add -- "$@"

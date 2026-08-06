@@ -29,4 +29,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_MEMORY_LIMIT=-1
 
+# The bind-mounted checkout belongs to the host user, so git inside the
+# container refuses to read it and Composer loses the package version.
+RUN git config --global --add safe.directory /app
+
 WORKDIR /app
