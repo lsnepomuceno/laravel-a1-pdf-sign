@@ -24,7 +24,7 @@ final readonly class NativeCertificateReader implements CertificateReader
     public function __construct(private CertificateParser $parser) {}
 
     public function read(
-        string $pfxContents,
+        string $contents,
         #[SensitiveParameter]
         string $password,
     ): Certificate {
@@ -36,7 +36,7 @@ final readonly class NativeCertificateReader implements CertificateReader
 
         $parsed = [];
 
-        if (! openssl_pkcs12_read($pfxContents, $parsed, $password)) {
+        if (! openssl_pkcs12_read($contents, $parsed, $password)) {
             $error = openssl_error_string();
 
             throw new InvalidCertificateContentException(

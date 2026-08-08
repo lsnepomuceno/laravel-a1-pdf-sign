@@ -1,5 +1,99 @@
 # Upgrading
 
+## From 2.0 to 2.1
+
+2.1 adds PEM as a second accepted certificate encoding. PKCS#12 behaviour is
+unchanged, and the PHP and Laravel requirements do not move — an application
+that signs with `.pfx` and does not implement the package's contracts upgrades
+without editing anything.
+
+Two changes reach code that extends the package rather than calls it.
+
+### The contracts gained a method and renamed a parameter
+
+| | 2.0 | 2.1 |
+|---|---|---|
+| `Contracts\A1PdfSign` | — | gains `signFromPem()` |
+| `Contracts\CertificateReader::read()` | `$pfxContents` | `$contents` |
+
+Injecting the contracts, or calling them, is unaffected. Implementing them is
+not: a test double or a custom reader bound in the container has to be updated.
+
+```php
+public function signFromPem(
+    string $pemPath,
+    string $password,
+    string $pdfPath,
+    ?string $privateKeyPath = null,
+): SignedPdf;
+```
+
+`read()` is called positionally everywhere in the package, so the rename only
+reaches you through a named argument:
+
+```php
+$reader->read(pfxContents: $bytes, password: $password);   // 2.0
+$reader->read(contents: $bytes, password: $password);      // 2.1
+```
+
+The parameter was named after PKCS#12 when that was the only encoding a reader
+could ingest. It no longer is — `PemCertificateReader` implements the same
+contract as the degenerate case, the reader whose conversion step is empty.
+
+### `pdf:sign` renamed its second argument
+
+```bash
+php artisan pdf:sign contract.pdf certificate.pfx secret signed.pdf
+```
+
+The invocation above still works: `pfxPath` became `certificatePath`, and
+console arguments are matched by position. Only `Artisan::call()` with named
+keys breaks.
+
+```php
+Artisan::call('pdf:sign', ['pfxPath' => $path, ...]);          // 2.0
+Artisan::call('pdf:sign', ['certificatePath' => $path, ...]);  // 2.1
+```
+
+The command also takes `--key` for a PEM key in its own file. Passing it with a
+PKCS#12 bundle is rejected rather than ignored — the bundle already carries its
+key, so the combination means the caller is mistaken about what they hold.
+
+### New: PEM certificates
+
+The encoding is decided by content, not by extension: PEM ships as `.pem`,
+`.crt`, `.cer`, `.key` and `.txt`, and gating on the suffix would reject valid
+files. The certificate and its private key may sit in one file or in two.
+
+```php
+A1PdfSign::signFromPem($pemPath, $password, $pdfPath);                 // one-shot
+A1PdfSign::signFromPem($certPath, $password, $pdfPath, $keyPath);      // key in its own file
+
+A1PdfSign::newSignature()
+    ->certificatePem($certificatePath, $keyPath, $password)            // $keyPath null when combined
+    ->pdf($pdfPath)
+    ->sign();
+
+A1PdfSign::newSignature()
+    ->certificateFromPem($bytes, $keyBytes);                           // from an upload or a secret store
+```
+
+`$password` defaults to empty, because **a PEM private key is frequently
+unencrypted — legal for PEM, impossible for PKCS#12**. OpenSSL ignores a
+passphrase given for a key that does not need one, so the argument is safe to
+pass either way. Prefer an encrypted key where you have the choice: an
+unprotected one is readable by anything that can read the file.
+
+`encryptCertificate()` gained no sibling. It takes "a certificate" generically
+and detects the encoding, where signing keeps explicit entry points so the
+caller states what it holds.
+
+Content that is neither valid PEM nor routable — binary DER, or PKCS#12 bytes
+handed to the PEM entry point — raises the new
+`Exceptions\InvalidPemContentException`, naming the offending half rather than
+reporting a generic parse failure. A certificate and key that are both valid
+but unrelated keep raising `InvalidX509PrivateKeyException`.
+
 ## From 1.x to 2.0
 
 Version 2.0 is a clean break: the deprecated API is removed rather than carried

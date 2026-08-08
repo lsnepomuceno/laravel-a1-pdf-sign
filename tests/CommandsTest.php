@@ -11,7 +11,7 @@ it('signs a pdf through the pdf:sign command', function () {
 
     $this->artisan('pdf:sign', [
         'pdfPath' => resource('test.pdf'),
-        'pfxPath' => $pfxPath,
+        'certificatePath' => $pfxPath,
         'password' => $pass,
         'fileName' => $fileName,
     ])
@@ -23,13 +23,60 @@ it('signs a pdf through the pdf:sign command', function () {
 it('reports failure from the pdf:sign command when the inputs are invalid', function () {
     $this->artisan('pdf:sign', [
         'pdfPath' => A1PdfSign::tempPath(true, '.pdf'),
-        'pfxPath' => A1PdfSign::tempPath(true, '.pfx'),
+        'certificatePath' => A1PdfSign::tempPath(true, '.pfx'),
         'password' => Str::random(32),
         'fileName' => A1PdfSign::tempPath(true, '.pdf'),
     ])
         ->assertFailed()
         ->expectsOutput('Your PDF file is being signed!')
         ->expectsOutputToContain('Could not sign your file, error occurred:');
+});
+
+it('signs with a PEM certificate through the pdf:sign command', function () {
+    // No flag says "this is PEM" — the command reads the encoding from the
+    // bytes, because PEM ships under half a dozen extensions.
+    [, , $bundlePath, $pass] = pemCertificate();
+
+    $fileName = A1PdfSign::tempPath(true, '.pdf');
+
+    $this->artisan('pdf:sign', [
+        'pdfPath' => resource('test.pdf'),
+        'certificatePath' => $bundlePath,
+        'password' => $pass,
+        'fileName' => $fileName,
+    ])->assertSuccessful();
+
+    expect(A1PdfSign::validate($fileName)->isValid())->toBeTrue();
+});
+
+it('signs with a PEM key given through --key', function () {
+    [$certificatePath, $privateKeyPath, , $pass] = pemCertificate();
+
+    $fileName = A1PdfSign::tempPath(true, '.pdf');
+
+    $this->artisan('pdf:sign', [
+        'pdfPath' => resource('test.pdf'),
+        'certificatePath' => $certificatePath,
+        'password' => $pass,
+        'fileName' => $fileName,
+        '--key' => $privateKeyPath,
+    ])->assertSuccessful();
+
+    expect(A1PdfSign::validate($fileName)->isValid())->toBeTrue();
+});
+
+it('rejects --key alongside a PKCS#12 bundle', function () {
+    [$pfxPath, $pass] = debugCertificate();
+
+    $this->artisan('pdf:sign', [
+        'pdfPath' => resource('test.pdf'),
+        'certificatePath' => $pfxPath,
+        'password' => $pass,
+        'fileName' => A1PdfSign::tempPath(true, '.pdf'),
+        '--key' => $pfxPath,
+    ])
+        ->assertFailed()
+        ->expectsOutputToContain('a PKCS#12 bundle already carries its key');
 });
 
 it('validates a signed pdf through the pdf:validate-signature command', function () {

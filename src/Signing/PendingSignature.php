@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
@@ -14,6 +15,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use SensitiveParameter;
@@ -51,6 +53,7 @@ final class PendingSignature
         private readonly CertificateReader $reader,
         private readonly PdfSigner $signer,
         private readonly SealRenderer $sealRenderer,
+        private readonly PemCertificateReader $pemReader,
     ) {
         $this->info = new SignatureInfo();
     }
@@ -83,6 +86,52 @@ final class PendingSignature
         string $password,
     ): self {
         $this->certificate = $this->reader->read(self::uploadedBytes($uploadedPfx), $password);
+
+        return $this;
+    }
+
+    /**
+     * Reads a PEM certificate, with the private key in the same file or in one
+     * of its own.
+     *
+     * Unlike certificate(), this does not gate on the file extension. PEM ships
+     * as .pem, .crt, .cer, .key and .txt, so the format is decided by content
+     * (ARCHITECTURE-V2.md §3i).
+     *
+     * @param  string  $password  Empty when the private key is unencrypted — legal and
+     *                            common for PEM, impossible for PKCS#12.
+     *
+     * @throws FileNotFoundException
+     * @throws InvalidPemContentException
+     */
+    public function certificatePem(
+        string $certificatePath,
+        ?string $privateKeyPath = null,
+        #[SensitiveParameter]
+        string $password = '',
+    ): self {
+        return $this->certificateFromPem(
+            Files::read($certificatePath),
+            $privateKeyPath === null ? null : Files::read($privateKeyPath),
+            $password,
+        );
+    }
+
+    /**
+     * The same, from bytes the caller already holds — an upload, a secret
+     * manager, a database column.
+     *
+     * @throws InvalidPemContentException
+     */
+    public function certificateFromPem(
+        string $contents,
+        ?string $privateKey = null,
+        #[SensitiveParameter]
+        string $password = '',
+    ): self {
+        $this->certificate = $privateKey === null
+            ? $this->pemReader->read($contents, $password)
+            : $this->pemReader->readPair($contents, $privateKey, $password);
 
         return $this;
     }

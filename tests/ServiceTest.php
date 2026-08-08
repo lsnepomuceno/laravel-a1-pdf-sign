@@ -50,6 +50,23 @@ it('round-trips an encrypted certificate', function () {
     expect($restored->original)->toContain('BEGIN CERTIFICATE');
 });
 
+it('encrypts a PEM certificate for storage and reads it back', function () {
+    // The vault stores PEM either way, so the only thing that had to change is
+    // what it accepts on the way in.
+    [, , $bundlePath, $pass] = pemCertificate();
+
+    $encrypted = A1PdfSign::encryptCertificate($bundlePath, $pass);
+
+    $restored = A1PdfSign::decryptCertificate(
+        $encrypted->hash,
+        $encrypted->certificate,
+        $encrypted->password,
+    );
+
+    expect($restored->original)->toContain('BEGIN CERTIFICATE')
+        ->and($restored->commonName())->toBe('Test Certificate');
+});
+
 it('honours the configured temp path', function () {
     $custom = sys_get_temp_dir() . '/a1-config-' . uniqid();
     config()->set('a1-pdf-sign.temp_path', $custom);
@@ -66,6 +83,11 @@ it('honours the configured temp path', function () {
 it('lets the container swap the implementation', function () {
     $fake = new class implements A1PdfSignContract {
         public function signFromFile(string $p, string $pw, string $pdf, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        {
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+        }
+
+        public function signFromPem(string $pem, string $pw, string $pdf, ?string $key = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
         {
             return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
         }

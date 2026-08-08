@@ -36,13 +36,13 @@ final readonly class OpenSslCliCertificateReader implements CertificateReader
     }
 
     public function read(
-        string $pfxContents,
+        string $contents,
         #[SensitiveParameter]
         string $password,
     ): Certificate {
         $tempDir = $this->paths->tempPath();
 
-        $pfx = TemporaryFile::create($tempDir, '.pfx', $pfxContents);
+        $pfx = TemporaryFile::create($tempDir, '.pfx', $contents);
         $out = TemporaryFile::create($tempDir, '.crt');
 
         try {

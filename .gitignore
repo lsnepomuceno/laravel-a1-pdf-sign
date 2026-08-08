@@ -17,10 +17,15 @@ demo.php
 Temp
 *.pdf
 *.pfx
+# A PEM private key is often unencrypted, so this matters more than the rules
+# above, not less. See ARCHITECTURE-V2.md §3i.
+*.pem
+*.key
 
 # Committed on purpose — see samples/README.md.
 !/samples/*.pdf
 !/samples/*.pfx
+!/samples/*.pem
 node_modules
 dist
 .output
