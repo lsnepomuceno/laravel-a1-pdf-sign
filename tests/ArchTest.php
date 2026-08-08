@@ -22,7 +22,7 @@ arch('no eval or dynamic code execution')
 /**
  * ddn/sapp is LGPL and this package is MIT. It is a conceptual reference for
  * the incremental writer only; a single import would make the package a
- * derivative work. See ARCHITECTURE-V2.md §3h.
+ * derivative work. See docs/spec/invariants.md.
  */
 arch('no trace of SAPP')
     ->expect('ddn\Sapp')
@@ -71,7 +71,7 @@ arch('facades only proxy contracts')
 
 /**
  * Everything that opens an external process has to go through the single
- * audited helper. See ARCHITECTURE-V2.md §3a and docs/spec/invariants.md.
+ * audited helper. See docs/decisions/0001-openssl-native-with-cli-fallback.md and docs/spec/invariants.md.
  */
 arch('only the shell helper opens processes')
     ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])

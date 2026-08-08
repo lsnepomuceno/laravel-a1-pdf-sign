@@ -32,6 +32,30 @@ shipped puts a `newSignature()` in front of it, so the facade can carry one-shot
 methods (`signFromFile`, `signFromPem`, `signFromUpload`) alongside the builder
 without overloading a single name.
 
+## The PDF engine: TCPDF → tc-lib-pdf → neither
+
+The trigger was not preference. **`tecnickcom/tcpdf` 6 was discontinued by its
+author on 2026-05-30**, and `tc-lib-pdf` is its official successor. Staying put
+meant building v2 on an engine with no upstream.
+
+An earlier step in the plan proposed removing `tecnickcom/tc-lib-pdf` on the
+grounds that it was declared in `composer.json` and used nowhere. The
+observation was right and the conclusion was wrong: it was unused because it had
+not been adopted *yet*. That removal was reverted, and what left instead was
+`tecnickcom/tcpdf` and, with it, `setasign/fpdi`.
+
+Then the destination moved as well. PR 7c swapped `tc-lib-pdf` for
+`tc-lib-pdf-sign` — thirteen transitive dependencies down to one — because the
+package had stopped needing a PDF *engine* at all. Once signing became
+[appending a revision](../decisions/0006-incremental-revision.md), nothing
+renders a document: the bytes already exist and only get extended.
+
+The proof-of-concept that preceded all of this answered the one question that
+could have invalidated the plan — whether tc-lib-pdf delivered LTV and
+timestamping in practice rather than in a docblock. It did: 15/15 checks, with a
+live TSA round-trip. A second spike proved the incremental writer on its own,
+3/3 signatures valid. Both live in `poc/`.
+
 ## Fonts — a blocker that evaporated
 
 tc-lib-pdf could not emit any PDF without a generated font definition, not even

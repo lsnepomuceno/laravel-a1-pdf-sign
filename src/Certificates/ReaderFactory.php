@@ -13,7 +13,7 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  *
  * Native is the default. The CLI is only reached when legacy mode is on,
  * because that is the single capability ext-openssl cannot provide — reading
- * RC2/40-bit bundles under OpenSSL 3.x. See ARCHITECTURE-V2.md §3a.
+ * RC2/40-bit bundles under OpenSSL 3.x. See docs/decisions/0001-openssl-native-with-cli-fallback.md.
  */
 final readonly class ReaderFactory
 {

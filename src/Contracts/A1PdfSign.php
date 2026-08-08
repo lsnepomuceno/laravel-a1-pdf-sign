@@ -40,7 +40,7 @@ interface A1PdfSign
      *
      * $privateKeyPath is null when the key sits in the same file as the
      * certificate. $password is empty when the key is unencrypted, which PEM
-     * permits and PKCS#12 does not. See ARCHITECTURE-V2.md §3i.
+     * permits and PKCS#12 does not. See docs/decisions/0007-pem-second-entry-one-pipeline.md.
      *
      * @throws \Throwable
      */

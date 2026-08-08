@@ -277,23 +277,38 @@ it('finds the references it exists to guard', function () {
         }
     }
 
-    expect(count($cited))->toBeGreaterThanOrEqual(15)
-        ->and(array_unique($cited))->toContain('3h', '3i', '1.14');
+    // Named sections are avoided deliberately: the split keeps moving them, and
+    // an assertion pinned to one turns this into a test that fails for the
+    // wrong reason. What matters is that the scan still returns something.
+    expect(count($cited))->toBeGreaterThanOrEqual(3)
+        ->and(array_unique($cited))->toContain('1.14');
 });
 
-it('reads the anchor shapes the document uses', function () {
-    $anchors = specAnchors(specContents(packageRoot() . '/ARCHITECTURE-V2.md'));
+it('reads every anchor shape', function () {
+    // Synthetic, so this keeps testing the parser rather than the current
+    // shape of a document that is being taken apart one slice at a time.
+    $anchors = specAnchors(<<<'MD'
+        ## 1. Diagnosis
 
-    expect($anchors)
-        ->toContain('4')        // ## 4. Backward compatibility
-        ->toContain('1.14')     // 14. in the diagnosis list
-        ->toContain('3a')       // ### a) under §3
-        ->toContain('3e.1');    // ### e.1) under §3
+        2. A numbered finding.
 
-    // The "### 6.3" shape had its own branch in the parser and no longer has an
-    // example: §6 moved to docs/spec/quality-policy.md. The branch stays, since
-    // §3's nested results are read by the same rule.
-    expect(specAnchors("## 9. Toolchain\n\n### 9.4 Mutation\n"))->toContain('9.4');
+        ## 3. Decisions
+
+        ### a) A lettered decision
+
+        ### e.1) A nested result
+
+        ## 9. Toolchain
+
+        ### 9.4 A numbered subsection
+
+        ```
+        1. Inside a fence, and therefore not an anchor.
+        ```
+        MD);
+
+    expect($anchors)->toContain('1', '1.2', '3', '3a', '3e.1', '9', '9.4')
+        ->and($anchors)->not->toContain('9.1');
 });
 
 it('ignores section markers that belong to another specification', function () {

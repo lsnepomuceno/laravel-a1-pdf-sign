@@ -23,7 +23,7 @@ jobs:
         # Laravel 13 supports PHP 8.3-8.5 and the package floor is 8.4.
         # Laravel 12 is not supported: it requires symfony/process ^7.2 while
         # Pest 5 requires ^8.1, so the two cannot be installed together, and
-        # Laravel 12 leaves support in 2027 anyway. See ARCHITECTURE-V2.md §3e.
+        # Laravel 12 leaves support in 2027 anyway. See docs/decisions/0005-php-and-laravel-floor.md.
         php: [ '8.4', '8.5' ]
 
     name: PHP ${{ matrix.php }} - Laravel 13

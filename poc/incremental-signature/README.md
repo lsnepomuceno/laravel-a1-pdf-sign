@@ -1,6 +1,6 @@
 # PoC 0b — incremental-revision signing
 
-Spike for PR 0b (see `ARCHITECTURE-V2.md` §3h). **This is not production code** — it exists
+Spike for PR 0b (see docs/spec/invariants.md). **This is not production code** — it exists
 to answer a single question before committing to the v2 architecture:
 
 > Can a PDF be signed several times without each new signature destroying the previous one?
@@ -76,4 +76,4 @@ Both are worth keeping as regression tests in the production implementation:
 ## Provenance
 
 Clean-room implementation written from ISO 32000-1 §7.5.6 (Incremental Updates) and §12.8
-(Digital Signatures). No line derived from `ddn/sapp` (LGPL) — see `ARCHITECTURE-V2.md` §3h.
+(Digital Signatures). No line derived from `ddn/sapp` (LGPL) — see docs/spec/invariants.md.

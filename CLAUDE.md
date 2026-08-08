@@ -69,7 +69,7 @@ requests to `main` only. Keep it in sync with `composer.json` and the compatibil
 
 **Laravel 12 is not supported**, despite reaching PHP 8.5: it requires `symfony/process ^7.2`
 while Pest 5 requires `^8.1`, so the two cannot be installed together and the cell fails at
-`composer update` before a test runs (ARCHITECTURE-V2.md §3e.1).
+`composer update` before a test runs (docs/decisions/0005-php-and-laravel-floor.md).
 
 ## Architecture
 

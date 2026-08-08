@@ -6,7 +6,7 @@ declare(strict_types=1);
  * PoC 0 — does tc-lib-pdf actually deliver LTV and RFC 3161 timestamping,
  * or does it only document them?
  *
- * Blocks PRs 7 and 8 (see ARCHITECTURE-V2.md §3g). Every claim in that section
+ * Blocks PRs 7 and 8 (see docs/history/v2-modernization.md). Every claim in that section
  * was read from the source; this script executes them.
  *
  * Fonts: tc-lib-pdf ships no font definition files, and it cannot emit any PDF
@@ -56,7 +56,7 @@ $key = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENS
 $csr = openssl_csr_new(
     ['countryName' => 'BR', 'organizationName' => 'PoC A1', 'commonName' => 'LTV TSA Probe'],
     $key,
-    ['digest_alg' => 'sha256']
+    ['digest_alg' => 'sha256'],
 );
 $x509 = openssl_csr_sign($csr, null, $key, 365, ['digest_alg' => 'sha256']);
 
@@ -66,7 +66,7 @@ openssl_pkey_export($key, $keyPem);
 printf(
     "tc-lib-pdf %s | PHP %s\n\n",
     InstalledVersions::getPrettyVersion('tecnickcom/tc-lib-pdf'),
-    PHP_VERSION
+    PHP_VERSION,
 );
 
 /**
@@ -78,7 +78,7 @@ function buildSigned(
     string $keyPem,
     array $extra = [],
     ?array $tsa = null,
-    array $reserve = []
+    array $reserve = [],
 ): string {
     $pdf = new Tcpdf();
     $pdf->setCreator('a1-pdf-sign poc');
@@ -92,7 +92,7 @@ function buildSigned(
         'info'      => ['Name' => 'PoC', 'Reason' => 'LTV/TSA probe'],
         'password'  => '',
         // PEM strings, not file:// — this also exercises the "key in memory"
-        // claim from ARCHITECTURE-V2.md §3g.
+        // claim from docs/history/v2-modernization.md.
         'privkey'   => $keyPem,
         'signcert'  => $certPem,
     ], $extra));
@@ -136,8 +136,11 @@ try {
     check('contains /ByteRange', str_contains($plain, '/ByteRange'));
 
     $cms = embeddedCms($plain);
-    check('CMS is not an empty placeholder', $cms !== '' && trim($cms, '0') !== '',
-        $cms === '' ? 'no /Contents found' : intdiv(strlen(rtrim($cms, '0')), 2) . ' bytes of DER');
+    check(
+        'CMS is not an empty placeholder',
+        $cms !== '' && trim($cms, '0') !== '',
+        $cms === '' ? 'no /Contents found' : intdiv(strlen(rtrim($cms, '0')), 2) . ' bytes of DER',
+    );
     check('accepts PEM strings for privkey/signcert (no file://)', $cms !== '' && trim($cms, '0') !== '');
 } catch (Throwable $e) {
     check('baseline signature', false, get_class($e) . ': ' . $e->getMessage());
@@ -170,7 +173,7 @@ try {
     check(
         'LTV output differs from baseline',
         $plain !== '' && strlen($ltv) > strlen($plain),
-        sprintf('%d vs %d bytes', strlen($ltv), strlen($plain))
+        sprintf('%d vs %d bytes', strlen($ltv), strlen($plain)),
     );
 } catch (Throwable $e) {
     check('LTV', false, get_class($e) . ': ' . $e->getMessage());
@@ -235,7 +238,7 @@ try {
     check(
         'CMS grew, i.e. a token was embedded',
         $stampedCms > $plainCms,
-        sprintf('%d vs %d bytes of DER', intdiv($stampedCms, 2), intdiv($plainCms, 2))
+        sprintf('%d vs %d bytes of DER', intdiv($stampedCms, 2), intdiv($plainCms, 2)),
     );
 } catch (Throwable $e) {
     $msg = $e->getMessage();

@@ -46,7 +46,7 @@ class SignPdfCommand extends Command
     /**
      * Routes on the certificate's encoding rather than on its extension: PEM
      * ships under half a dozen suffixes, and the content says so unambiguously
-     * (ARCHITECTURE-V2.md §3i).
+     * (docs/decisions/0007-pem-second-entry-one-pipeline.md).
      *
      * @throws \Throwable
      */
