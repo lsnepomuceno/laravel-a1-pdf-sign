@@ -108,8 +108,8 @@ final readonly class A1PdfSignManager implements A1PdfSign
     /**
      * encryptCertificate() stores the PEM bundle, so this parses it directly.
      * The v1 helper wrote it to a .pfx and fed it to `openssl pkcs12 -in`,
-     * which expects binary PKCS#12 and always failed — ARCHITECTURE-V2.md
-     * §1.14.
+     * which expects binary PKCS#12 and always failed — see
+     * docs/history/v2-modernization.md.
      */
     public function decryptCertificate(
         #[SensitiveParameter]

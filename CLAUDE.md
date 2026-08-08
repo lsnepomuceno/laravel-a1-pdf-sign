@@ -19,10 +19,11 @@ Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a refer
 | `docs/spec/invariants.md` | the rules that break the product or the project. **Read before touching `src/Signing`, `src/Validation` or the dependency list** |
 | `docs/spec/public-api.md` | what the package exposes, and what changing it costs |
 | `docs/spec/quality-policy.md` | the gates, and why each sits where it does |
+| `docs/decisions/` | why the design is what it is — one numbered file per decision |
 | `docs/history/v2-modernization.md` | why v1 was shaped as it was, and where the build diverged from the plan |
-| `ARCHITECTURE-V2.md` | the remaining technical decisions (§3), compatibility (§4), roadmap (§5) and decision log (§7) |
+| `docs/history/decision-log.md` | which questions were put, and when they were answered |
 
-When you change behaviour that a numbered section of `ARCHITECTURE-V2.md` justifies, update that section too.
+`ARCHITECTURE.md` is the index. When you change behaviour that a decision record justifies, update that record's outcome section too — a record whose outcome is never written back is how the previous document drifted away from the code.
 
 ## Commands
 

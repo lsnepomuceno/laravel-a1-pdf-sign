@@ -3,9 +3,9 @@
 /**
  * Architectural rules, executable.
  *
- * These turn ARCHITECTURE-V2.md from a document into a gate: the constraints
- * it describes are checked on every run, so the architecture cannot erode
- * silently after a merge. The set grows as the v2 PRs land.
+ * These turn docs/spec/invariants.md from a document into a gate: the rules it
+ * describes are checked on every run, so the architecture cannot erode silently
+ * after a merge.
  */
 arch('no debug leftovers ship')
     ->expect(['dd', 'dump', 'var_dump', 'print_r', 'die', 'exit', 'ray'])
@@ -50,7 +50,7 @@ arch('value objects stay on the shared base')
 
 /**
  * v2 is a clean break: no deprecation layer survives into the release.
- * See ARCHITECTURE-V2.md §4.
+ * See UPGRADE.md.
  */
 arch('no deprecated namespace lingers')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Entities')

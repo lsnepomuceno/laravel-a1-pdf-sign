@@ -65,7 +65,7 @@ final readonly class CertificateVault
      * What seal() stored is the PEM bundle, so it is parsed directly — no
      * PKCS#12 conversion, no temporary file and no shell-out. The v1 pair
      * wrote the PEM to a .pfx and fed it back to `openssl pkcs12 -in`, which
-     * expects binary PKCS#12 and always failed. See ARCHITECTURE-V2.md §1.14.
+     * expects binary PKCS#12 and always failed. See docs/history/v2-modernization.md.
      *
      * @throws InvalidCertificateContentException
      * @throws InvalidX509PrivateKeyException

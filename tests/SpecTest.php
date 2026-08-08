@@ -3,15 +3,19 @@
 /**
  * The specification, checked against the code that cites it.
  *
- * ARCHITECTURE-V2.md is load-bearing: docblocks in src/, comments in the CI
- * workflows and even .gitattributes point at a numbered section for their
- * justification. Nothing verified those pointers, and they drifted — §12 was
- * cited six times before it had a row of its own, and three roadmap rows
- * shipped unmarked, all of it noticed by hand months later.
+ * Docblocks in src/, comments in the CI workflows, .gitattributes and CLAUDE.md
+ * all defer to a documentation file for their justification. Nothing verified
+ * those pointers, and they drifted: §12 was cited six times before it had a
+ * section of its own, and three roadmap rows shipped unmarked, all noticed by
+ * hand months later.
  *
- * This is the gate that was missing, and it lands before the document is split
- * apart on purpose: the reorganisation rewrites every one of these references,
- * and this is what proves the rewrite was complete.
+ * The gate landed before the split and earned its keep during it — it failed
+ * four times on references that had rotted mid-move, twice on this file's own
+ * assertions.
+ *
+ * It checks paths rather than section numbers because that is what the split
+ * replaced them with. A numbered filename survives the next reorganisation;
+ * "§3i" did not survive this one.
  *
  * The helpers stay local to this file. They are used nowhere else, and the
  * shared-helper rule in tests/Pest.php exists for the opposite problem — a
@@ -21,121 +25,38 @@
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 
 /**
- * Every section identifier the document actually defines.
+ * Every documentation file this content points at, as an absolute path.
  *
- * Four shapes are in use, and all four are cited from code: top-level sections
- * (§4), the ordered diagnosis list that runs 1..14 across the subsections of §1
- * (§1.14), the lettered decisions under §3 including their nested results
- * (§3a, §3e.1), and the numbered toolchain entries (§6.3).
+ * Relative hops are resolved from the citing file, so a link between two files
+ * inside docs/ is checked the same way as a citation from src/.
  *
  * @return list<string>
  */
-function specAnchors(string $markdown): array
+function specDocReferences(string $contents, string $from): array
 {
-    $anchors = [];
-    $top = null;
-    $inFence = false;
+    $paths = [];
 
-    foreach (explode("\n", $markdown) as $line) {
-        // Ordered lists inside fenced examples are not anchors.
-        if (str_starts_with($line, '```')) {
-            $inFence = ! $inFence;
-
-            continue;
-        }
-
-        if ($inFence) {
-            continue;
-        }
-
-        if (preg_match('/^## (\d+)\./', $line, $matches) === 1) {
-            $top = $matches[1];
-            $anchors[] = $top;
-
-            continue;
-        }
-
-        if ($top === null) {
-            continue;
-        }
-
-        // ### e.1)  ·  #### g.2)
-        if (preg_match('/^#{3,4} ([a-z])\.(\d+)\)/', $line, $matches) === 1) {
-            $anchors[] = $top . $matches[1] . '.' . $matches[2];
-
-            continue;
-        }
-
-        // ### a)  ·  ### f) ~~reverted~~
-        if (preg_match('/^#{3,4} ([a-z])\)/', $line, $matches) === 1) {
-            $anchors[] = $top . $matches[1];
-
-            continue;
-        }
-
-        // ### 6.3 Mutation testing
-        if (preg_match('/^#{3,4} (\d+)\.(\d+)/', $line, $matches) === 1) {
-            $anchors[] = $matches[1] . '.' . $matches[2];
-
-            continue;
-        }
-
-        if (preg_match('/^(\d+)\. /', $line, $matches) === 1) {
-            $anchors[] = $top . '.' . $matches[1];
+    // Cited from anywhere: a path written from the repository root, which is how
+    // a docblock, a CI comment or .gitattributes refers to documentation.
+    if (preg_match_all('#(?<![\w./-])docs/[\w./-]+\.md#', $contents, $matches) > 0) {
+        foreach ($matches[0] as $path) {
+            $paths[] = packageRoot() . '/' . $path;
         }
     }
 
-    return array_values(array_unique($anchors));
-}
-
-/**
- * Every section this file points at, by identifier.
- *
- * Only references anchored to the document's own name count. A bare "§7.5.6" is
- * ISO 32000-1 and "§12.8" is an RFC, both of which appear in this codebase, so
- * matching on the marker alone would report the PDF specification as drift.
- *
- * @return list<string>
- */
-function specReferences(string $contents): array
-{
-    // A docblock wraps, so a reference can straddle a line break and its
-    // leading asterisk. Flatten those before matching.
-    $flat = preg_replace('/\R\s*\*?[ \t]*/', ' ', $contents);
-
-    if ($flat === null) {
-        return [];
-    }
-
-    $sections = [];
-    $offset = 0;
-    $name = 'ARCHITECTURE-V2.md';
-
-    while (($position = strpos($flat, $name, $offset)) !== false) {
-        $offset = $position + strlen($name);
-
-        // Only the unbroken run of identifiers that follows the name, so that
-        // prose merely naming the document contributes nothing, and a "§7.5"
-        // later in the same sentence is not swept in. The run may chain, as in
-        // "see ARCHITECTURE-V2.md §3a and §3h".
-        $matched = preg_match(
-            '/^[\s(`]*(?:§\d+[a-z]?(?:\.\d+)?[\s,.)`]*(?:and|or)?[\s]*)+/',
-            substr($flat, $offset, 120),
-            $run,
-        );
-
-        if ($matched !== 1) {
-            continue;
-        }
-
-        preg_match_all('/§(\d+[a-z]?(?:\.\d+)?)/', $run[0], $found);
-
-        foreach ($found[1] as $section) {
-            $sections[] = $section;
+    // Inside docs/, links are ordinary Markdown and resolve against the file
+    // that carries them — "../spec/invariants.md" names no docs/ segment at all,
+    // and the decision index links its records as bare siblings.
+    if (str_starts_with($from, packageRoot() . '/docs/')
+        && preg_match_all('#\]\(([\w./-]+\.md)\)#', $contents, $links) > 0) {
+        foreach ($links[1] as $path) {
+            $paths[] = str_starts_with($path, 'docs/')
+                ? packageRoot() . '/' . $path
+                : dirname($from) . '/' . $path;
         }
     }
 
-    return $sections;
+    return array_values(array_unique($paths));
 }
 
 /**
@@ -146,11 +67,6 @@ function specReferences(string $contents): array
 function specScannedFiles(string $directory): array
 {
     $skip = ['.git', '.idea', '.output', 'dist', 'node_modules', 'vendor'];
-
-    // This file's own string literals are fixtures describing the citation
-    // syntax, not citations. Scanning them would make the gate fail on its own
-    // examples the moment a section they name is moved.
-    $skip[] = basename(__FILE__);
 
     $entries = scandir($directory);
 
@@ -197,59 +113,12 @@ function specContents(string $path): string
     return $contents;
 }
 
-/**
- * Every documentation file this file points at.
- *
- * The split replaces "§3i" with a path — docs/decisions/0007-….md — because a
- * numbered filename is a stable identifier that survives the document being
- * reorganised again. Relative hops are resolved from the citing file so that
- * links inside docs/ are checked the same way as citations from src/.
- *
- * @return list<string>
- */
-function specDocReferences(string $contents, string $from): array
-{
-    if (preg_match_all('#(?:\.\./)*docs/[\w./-]+\.md#', $contents, $matches) < 1) {
-        return [];
-    }
-
-    $paths = [];
-
-    foreach ($matches[0] as $path) {
-        $paths[] = str_starts_with($path, '..')
-            ? dirname($from) . '/' . $path
-            : packageRoot() . '/' . $path;
-    }
-
-    return $paths;
-}
-
 function packageRoot(): string
 {
     return dirname(__DIR__);
 }
 
-it('resolves every ARCHITECTURE-V2.md section cited anywhere in the package', function () {
-    $anchors = specAnchors(specContents(packageRoot() . '/ARCHITECTURE-V2.md'));
-
-    $dangling = [];
-
-    foreach (specScannedFiles(packageRoot()) as $file) {
-        foreach (specReferences(specContents($file)) as $section) {
-            if (in_array($section, $anchors, true)) {
-                continue;
-            }
-
-            $dangling[] = str_replace(packageRoot() . '/', '', $file) . ' → §' . $section;
-        }
-    }
-
-    // Listed rather than counted: the failure has to name the reference to be
-    // actionable, since the whole point is that nobody knew it had rotted.
-    expect(array_values(array_unique($dangling)))->toBe([]);
-});
-
-it('resolves every docs/ file cited anywhere in the package', function () {
+it('resolves every documentation file cited anywhere in the package', function () {
     $missing = [];
 
     foreach (specScannedFiles(packageRoot()) as $file) {
@@ -258,6 +127,8 @@ it('resolves every docs/ file cited anywhere in the package', function () {
                 continue;
             }
 
+            // Named rather than counted: the failure has to say which pointer
+            // rotted, since the whole problem is that nobody knew it had.
             $missing[] = str_replace(packageRoot() . '/', '', $file)
                 . ' → ' . str_replace(packageRoot() . '/', '', $path);
         }
@@ -272,64 +143,52 @@ it('finds the references it exists to guard', function () {
     $cited = [];
 
     foreach (specScannedFiles(packageRoot()) as $file) {
-        foreach (specReferences(specContents($file)) as $section) {
-            $cited[] = $section;
-        }
+        $cited = array_merge($cited, specDocReferences(specContents($file), $file));
     }
 
-    // Named sections are avoided deliberately: the split keeps moving them, and
-    // an assertion pinned to one turns this into a test that fails for the
-    // wrong reason. What matters is that the scan still returns something.
-    expect(count($cited))->toBeGreaterThanOrEqual(3)
-        ->and(array_unique($cited))->toContain('1.14');
+    expect(count($cited))->toBeGreaterThanOrEqual(20)
+        ->and(array_map(fn(string $path): string => basename($path), $cited))
+        ->toContain('invariants.md', '0006-incremental-revision.md');
 });
 
-it('reads every anchor shape', function () {
-    // Synthetic, so this keeps testing the parser rather than the current
-    // shape of a document that is being taken apart one slice at a time.
-    $anchors = specAnchors(<<<'MD'
-        ## 1. Diagnosis
+it('resolves a relative hop from inside docs/', function () {
+    $from = packageRoot() . '/docs/decisions/0006-incremental-revision.md';
 
-        2. A numbered finding.
-
-        ## 3. Decisions
-
-        ### a) A lettered decision
-
-        ### e.1) A nested result
-
-        ## 9. Toolchain
-
-        ### 9.4 A numbered subsection
-
-        ```
-        1. Inside a fence, and therefore not an anchor.
-        ```
-        MD);
-
-    expect($anchors)->toContain('1', '1.2', '3', '3a', '3e.1', '9', '9.4')
-        ->and($anchors)->not->toContain('9.1');
+    expect(specDocReferences('See [the invariants](../spec/invariants.md).', $from))
+        ->toBe([packageRoot() . '/docs/decisions/../spec/invariants.md']);
 });
 
-it('ignores section markers that belong to another specification', function () {
-    // ISO 32000-1 and the RFCs are cited by section throughout src/Signing.
-    expect(specReferences('Appends a revision, ISO 32000-1 §7.5.6, without rebuilding.'))->toBe([])
-        ->and(specReferences('An RFC 3161 timestamp, §2.4.2, over the whole file.'))->toBe([])
-        ->and(specReferences('The document merely named, ARCHITECTURE-V2.md, in passing.'))->toBe([]);
+it('ignores prose that names no file', function () {
+    expect(specDocReferences('The documentation lives under docs/, split by lifecycle.', 'x'))
+        ->toBe([]);
 });
 
-it('reads a reference that wraps across a docblock line break', function () {
-    $docblock = <<<'PHP'
-    /**
-     * Feeds it to `openssl pkcs12 -in`, which expects binary PKCS#12 and
-     * always failed — ARCHITECTURE-V2.md
-     * §1.14.
-     */
-    PHP;
+it('every documentation file is reachable from the index', function () {
+    // A file nothing links to is a file nobody reads, and it rots without the
+    // gate above ever noticing, since the gate only checks pointers that exist.
+    $index = specContents(packageRoot() . '/ARCHITECTURE.md');
 
-    expect(specReferences($docblock))->toBe(['1.14']);
-});
+    $linked = [];
 
-it('reads a chain of references sharing one mention of the document', function () {
-    expect(specReferences('See ARCHITECTURE-V2.md §3a and §3h.'))->toBe(['3a', '3h']);
+    foreach (specDocReferences($index, packageRoot() . '/ARCHITECTURE.md') as $path) {
+        $linked[] = realpath($path);
+    }
+
+    // The decision records are indexed by their own README rather than by the
+    // root file, so that adding one does not mean editing two indexes.
+    foreach (specDocReferences(specContents(packageRoot() . '/docs/decisions/README.md'), packageRoot() . '/docs/decisions/README.md') as $path) {
+        $linked[] = realpath($path);
+    }
+
+    $orphans = [];
+
+    foreach (specScannedFiles(packageRoot() . '/docs') as $file) {
+        if (basename($file) === 'README.md' || in_array(realpath($file), $linked, true)) {
+            continue;
+        }
+
+        $orphans[] = str_replace(packageRoot() . '/', '', $file);
+    }
+
+    expect($orphans)->toBe([]);
 });
