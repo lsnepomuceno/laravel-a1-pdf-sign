@@ -141,21 +141,42 @@ jobs:
             const { NAMESPACE, FLOOR, SCORE } = process.env
             const { owner, repo } = context.repo
 
-            const title = `Mutation score below floor: ${NAMESPACE}`
             const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`
 
-            const body = [
-              `\`src/${NAMESPACE}\` scored **${SCORE}%** against a floor of **${FLOOR}**.`,
-              ``,
-              `Run: ${run}`,
-              ``,
-              `Before acting on it: the score is not reproducible, and the variance tracks how`,
-              `many mutations time out, which tracks machine load. \`Certificates\` swings about`,
-              `three points between identical runs. One or two points is noise; a sustained`,
-              `drop, or one that survives a re-run, is not.`,
-              ``,
-              `**Do not lower the floor to make this pass** — docs/spec/quality-policy.md.`,
-            ].join('\n')
+            // A run that produced no score did not score badly — it crashed, and
+            // the two need different titles. Reporting a crash as a regression
+            // sends whoever opens it hunting for a test that never weakened;
+            // that happened on 2026-08-08, when php-code-coverage 14.2.4 broke
+            // the plugin and three issues claimed a score of "unknown%".
+            const crashed = !/^[0-9.]+$/.test(SCORE)
+
+            const title = crashed
+              ? `Mutation run failed: ${NAMESPACE}`
+              : `Mutation score below floor: ${NAMESPACE}`
+
+            const body = crashed
+              ? [
+                  `The mutation run for \`src/${NAMESPACE}\` failed without producing a score.`,
+                  ``,
+                  `Run: ${run}`,
+                  ``,
+                  `**This is not a score regression.** No number was reported, so nothing can be`,
+                  `said about coverage quality from this run. Read the log before touching any`,
+                  `test — the usual cause is the toolchain rather than this repository, since`,
+                  `the job resolves its dependencies unpinned on every run.`,
+                ].join('\n')
+              : [
+                  `\`src/${NAMESPACE}\` scored **${SCORE}%** against a floor of **${FLOOR}**.`,
+                  ``,
+                  `Run: ${run}`,
+                  ``,
+                  `Before acting on it: the score is not reproducible, and the variance tracks how`,
+                  `many mutations time out, which tracks machine load. \`Certificates\` swings about`,
+                  `three points between identical runs. One or two points is noise; a sustained`,
+                  `drop, or one that survives a re-run, is not.`,
+                  ``,
+                  `**Do not lower the floor to make this pass** — docs/spec/quality-policy.md.`,
+                ].join('\n')
 
             // One open issue per namespace, commented on rather than reopened
             // nightly: without this the same regression files a fresh issue

@@ -75,6 +75,28 @@ is reported as uncovered. Measured on `src/Certificates` — the full run scores
 shard 2/2 reports 69.12%. Faster precisely because it is wrong. Split by mutated
 path instead.
 
+### `phpunit/php-code-coverage` is held below 14.2.4
+
+**`>=14.2 <14.2.4` in `require-dev`. Remove it once `pest-plugin-mutate` can
+consume the newer format.**
+
+14.2.4 changed the shape of `lineCoverage()`: the plugin expects each covered
+line to carry a list of test identifiers, and gets integers instead. It dies
+before scoring anything —
+
+```
+TypeError: preg_match(): Argument #2 ($subject) must be of type string, int given
+  at vendor/pestphp/pest-plugin-mutate/src/MutationTest.php:54
+```
+
+— and reproduces with and without `--parallel`, on both `pest-plugin-mutate`
+5.0.0 and 5.0.1, so it is neither the plugin version nor the parallel runner.
+
+This is the only pinned dependency in the package, and it exists because the
+nightly resolves everything unpinned on every run: a release anywhere in the
+test stack can break the job overnight, which is exactly what happened on
+2026-08-08.
+
 Not a pull-request gate for two reasons that follow from the above: a run costs
 ~2600 process-seconds against ~30 seconds for every other check, and a blocking
 gate that moves three points on its own eventually fails a pull request that

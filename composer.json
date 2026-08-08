@@ -52,6 +52,7 @@
     "phpstan/phpstan": "^2.2",
     "phpstan/phpstan-deprecation-rules": "^2.0",
     "phpstan/phpstan-strict-rules": "^2.0",
+    "phpunit/php-code-coverage": ">=14.2 <14.2.4",
     "shipmonk/composer-dependency-analyser": "^1.8"
   },
   "suggest": {
