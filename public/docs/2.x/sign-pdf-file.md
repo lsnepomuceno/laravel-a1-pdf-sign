@@ -60,7 +60,35 @@ class ExampleController
 
 <hr>
 
-#### 3 - Signing the same document more than once.
+#### 3 - Signing with a PEM certificate. <small>(since 2.1)</small>
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+// One-shot, certificate and key in the same file
+$signed = A1PdfSign::signFromPem('path/to/certificate.pem', 'password', 'path/to/document.pdf');
+
+// One-shot, key in a file of its own
+$signed = A1PdfSign::signFromPem('path/to/certificate.crt', 'password', 'path/to/document.pdf', 'path/to/private.key');
+
+// Or through the builder, where the rest of the fluent API is available
+$signed = A1PdfSign::newSignature()
+    ->certificatePem('path/to/certificate.pem', password: 'password')
+    ->pdf('path/to/document.pdf')
+    ->info(name: 'Lucas', reason: 'Contract')
+    ->seal()
+    ->sign();
+```
+
+The encoding is read from the file's content rather than its extension, and the password may be empty when the private key is unencrypted. [Working with certificates](/docs/2.x/working-with-certificate) covers both in detail.
+
+Everything after the certificate is identical — profiles, seals, timestamps and multiple signatures all behave the same, because the two encodings converge on one pipeline as soon as the certificate is parsed.
+
+<hr>
+
+#### 4 - Signing the same document more than once.
 
 Each signature is appended as a new revision, so the ones before it stay valid.
 
@@ -94,7 +122,7 @@ Signature fields must not collide, so each revision gets its own name automatica
 
 <hr>
 
-#### 4 - Visible signatures.
+#### 5 - Visible signatures.
 
 ```PHP
 <?php

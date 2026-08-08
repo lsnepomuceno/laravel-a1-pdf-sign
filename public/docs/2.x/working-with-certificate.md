@@ -25,7 +25,49 @@ The certificate is never written to disk, and the password never reaches a comma
 
 <hr>
 
-#### 2 - Reading a certificate from an upload.
+#### 2 - Reading a PEM certificate. <small>(since 2.1)</small>
+
+PKCS#12 (`.pfx` / `.p12`) is not the only encoding accepted. A PEM certificate is read through its own entry point, with the private key in the same file or in one of its own.
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+class ExampleController
+{
+    public function dummyFunction()
+    {
+        // Certificate and key combined in one file
+        $signed = A1PdfSign::newSignature()
+            ->certificatePem('path/to/certificate.pem', password: 'password')
+            ->pdf('path/to/document.pdf')
+            ->sign();
+
+        // Key in a file of its own
+        $signed = A1PdfSign::newSignature()
+            ->certificatePem('path/to/certificate.crt', 'path/to/private.key', 'password')
+            ->pdf('path/to/document.pdf')
+            ->sign();
+
+        // From bytes you already hold — an upload, a secret manager, a database column
+        $signed = A1PdfSign::newSignature()
+            ->certificateFromPem($certificateBytes, $keyBytes)
+            ->pdf('path/to/document.pdf')
+            ->sign();
+    }
+}
+```
+
+**Nothing gates on the file extension.** PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`, so the encoding is decided by the content — a certificate under any of those suffixes is read the same way.
+
+The password defaults to empty, because **a PEM private key is frequently unencrypted, which PKCS#12 cannot express**. OpenSSL ignores a passphrase given for a key that does not need one, so passing it either way is safe. Prefer an encrypted key where you have the choice: an unprotected one is readable by anything that can read the file.
+
+Content that is not PEM at all — binary DER, or a PKCS#12 bundle handed to this entry point — raises `InvalidPemContentException`, naming the half at fault instead of reporting a generic parse failure. A certificate and key that are each valid but unrelated raise `InvalidX509PrivateKeyException`.
+
+<hr>
+
+#### 3 - Reading a certificate from an upload.
 
 ```PHP
 <?php
@@ -47,7 +89,7 @@ class ExampleController
 
 <hr>
 
-#### 3 - Storing a certificate securely in the database.
+#### 4 - Storing a certificate securely in the database.
 
 ##### IMPORTANT: store the certificate column as a binary type.
 
@@ -72,11 +114,11 @@ class ExampleController
 }
 ```
 
-`encryptCertificate()` also accepts an `UploadedFile` directly.
+`encryptCertificate()` also accepts an `UploadedFile` directly, and — since 2.1 — a PEM certificate. It gained no PEM sibling: it takes "a certificate" generically and detects the encoding, where signing keeps explicit entry points so the caller states what it holds.
 
 <hr>
 
-#### 4 - Reading the certificate back.
+#### 5 - Reading the certificate back.
 
 ```PHP
 <?php
@@ -111,7 +153,7 @@ A1PdfSign::newSignature()
 
 <hr>
 
-#### 5 - Legacy certificates.
+#### 6 - Legacy certificates.
 
 Under OpenSSL 3.x, `openssl_pkcs12_read()` fails on old PFX files (RC2/40-bit) and PHP exposes no equivalent to the CLI's `-legacy` flag. For those files only, the package falls back to the `openssl` binary:
 

@@ -1,7 +1,7 @@
 # Welcome to the lsnepomuceno/laravel-a1-pdf-sign wiki!
 ### Use this documentation for feature implementation.
 
-Sign PDF files with A1/x509 `.pfx` certificates, and cryptographically verify signatures already in a document.
+Sign PDF files with A1/x509 certificates — PKCS#12 (`.pfx` / `.p12`) or PEM — and cryptographically verify signatures already in a document.
 
 ```PHP
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
