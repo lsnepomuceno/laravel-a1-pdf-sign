@@ -1,5 +1,5 @@
 # Keep development-only paths out of the distributed package.
-# See ARCHITECTURE-V2.md §6.7.
+# See docs/spec/quality-policy.md.
 /.docker            export-ignore
 /.husky             export-ignore
 /.github            export-ignore
@@ -8,7 +8,8 @@
 /poc                export-ignore
 /samples            export-ignore
 /tests              export-ignore
-/ARCHITECTURE-V2.md export-ignore
+/ARCHITECTURE.md    export-ignore
+/docs               export-ignore
 /CLAUDE.md          export-ignore
 /CODE_OF_CONDUCT.md export-ignore
 /CONTRIBUTING.md    export-ignore

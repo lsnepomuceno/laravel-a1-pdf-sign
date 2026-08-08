@@ -24,7 +24,7 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
  * each one covers the file up to its own revision, so signing again does not
  * invalidate what came before. It also stops the silent damage the v1 flow
  * caused — rebuilding a document through FPDI discarded annotations, form
- * fields and any signature already present. See ARCHITECTURE-V2.md §3h.
+ * fields and any signature already present. See docs/decisions/0006-incremental-revision.md.
  *
  * Proven by poc/incremental-signature: three signatures, all valid.
  */

@@ -121,7 +121,7 @@ it('rejects a bundle whose key does not match its certificate', function () {
 | could not do is validate a passphrase-protected private key, because the
 | bundle was handed to openssl_x509_check_private_key() as a bare string.
 | PKCS#12 never reached that path: openssl_pkcs12_read() returns a key that is
-| already decrypted. See ARCHITECTURE-V2.md §3i.
+| already decrypted. See docs/decisions/0007-pem-second-entry-one-pipeline.md.
 |
 */
 

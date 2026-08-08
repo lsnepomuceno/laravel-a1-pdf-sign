@@ -11,7 +11,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
  * An arch rule asserts nothing else in src/ touches the process factory or the
  * exec family, so every external command is auditable here. Only the legacy
  * certificate reader and the signature validator still need it; see
- * ARCHITECTURE-V2.md §3a.
+ * docs/decisions/0001-openssl-native-with-cli-fallback.md.
  *
  * It runs through Laravel's process factory rather than Symfony's Process
  * directly: the behaviour is identical — the factory builds the same object —

@@ -9,7 +9,7 @@ declare(strict_types=1);
  *   §7.5.6  Incremental Updates
  *   §12.8   Digital Signatures
  *
- * No line is derived from ddn/sapp (LGPL). See ARCHITECTURE-V2.md §3h.
+ * No line is derived from ddn/sapp (LGPL). See docs/spec/invariants.md.
  *
  * Spike scope: classic cross-reference tables only. Cross-reference streams
  * (PDF 1.5+) are detected and explicitly rejected — support lands in the
@@ -33,7 +33,7 @@ final class IncrementalSigner
         string $certPem,
         string $keyPem,
         array $info = [],
-        string $fieldName = 'Signature'
+        string $fieldName = 'Signature',
     ): string {
         $doc = $this->readDocument($pdf);
 
@@ -150,7 +150,7 @@ final class IncrementalSigner
         if (!str_starts_with($head, 'xref')) {
             throw new RuntimeException(
                 "Cross-reference stream (PDF 1.5+) found at @{$offset}. "
-                . 'This spike only supports classic cross-reference tables.'
+                . 'This spike only supports classic cross-reference tables.',
             );
         }
 
@@ -285,7 +285,7 @@ final class IncrementalSigner
                     '/\/Fields\s*\[.*?\]/s',
                     '/Fields [' . trim($fields . " {$widgetNum} 0 R") . ']',
                     $acro,
-                    1
+                    1,
                 );
             } else {
                 $updated = $acro . "/Fields [{$widgetNum} 0 R]";
@@ -313,7 +313,7 @@ final class IncrementalSigner
             return str_replace(
                 $m[0],
                 '/Annots [' . trim($annots . " {$widgetNum} 0 R") . ']',
-                $page
+                $page,
             );
         }
 
@@ -401,7 +401,7 @@ final class IncrementalSigner
             '/ByteRange[0 %s %s %s]',
             str_pad((string) $range[1], strlen(self::BYTERANGE_FIELD)),
             str_pad((string) $range[2], strlen(self::BYTERANGE_FIELD)),
-            str_pad((string) $range[3], strlen(self::BYTERANGE_FIELD))
+            str_pad((string) $range[3], strlen(self::BYTERANGE_FIELD)),
         );
 
         if (strlen($replacement) !== strlen($placeholder)) {
@@ -439,7 +439,7 @@ final class IncrementalSigner
             throw new RuntimeException(sprintf(
                 'CMS of %d bytes does not fit the %d-byte placeholder. Increase CONTENTS_HEX_LEN.',
                 strlen($der),
-                intdiv(self::CONTENTS_HEX_LEN, 2)
+                intdiv(self::CONTENTS_HEX_LEN, 2),
             ));
         }
 
@@ -463,7 +463,7 @@ final class IncrementalSigner
                 $certPem,
                 $keyPem,
                 [],
-                PKCS7_BINARY | PKCS7_DETACHED
+                PKCS7_BINARY | PKCS7_DETACHED,
             );
 
             if (!$ok) {

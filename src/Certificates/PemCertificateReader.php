@@ -16,7 +16,7 @@ use SensitiveParameter;
  * {@see CertificateParser}. PEM is already that destination format, so this
  * reader has no conversion step: it checks the input is what it claims to be,
  * and delegates. Everything downstream is unchanged, which is the whole point —
- * one pipeline, reached through a second entry (ARCHITECTURE-V2.md §3i).
+ * one pipeline, reached through a second entry (docs/decisions/0007-pem-second-entry-one-pipeline.md).
  *
  * It carries no legacy/native axis, so it is not built by {@see ReaderFactory};
  * its single dependency autowires.

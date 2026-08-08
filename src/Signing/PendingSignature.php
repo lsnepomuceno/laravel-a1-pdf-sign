@@ -96,7 +96,7 @@ final class PendingSignature
      *
      * Unlike certificate(), this does not gate on the file extension. PEM ships
      * as .pem, .crt, .cer, .key and .txt, so the format is decided by content
-     * (ARCHITECTURE-V2.md §3i).
+     * (docs/decisions/0007-pem-second-entry-one-pipeline.md).
      *
      * @param  string  $password  Empty when the private key is unencrypted — legal and
      *                            common for PEM, impossible for PKCS#12.

@@ -44,7 +44,7 @@ final class DebugCertificate
      * $encryptKey mirrors what a real .pem carries: a passphrase-protected key
      * is the common case, an unencrypted one is legal and frequent. The two
      * behave differently under openssl_x509_check_private_key(), so both are
-     * fixtures rather than one (ARCHITECTURE-V2.md §3i).
+     * fixtures rather than one (docs/decisions/0007-pem-second-entry-one-pipeline.md).
      *
      * @return array{0: string, 1: string, 2: string} Certificate PEM, private key PEM, and the
      *                                                key's password — empty when it is unencrypted.

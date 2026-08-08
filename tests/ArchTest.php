@@ -3,9 +3,9 @@
 /**
  * Architectural rules, executable.
  *
- * These turn ARCHITECTURE-V2.md from a document into a gate: the constraints
- * it describes are checked on every run, so the architecture cannot erode
- * silently after a merge. The set grows as the v2 PRs land.
+ * These turn docs/spec/invariants.md from a document into a gate: the rules it
+ * describes are checked on every run, so the architecture cannot erode silently
+ * after a merge.
  */
 arch('no debug leftovers ship')
     ->expect(['dd', 'dump', 'var_dump', 'print_r', 'die', 'exit', 'ray'])
@@ -22,7 +22,7 @@ arch('no eval or dynamic code execution')
 /**
  * ddn/sapp is LGPL and this package is MIT. It is a conceptual reference for
  * the incremental writer only; a single import would make the package a
- * derivative work. See ARCHITECTURE-V2.md §3h.
+ * derivative work. See docs/spec/invariants.md.
  */
 arch('no trace of SAPP')
     ->expect('ddn\Sapp')
@@ -50,7 +50,7 @@ arch('value objects stay on the shared base')
 
 /**
  * v2 is a clean break: no deprecation layer survives into the release.
- * See ARCHITECTURE-V2.md §4.
+ * See UPGRADE.md.
  */
 arch('no deprecated namespace lingers')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Entities')
@@ -71,7 +71,7 @@ arch('facades only proxy contracts')
 
 /**
  * Everything that opens an external process has to go through the single
- * audited helper. See ARCHITECTURE-V2.md §3a and §6.2.
+ * audited helper. See docs/decisions/0001-openssl-native-with-cli-fallback.md and docs/spec/invariants.md.
  */
 arch('only the shell helper opens processes')
     ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])

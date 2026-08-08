@@ -1,6 +1,6 @@
 # PoC 0 — tc-lib-pdf: LTV and RFC 3161 timestamping
 
-Spike for PR 0 (see `ARCHITECTURE-V2.md` §3g). **Not production code.** It executes the
+Spike for PR 0 (see docs/history/v2-modernization.md). **Not production code.** It executes the
 claims that §3g had only read from the source, and it blocks PRs 7 and 8.
 
 **Result: 15/15 checks pass**, including a live timestamp from a public TSA.

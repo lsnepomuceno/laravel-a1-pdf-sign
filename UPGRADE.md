@@ -99,6 +99,14 @@ but unrelated keep raising `InvalidX509PrivateKeyException`.
 Version 2.0 is a clean break: the deprecated API is removed rather than carried
 behind a shim. Upgrading requires editing your code.
 
+That was a deliberate reversal — the original plan kept a deprecation layer
+until 3.0. A 3.0 is far enough out that a shim living "until then" is a shim
+maintained indefinitely, and every one of them constrains the design it wraps:
+`Entities\*` could not be `final`, the enums would carry legacy backing values,
+and the global helpers would keep the global namespace occupied. Since the PHP
+8.4 and Laravel 13 floor already forces a deliberate upgrade, the marginal cost
+of also renaming call sites is small.
+
 If you cannot move yet, stay on `^1`, which remains maintained on the
 `v1.x-dev` branch.
 

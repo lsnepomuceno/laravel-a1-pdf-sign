@@ -4,9 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A standalone Laravel package (not an application) that signs PDF files with A1/x509 `.pfx` certificates and cryptographically verifies existing PDF signatures. Published on Packagist as `lsnepomuceno/laravel-a1-pdf-sign`.
+A standalone Laravel package (not an application) that signs PDF files with A1/x509 certificates — PKCS#12 or PEM — and cryptographically verifies existing PDF signatures. Published on Packagist as `lsnepomuceno/laravel-a1-pdf-sign`.
 
-Branch `feat/v2` holds a clean-break rewrite. The v1 surface — the global helper functions, `src/Sign/*`, `src/Entities/*` — is **gone**, not deprecated. `ARCHITECTURE-V2.md` is the master plan and the reason behind almost every decision below; `UPGRADE.md` maps every removed API to its replacement. When you change behaviour that a numbered section of `ARCHITECTURE-V2.md` justifies, update that section too.
+The invariants are imported rather than summarised, so they are in context for every session instead of being a link someone has to decide to follow:
+
+@docs/spec/invariants.md
+
+The v1 surface — the global helper functions, `src/Sign/*`, `src/Entities/*` — is **gone**, not deprecated. `UPGRADE.md` maps every removed API to its replacement.
+
+Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a reference into it stops resolving:
+
+| Read | For |
+|---|---|
+| `docs/spec/invariants.md` | the rules that break the product or the project. **Read before touching `src/Signing`, `src/Validation` or the dependency list** |
+| `docs/spec/public-api.md` | what the package exposes, and what changing it costs |
+| `docs/spec/quality-policy.md` | the gates, and why each sits where it does |
+| `docs/decisions/` | why the design is what it is — one numbered file per decision |
+| `docs/history/v2-modernization.md` | why v1 was shaped as it was, and where the build diverged from the plan |
+| `docs/history/decision-log.md` | which questions were put, and when they were answered |
+
+`ARCHITECTURE.md` is the index. When you change behaviour that a decision record justifies, update that record's outcome section too — a record whose outcome is never written back is how the previous document drifted away from the code.
 
 ## Commands
 
@@ -53,7 +70,7 @@ requests to `main` only. Keep it in sync with `composer.json` and the compatibil
 
 **Laravel 12 is not supported**, despite reaching PHP 8.5: it requires `symfony/process ^7.2`
 while Pest 5 requires `^8.1`, so the two cannot be installed together and the cell fails at
-`composer update` before a test runs (ARCHITECTURE-V2.md §3e.1).
+`composer update` before a test runs (docs/decisions/0005-php-and-laravel-floor.md).
 
 ## Architecture
 
@@ -113,7 +130,7 @@ DocTimeStamps are classified separately (`isTimestamp`) and excluded from `isVal
 
 - **PHPStan `level: max`, no baseline.** The baseline was deleted, not shrunk (§7, decision 13); the gate is "no errors", not "no new errors". Only Pest's untypeable fluent API is ignored, scoped to `tests/*`.
 - **Type coverage gated at 100%.**
-- **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`. The flag is `--min` (Pest 5 removed `--covered-min`). It runs **nightly, not on pull requests** (`.github/workflows/mutation.yml`), one runner per namespace with its own floor: Certificates 58, Signing 62, Validation 75. Those floors sit below the measured scores because **the score is not reproducible** — it tracks how many mutations time out, which tracks machine load, and Certificates swings three points between identical runs. Raise a floor only after measuring; never set a target ahead of the measurement.
+- **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`, nightly rather than on pull requests. The floors live in `.github/workflows/mutation.yml` and are explained in `docs/spec/quality-policy.md` — they are not repeated here, because a number kept in three places drifts in two of them. Raise a floor only after measuring; never set a target ahead of the measurement.
 - **Do not split mutation runs with `--shard`.** It divides the test suite, and every mutation needs the whole suite: a mutation killed by a test in another shard is reported as uncovered. Split by mutated path instead.
 - `composer-dependency-analyser.php` catches unused and shadow dependencies.
 

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
  * The v1 code deleted its temporary files with a call placed after the work
  * that might throw, so any failure leaked them — including PEM files holding
  * a private key. Here deletion happens in a finally block, with the destructor
- * as a backstop. See ARCHITECTURE-V2.md §1.2.
+ * as a backstop. See docs/history/v2-modernization.md.
  */
 final class TemporaryFile
 {
