@@ -15,7 +15,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
  * functions, which now delegate here. Resolve it from the container, or use
  * the A1PdfSign facade.
  *
- * The fluent signing builder described in ARCHITECTURE-V2.md §2 attaches to
+ * The fluent signing builder described in docs/spec/public-api.md attaches to
  * this contract in PR 7; the methods below mirror the v1 helpers so the
  * migration is a rename, not a rewrite.
  */

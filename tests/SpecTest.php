@@ -117,7 +117,7 @@ function specReferences(string $contents): array
         // Only the unbroken run of identifiers that follows the name, so that
         // prose merely naming the document contributes nothing, and a "§7.5"
         // later in the same sentence is not swept in. The run may chain, as in
-        // "see ARCHITECTURE-V2.md §3a and §6.2".
+        // "see ARCHITECTURE-V2.md §3a and §3h".
         $matched = preg_match(
             '/^[\s(`]*(?:§\d+[a-z]?(?:\.\d+)?[\s,.)`]*(?:and|or)?[\s]*)+/',
             substr($flat, $offset, 120),
@@ -146,6 +146,11 @@ function specReferences(string $contents): array
 function specScannedFiles(string $directory): array
 {
     $skip = ['.git', '.idea', '.output', 'dist', 'node_modules', 'vendor'];
+
+    // This file's own string literals are fixtures describing the citation
+    // syntax, not citations. Scanning them would make the gate fail on its own
+    // examples the moment a section they name is moved.
+    $skip[] = basename(__FILE__);
 
     $entries = scandir($directory);
 
@@ -192,6 +197,33 @@ function specContents(string $path): string
     return $contents;
 }
 
+/**
+ * Every documentation file this file points at.
+ *
+ * The split replaces "§3i" with a path — docs/decisions/0007-….md — because a
+ * numbered filename is a stable identifier that survives the document being
+ * reorganised again. Relative hops are resolved from the citing file so that
+ * links inside docs/ are checked the same way as citations from src/.
+ *
+ * @return list<string>
+ */
+function specDocReferences(string $contents, string $from): array
+{
+    if (preg_match_all('#(?:\.\./)*docs/[\w./-]+\.md#', $contents, $matches) < 1) {
+        return [];
+    }
+
+    $paths = [];
+
+    foreach ($matches[0] as $path) {
+        $paths[] = str_starts_with($path, '..')
+            ? dirname($from) . '/' . $path
+            : packageRoot() . '/' . $path;
+    }
+
+    return $paths;
+}
+
 function packageRoot(): string
 {
     return dirname(__DIR__);
@@ -217,6 +249,23 @@ it('resolves every ARCHITECTURE-V2.md section cited anywhere in the package', fu
     expect(array_values(array_unique($dangling)))->toBe([]);
 });
 
+it('resolves every docs/ file cited anywhere in the package', function () {
+    $missing = [];
+
+    foreach (specScannedFiles(packageRoot()) as $file) {
+        foreach (specDocReferences(specContents($file), $file) as $path) {
+            if (file_exists($path)) {
+                continue;
+            }
+
+            $missing[] = str_replace(packageRoot() . '/', '', $file)
+                . ' → ' . str_replace(packageRoot() . '/', '', $path);
+        }
+    }
+
+    expect(array_values(array_unique($missing)))->toBe([]);
+});
+
 it('finds the references it exists to guard', function () {
     // Without this, a regex that quietly stops matching turns the gate above
     // into a test that passes because it checks nothing.
@@ -228,20 +277,23 @@ it('finds the references it exists to guard', function () {
         }
     }
 
-    expect(count($cited))->toBeGreaterThanOrEqual(20)
-        ->and(array_unique($cited))->toContain('3h', '3i', '6.3', '1.14');
+    expect(count($cited))->toBeGreaterThanOrEqual(15)
+        ->and(array_unique($cited))->toContain('3h', '3i', '1.14');
 });
 
-it('reads the four anchor shapes the document uses', function () {
+it('reads the anchor shapes the document uses', function () {
     $anchors = specAnchors(specContents(packageRoot() . '/ARCHITECTURE-V2.md'));
 
     expect($anchors)
         ->toContain('4')        // ## 4. Backward compatibility
         ->toContain('1.14')     // 14. in the diagnosis list
         ->toContain('3a')       // ### a) under §3
-        ->toContain('3e.1')     // ### e.1) under §3
-        ->toContain('3i')       // ### i) under §3
-        ->toContain('6.3');     // ### 6.3
+        ->toContain('3e.1');    // ### e.1) under §3
+
+    // The "### 6.3" shape had its own branch in the parser and no longer has an
+    // example: §6 moved to docs/spec/quality-policy.md. The branch stays, since
+    // §3's nested results are read by the same rule.
+    expect(specAnchors("## 9. Toolchain\n\n### 9.4 Mutation\n"))->toContain('9.4');
 });
 
 it('ignores section markers that belong to another specification', function () {
@@ -264,5 +316,5 @@ it('reads a reference that wraps across a docblock line break', function () {
 });
 
 it('reads a chain of references sharing one mention of the document', function () {
-    expect(specReferences('See ARCHITECTURE-V2.md §3a and §6.2.'))->toBe(['3a', '6.2']);
+    expect(specReferences('See ARCHITECTURE-V2.md §3a and §3h.'))->toBe(['3a', '3h']);
 });

@@ -1,7 +1,7 @@
 name: Mutation testing
 
 # Nightly rather than per pull request, for two measured reasons
-# (ARCHITECTURE-V2.md §6.3):
+# (docs/spec/quality-policy.md):
 #
 #   Cost. Timeouts dominate the run — a mutation that breaks a loop condition
 #   burns the full timeout, which the plugin derives from the suite duration
@@ -154,7 +154,7 @@ jobs:
               `three points between identical runs. One or two points is noise; a sustained`,
               `drop, or one that survives a re-run, is not.`,
               ``,
-              `**Do not lower the floor to make this pass** — ARCHITECTURE-V2.md §6.3.`,
+              `**Do not lower the floor to make this pass** — docs/spec/quality-policy.md.`,
             ].join('\n')
 
             // One open issue per namespace, commented on rather than reopened

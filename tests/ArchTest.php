@@ -71,7 +71,7 @@ arch('facades only proxy contracts')
 
 /**
  * Everything that opens an external process has to go through the single
- * audited helper. See ARCHITECTURE-V2.md §3a and §6.2.
+ * audited helper. See ARCHITECTURE-V2.md §3a and docs/spec/invariants.md.
  */
 arch('only the shell helper opens processes')
     ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])
