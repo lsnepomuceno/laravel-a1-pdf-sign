@@ -2,6 +2,8 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Data;
 
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
+
 /**
  * The outcome of inspecting a document's signatures.
  *
@@ -22,7 +24,34 @@ final readonly class SignatureReport extends BaseData
     public function __construct(
         public array $signatures,
         public ?SecurityStore $securityStore = null,
+        public ?CertificationLevel $certification = null,
     ) {}
+
+    /**
+     * Whether the document's author certified it, ISO 32000-1 §12.8.2.2.
+     *
+     * A certification is a different claim from an approval signature: it says
+     * what may happen to the document from here on, not what the bytes were. A
+     * reader that honours it will refuse the changes the level forbids, which
+     * is why the report says whether one is there rather than leaving the
+     * caller to look for /Perms
+     * (docs/decisions/0012-certification-signatures.md).
+     */
+    public function isCertified(): bool
+    {
+        return $this->certification !== null;
+    }
+
+    /**
+     * Whether this document can still be signed.
+     *
+     * False only for a certification at no-changes, where a further signature
+     * would be a further revision and that is exactly what was forbidden.
+     */
+    public function acceptsFurtherSignatures(): bool
+    {
+        return $this->certification?->allowsFurtherSignatures() ?? true;
+    }
 
     /**
      * Whether the document carries validation material for every signature in

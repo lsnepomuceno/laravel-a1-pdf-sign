@@ -12,8 +12,10 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
@@ -41,6 +43,8 @@ final class PendingSignature
     private string $fieldName = 'Signature';
 
     private ?string $targetField = null;
+
+    private ?CertificationLevel $certification = null;
 
     private ?SealPlacement $placement = null;
 
@@ -242,6 +246,32 @@ final class PendingSignature
     }
 
     /**
+     * Makes this a certification signature, ISO 32000-1 §12.8.2.2.
+     *
+     * A certification is the author's statement about what may happen to the
+     * document from here on, rather than a signer's statement about what the
+     * bytes were. It has to be the first signature, there can be only one, and
+     * at "no-changes" the document cannot be signed at all afterwards: a
+     * further signature is a further revision, which is exactly what that level
+     * forbids. All three are enforced, not documented.
+     *
+     * @param  CertificationLevel|string  $level  no-changes, form-filling or
+     *                                            annotations. Default
+     *                                            form-filling, because a
+     *                                            document that still has to be
+     *                                            signed is the common case and
+     *                                            no-changes would refuse it.
+     *
+     * @see docs/decisions/0012-certification-signatures.md
+     */
+    public function certify(CertificationLevel|string $level = CertificationLevel::FormFilling): self
+    {
+        $this->certification = CertificationLevel::resolve($level);
+
+        return $this;
+    }
+
+    /**
      * Signs into a field the document already carries, rather than creating one.
      *
      * The case this exists for is a template someone else laid out: a contract
@@ -268,6 +298,7 @@ final class PendingSignature
     }
 
     /**
+     * @throws CertificationException
      * @throws FileNotFoundException
      * @throws SignatureFieldException
      */
@@ -298,6 +329,7 @@ final class PendingSignature
             $seal !== null ? ($this->placement ?? $this->defaultPlacement()) : null,
             SignatureProfile::resolve($this->profile ?? $this->configuredProfile()),
             $this->targetField,
+            $this->certification,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());

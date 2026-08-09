@@ -9,11 +9,14 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\CertificationReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocTimeStampWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentInfo;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
@@ -51,6 +54,7 @@ final readonly class IncrementalSigner implements PdfSigner
         private DssWriter $dss,
         private DocTimeStampWriter $archiveTimestamp,
         private SignatureFieldReader $fields,
+        private CertificationReader $certifications,
     ) {}
 
     public function sign(
@@ -62,10 +66,13 @@ final readonly class IncrementalSigner implements PdfSigner
         ?SealPlacement $placement = null,
         ?SignatureProfile $profile = null,
         ?string $intoField = null,
+        ?CertificationLevel $certification = null,
     ): SignedPdf {
         $profile ??= SignatureProfile::PadesBB;
 
         $document = $this->reader->read($pdfContents);
+
+        $this->guardCertification($pdfContents, $document, $certification);
 
         $target = $intoField === null ? null : $this->target($pdfContents, $document, $intoField);
 
@@ -85,6 +92,7 @@ final readonly class IncrementalSigner implements PdfSigner
             $placement,
             $profile,
             $target,
+            $certification,
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
@@ -137,6 +145,50 @@ final readonly class IncrementalSigner implements PdfSigner
             $open + 1,
             self::CONTENTS_HEX_LENGTH,
         );
+    }
+
+    /**
+     * The three rules of ISO 32000-1 §12.8.2.2 this package enforces rather
+     * than documents.
+     *
+     * A caller who discovers them by watching a second signature silently
+     * invalidate the first has been told too late, and the file is already
+     * wrong (docs/decisions/0012-certification-signatures.md).
+     *
+     * @throws CertificationException
+     * @throws InvalidPdfFileException
+     */
+    private function guardCertification(
+        string $pdf,
+        DocumentInfo $document,
+        ?CertificationLevel $certification,
+    ): void {
+        $existing = $this->certifications->level($pdf, $document);
+
+        // Applies to every signature, certification or not: at "no-changes" a
+        // further revision is exactly what was forbidden.
+        if ($existing !== null && ! $existing->allowsFurtherSignatures()) {
+            throw CertificationException::locked();
+        }
+
+        if ($certification === null) {
+            return;
+        }
+
+        if ($existing !== null) {
+            throw CertificationException::alreadyCertified($existing);
+        }
+
+        $signatures = count(array_filter(
+            $this->fields->read($pdf, $document),
+            static fn(SignatureField $field): bool => $field->isSigned,
+        ));
+
+        // A certification states what may happen to the document from here on,
+        // and an approval signature already applied is a thing that happened.
+        if ($signatures > 0) {
+            throw CertificationException::documentAlreadySigned($signatures);
+        }
     }
 
     /**

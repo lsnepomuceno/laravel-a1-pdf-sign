@@ -15,6 +15,7 @@
 
 use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\LaravelA1PdfSignServiceProvider;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
@@ -219,4 +220,38 @@ printf(
     $fieldReport->count(),
     $fieldReport->isValid() ? 'true' : 'false',
     count($manager->signatureFields($intoFields)),
+);
+
+// A certified document, ISO 32000-1 §12.8.2.2. form-filling is the level a
+// sample can usefully carry: no-changes would forbid the very revision another
+// signature needs, and this sample is signed again below to show that the
+// certification survives (docs/decisions/0012-certification-signatures.md).
+$certified = "{$output}/certified.pdf";
+
+$manager->newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($source)
+    ->certify(CertificationLevel::FormFilling)
+    ->info(name: 'Lucas Nepomuceno', reason: 'Document author', location: 'Brazil')
+    ->seal()
+    ->profile(SignatureProfile::PadesBB)
+    ->sign()
+    ->save($certified);
+
+$manager->newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($certified)
+    ->info(name: 'Second signer', reason: 'Approval after certification')
+    ->profile(SignatureProfile::PadesBB)
+    ->sign()
+    ->save($certified);
+
+$certifiedReport = $manager->validate($certified);
+
+printf(
+    "validate(certified.pdf):      %d signatures, valid=%s, certified=%s, accepts more=%s\n",
+    $certifiedReport->count(),
+    $certifiedReport->isValid() ? 'true' : 'false',
+    $certifiedReport->certification?->value ?? 'no',
+    $certifiedReport->acceptsFurtherSignatures() ? 'true' : 'false',
 );

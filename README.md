@@ -166,6 +166,28 @@ A1PdfSign::newSignature()
 A field that is missing or already signed raises rather than falling back to appending, since that fallback is the
 failure this prevents: a signature that is valid and in the wrong place, with the template's field still empty.
 
+### Certification
+
+A certification signature says what may happen to the document from here on, rather than what the bytes were
+(ISO 32000-1 §12.8.2.2):
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($path)
+    ->certify('form-filling')   // no-changes | form-filling | annotations
+    ->sign();
+```
+
+| Level | Permits |
+|---|---|
+| `no-changes` | nothing; the document **cannot be signed again** |
+| `form-filling` | filling form fields and signing. **Default** |
+| `annotations` | form filling, signing and annotations |
+
+A certification has to be the first signature and there can be only one. Both are enforced, and so is the exclusion at
+`no-changes`: a further signature is a further revision, which is exactly what that level forbids.
+
 ### Validation
 
 ```php
@@ -174,6 +196,7 @@ $report = A1PdfSign::validate($pdfPath);
 $report->isValid();     // every signature verifies against the bytes it covers
 $report->count();       // how many signatures the document carries
 $report->signers();     // structured signer identity
+$report->isCertified(); // whether the author certified the document
 ```
 
 `isValid()` answers whether each signature matches the document. It does not check the issuer against a trust store:

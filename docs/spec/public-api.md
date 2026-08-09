@@ -148,6 +148,33 @@ you accept stays with the application.
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
+## Certification signatures
+
+A certification is the author's statement about what may happen to the document
+from here on, rather than a signer's statement about what the bytes were
+(ISO 32000-1 §12.8.2.2):
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($path)
+    ->certify('form-filling')   // no-changes | form-filling | annotations
+    ->sign();
+
+$report->isCertified();               // bool
+$report->certification;               // ?CertificationLevel
+$report->acceptsFurtherSignatures();  // false only at no-changes
+```
+
+Three rules are enforced rather than documented, each raising
+`CertificationException`: a certification has to be the **first** signature,
+there can be only **one**, and a document certified at **`no-changes` cannot be
+signed again** because a further signature is a further revision, which is what
+that level forbids.
+
+`certify()` defaults to `form-filling`, since a document that still has to be
+signed is the common case ([0012](../decisions/0012-certification-signatures.md)).
+
 ## Signing into a field the document already carries
 
 A template laid out by someone else arrives with its fields placed, and the
@@ -195,7 +222,6 @@ Stated here because a public API is also its boundaries, and each has a record:
 | | |
 |---|---|
 | Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
-| Certification signatures (`/DocMDP`) | every signature is an approval signature. [0012](../decisions/0012-certification-signatures.md) |
 | Checking the chain against a trust store | the chain is built and verified; whether its root is one you accept is the application's policy. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
 | Revocation checking at validation time | the store's OCSP responses and CRLs are counted, not evaluated |
 

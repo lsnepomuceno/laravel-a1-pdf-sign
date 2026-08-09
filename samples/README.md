@@ -60,12 +60,38 @@ ICP-Brasil certificate.
 | `two-seals.pdf` | Two signatures, each with its own visible seal in its own place |
 | `xref-stream.pdf` | Two signatures on a PDF 1.5 document whose cross-reference sections are streams, not tables |
 | `signed-into-fields.pdf` | A template's own two signature fields, filled by name rather than appended beside |
+| `certified.pdf` | A certification at `form-filling`, then an approval signature on top of it |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
 from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
+
+## What `certified.pdf` proves
+
+That a `/DocMDP` certification is written and survives a later signature. The
+author certifies at `form-filling`, ISO 32000-1 §12.8.2.2, and a second party
+then signs: that combination is the whole reason levels 2 and 3 exist, since
+`no-changes` would forbid the very revision the second signature needs.
+
+**This is the sample that most needs a real reader**, and the one this project
+can least verify on its own. `pdfsig` does not surface `/DocMDP` at all, so
+poppler confirms only that both signatures verify and the file is well formed.
+Whether the certification is *enforced* is precisely what varies between
+readers, so open it in Adobe Reader or ITI Validar and check two things: that
+the certification is reported, and that the approval signature which followed it
+is accepted rather than treated as a violation.
+
+The structure, for reading by hand:
+
+```
+/Perms<</DocMDP 19 0 R>>
+19 0 obj <</Type/Sig ... /Reference[<</Type/SigRef/TransformMethod/DocMDP
+                                     /TransformParams<</Type/TransformParams/P 2/V/1.2>>>>]
+```
+
+See [`../docs/decisions/0012-certification-signatures.md`](../docs/decisions/0012-certification-signatures.md).
 
 ## What `signed-into-fields.pdf` proves
 
