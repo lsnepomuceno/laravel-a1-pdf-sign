@@ -105,8 +105,17 @@ final class DocumentReader
                 continue;
             }
 
+            // Bounded at endobj, not at a byte count. A fixed window reaches
+            // into whatever follows, and in a compact document that is the next
+            // object: the catalog was reported as the first page because a
+            // /Type/Page two objects later fell inside its window, and the
+            // revision then wrote the signature's /AcroForm and its /Annots
+            // both onto object 1, the second overwriting the first.
+            $end = strpos($pdf, 'endobj', $offset);
+            $object = substr($pdf, $offset, ($end === false ? strlen($pdf) : $end) - $offset);
+
             // The negative lookahead keeps /Pages, the page tree root, out.
-            if (preg_match('/\/Type\s*\/Page(?![s\w])/', substr($pdf, $offset, 400)) === 1) {
+            if (preg_match('/\/Type\s*\/Page(?![s\w])/', $object) === 1) {
                 return $number;
             }
         }

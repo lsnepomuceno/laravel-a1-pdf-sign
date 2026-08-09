@@ -19,7 +19,7 @@ it('renders a seal carrying the certificate identity', function () {
         ->and($seal->pdfFilter())->toBe('DCTDecode');
 
     // The bytes must be a real image, not just non-empty.
-    $decoded = (new ImageManager(driver: new GdDriver()))->read($seal->contents);
+    $decoded = new ImageManager(driver: new GdDriver())->read($seal->contents);
 
     expect($decoded->width())->toBe(590);
 });
@@ -36,7 +36,7 @@ it('honours the configured font colour and size', function () {
 
 it('embeds the seal as a JPEG passthrough, without re-encoding', function () {
     $seal = app(SealRenderer::class)->render(testCertificate());
-    $object = (new SealAppearance())->imageObject(20, $seal);
+    $object = new SealAppearance()->imageObject(20, $seal);
 
     expect($object)->toContain('/Subtype/Image')
         ->toContain('/Filter/DCTDecode')
@@ -61,7 +61,7 @@ it('keeps the aspect ratio when no height is given', function () {
 it('uses an explicit height when one is given', function () {
     $seal = new SealImage('x', 600, 300);
 
-    [, $y1, , $y2] = (new SealAppearance())->rectangle(
+    [, $y1, , $y2] = new SealAppearance()->rectangle(
         new SealPlacement(width: 50, height: 80, y: 0),
         $seal,
     );

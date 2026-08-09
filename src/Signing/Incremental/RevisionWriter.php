@@ -22,6 +22,8 @@ final class RevisionWriter
     public function __construct(
         private readonly DocumentReader $reader,
         private readonly SealAppearance $appearance = new SealAppearance(),
+        private readonly XrefStreamWriter $streams = new XrefStreamWriter(),
+        private readonly XrefSubsections $subsections = new XrefSubsections(),
     ) {}
 
     /**
@@ -83,11 +85,12 @@ final class RevisionWriter
         $offsets[$pageNumber] = $base + strlen($body);
         $body .= "{$pageNumber} 0 obj\n{$page}\nendobj\n";
 
-        $xrefOffset = $base + strlen($body);
-
-        $body .= $this->xrefTable($offsets);
-        $body .= $this->trailer(max(array_keys($offsets)) + 1, $catalogNumber, $document);
-        $body .= "startxref\n{$xrefOffset}\n%%EOF\n";
+        $body .= $this->crossReference(
+            $base + strlen($body),
+            $offsets,
+            max(array_keys($offsets)) + 1,
+            $document,
+        );
 
         return $pdf . $body;
     }
@@ -120,17 +123,53 @@ final class RevisionWriter
             $body .= $object;
         }
 
-        $xrefOffset = $base + strlen($body);
-
-        $body .= $this->xrefTable($offsets);
-        $body .= $this->trailer(
+        $body .= $this->crossReference(
+            $base + strlen($body),
+            $offsets,
             max(max(array_keys($offsets)) + 1, $document->size),
-            $document->root,
             $document,
         );
-        $body .= "startxref\n{$xrefOffset}\n%%EOF\n";
 
         return $pdf . $body;
+    }
+
+    /**
+     * The cross-reference section closing a revision, in the form the document
+     * already uses.
+     *
+     * A document whose latest section is a stream cannot be extended with a
+     * classic table. Doing it anyway produced a file poppler reported as
+     * carrying no signatures at all, which is why this branches rather than
+     * emitting one shape for everything
+     * (docs/decisions/0009-cross-reference-streams.md).
+     *
+     * @param  array<int, int>  $offsets  Object number to byte offset.
+     * @param  int  $size  One past the highest object number, before the stream
+     *                     object this may have to allocate for itself.
+     */
+    private function crossReference(int $xrefOffset, array $offsets, int $size, DocumentInfo $document): string
+    {
+        $ending = "startxref\n{$xrefOffset}\n%%EOF\n";
+
+        if (! $document->usesXrefStream) {
+            return $this->xrefTable($offsets)
+                . $this->trailer($size, $document->root, $document)
+                . $ending;
+        }
+
+        // The stream is an object, so it consumes a number and indexes itself.
+        // /Size is already one past the highest number in the revision, which
+        // makes it the first number free for the stream to take.
+        $offsets[$size] = $xrefOffset;
+
+        return $this->streams->object(
+            $size,
+            $offsets,
+            $size + 1,
+            $document->root,
+            $document->infoRef,
+            $document->startxref,
+        ) . $ending;
     }
 
     /**
@@ -293,11 +332,9 @@ final class RevisionWriter
      */
     private function xrefTable(array $offsets): string
     {
-        ksort($offsets);
-
         $out = "xref\n";
 
-        foreach ($this->consecutiveGroups($offsets) as $group) {
+        foreach ($this->subsections->of($offsets) as $group) {
             $out .= array_key_first($group) . ' ' . count($group) . "\n";
 
             foreach ($group as $offset) {
@@ -307,33 +344,6 @@ final class RevisionWriter
         }
 
         return $out;
-    }
-
-    /**
-     * @param  array<int, int>  $offsets
-     * @return array<int, array<int, int>>
-     */
-    private function consecutiveGroups(array $offsets): array
-    {
-        $groups = [];
-        $current = [];
-        $previous = null;
-
-        foreach ($offsets as $number => $offset) {
-            if ($previous !== null && $number !== $previous + 1) {
-                $groups[] = $current;
-                $current = [];
-            }
-
-            $current[$number] = $offset;
-            $previous = $number;
-        }
-
-        if ($current !== []) {
-            $groups[] = $current;
-        }
-
-        return $groups;
     }
 
     private function trailer(int $size, int $root, DocumentInfo $document): string

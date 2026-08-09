@@ -58,12 +58,34 @@ ICP-Brasil certificate.
 | `pades-b-lta.pdf` | B-LT plus an archive timestamp, a second `/ByteRange`, of type `ETSI.RFC3161`, covering the whole file |
 | `six-signatures.pdf` | Six signatures on one document |
 | `two-seals.pdf` | Two signatures, each with its own visible seal in its own place |
+| `xref-stream.pdf` | Two signatures on a PDF 1.5 document whose cross-reference sections are streams, not tables |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
 from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
+
+## What `xref-stream.pdf` proves
+
+That a document using the cross-reference stream of ISO 32000-1 §7.5.8 can be
+signed, and signed again. PDF 1.5 is from 2003 and this is the form Word,
+"print to PDF" in Chrome and most modern generators emit, so it is not an edge
+case: it is the majority of documents a consumer holds.
+
+**This is the sample that has to be opened rather than trusted.** The suite
+cannot tell "a revision was appended" from "a revision was appended in a shape
+readers accept". The first attempt appended a classic table to a document whose
+latest section was a stream, and poppler answered:
+
+```
+File 'xref-signed.pdf' does not contain any signatures
+```
+
+The bytes were there; nothing read them as a signature. The signer now appends
+a stream when the document already uses one, and the appended stream indexes
+itself, since the next revision can only find this one's objects through it.
+See [`../docs/decisions/0009-cross-reference-streams.md`](../docs/decisions/0009-cross-reference-streams.md).
 
 ## What `two-seals.pdf` proves
 

@@ -61,18 +61,6 @@ final readonly class IncrementalSigner implements PdfSigner
 
         $document = $this->reader->read($pdfContents);
 
-        // Reading a cross-reference stream works; appending a revision that a
-        // reader accepts does not, and the difference is silent. Measured on
-        // 2026-08-09: signing produced 17376 bytes that poppler reports as
-        // carrying no signature at all. Refusing is worse for reach and far
-        // better than handing back a file that looks signed and is not.
-        // See docs/decisions/0009-cross-reference-streams.md.
-        if ($document->usesXrefStream) {
-            throw new InvalidPdfFileException(
-                'this document uses a cross-reference stream (PDF 1.5+), which can be read but not yet appended to; signing it would produce a file readers do not see as signed',
-            );
-        }
-
         $withRevision = $this->writer->append(
             $pdfContents,
             $document,

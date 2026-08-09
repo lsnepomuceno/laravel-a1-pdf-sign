@@ -162,3 +162,32 @@ printf(
     $pemReport->isValid() ? 'true' : 'false',
     $pemReport->signers()[0]->commonName ?? '?',
 );
+
+// A document whose cross-reference section is a stream rather than a table,
+// signed twice. This is the sample that has to be opened in a real reader: the
+// suite cannot tell "the revision was appended" from "the revision was appended
+// in a shape readers accept", and the first attempt at this produced a file
+// poppler reported as carrying no signatures at all
+// (docs/decisions/0009-cross-reference-streams.md).
+$xrefStream = "{$output}/xref-stream.pdf";
+copy(__DIR__ . '/../tests/Resources/xref-stream.pdf', $xrefStream);
+
+foreach (['First signer' => 'Cross-reference stream', 'Second signer' => 'Second revision'] as $name => $reason) {
+    $onStream = $manager->newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf($xrefStream)
+        ->info(name: $name, reason: $reason, location: 'Brazil')
+        ->profile(SignatureProfile::PadesBB)
+        ->sign();
+
+    $onStream->save($xrefStream);
+}
+
+$streamReport = $manager->validate($xrefStream);
+
+printf(
+    "validate(xref-stream.pdf):    %d signatures, valid=%s, appended=%s\n",
+    $streamReport->count(),
+    $streamReport->isValid() ? 'true' : 'false',
+    substr_count((string) file_get_contents($xrefStream), '/Type/XRef') . ' xref streams',
+);

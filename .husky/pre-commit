@@ -1,9 +1,10 @@
 #!/bin/sh
-# Formats the staged PHP files with Pint and stages the result, so style is
-# never what a pull request gets blocked on.
+# Formats the staged PHP files with Pint and stages the result, then runs
+# PHPStan, so neither style nor static analysis is what a pull request gets
+# blocked on.
 #
 # Pint requires PHP 8.2 and the package floor is 8.4, so a development machine
-# running an older PHP still needs a way to format: the hook falls back to the
+# running an older PHP still needs a way to run both: the hook falls back to the
 # Docker service when the local binary cannot run. See CONTRIBUTING.md.
 
 staged=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
@@ -12,13 +13,23 @@ if [ -z "$staged" ]; then
     exit 0
 fi
 
+# Whichever runner works is used for both tools, so they never disagree about
+# which PHP they are looking at.
 if [ -x vendor/bin/pint ] && vendor/bin/pint --version >/dev/null 2>&1; then
-    run_pint() { vendor/bin/pint "$@"; }
+    run() {
+        tool=$1
+        shift
+        vendor/bin/"$tool" "$@"
+    }
 elif command -v docker >/dev/null 2>&1; then
-    echo "pre-commit: local PHP cannot run Pint, falling back to Docker."
-    run_pint() { docker compose -f .docker/compose.yaml run --rm -T php vendor/bin/pint "$@"; }
+    echo "pre-commit: local PHP cannot run the toolchain, falling back to Docker."
+    run() {
+        tool=$1
+        shift
+        docker compose -f .docker/compose.yaml run --rm -T php vendor/bin/"$tool" "$@"
+    }
 else
-    echo "pre-commit: Pint is not runnable. Install PHP 8.4+ and run 'composer install', or install Docker." >&2
+    echo "pre-commit: the toolchain is not runnable. Install PHP 8.4+ and run 'composer install', or install Docker." >&2
     exit 1
 fi
 
@@ -31,6 +42,17 @@ set -- $staged
 set +f
 unset IFS
 
-run_pint "$@" || exit 1
+run pint "$@" || exit 1
 
 git add -- "$@"
+
+# PHPStan analyses the paths its own configuration names, not the staged ones:
+# a change in one file breaks types in another, and analysing only what was
+# touched would report a clean commit that fails in CI. level max, no baseline
+# (docs/spec/quality-policy.md).
+echo "pre-commit: running PHPStan."
+
+if ! run phpstan analyse --memory-limit=1G --no-progress; then
+    echo "pre-commit: PHPStan failed. Fix the errors, or commit with --no-verify if you are stashing work in progress." >&2
+    exit 1
+fi

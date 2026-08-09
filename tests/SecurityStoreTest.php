@@ -48,7 +48,7 @@ it('reads the last store, not the first', function () {
 it('reads a nested VRI without stopping at the first closing marker', function () {
     // /VRI nests, so a reader that took the first ">>" would cut the store in
     // half and report no certificates at all.
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         "junk << /Type /DSS /VRI << /" . str_repeat('A', 40) . " 9 0 R >> /Certs [ 1 0 R 2 0 R ] /OCSPs [ 3 0 R ] >> trailing",
     );
 
@@ -59,13 +59,13 @@ it('reads a nested VRI without stopping at the first closing marker', function (
 });
 
 it('finds no store in a document that has none', function () {
-    expect((new SecurityStoreReader())->read(Files::read(resource('test.pdf'))))->toBeNull();
+    expect(new SecurityStoreReader()->read(Files::read(resource('test.pdf'))))->toBeNull();
 });
 
 it('reads a store nested three levels deep', function () {
     // The delimiter counting has to survive more than the one level /VRI needs,
     // because nothing stops a producer from nesting further.
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         'x << /Type /DSS /VRI << /' . str_repeat('B', 40) . ' << /Inner << /Deeper 1 0 R >> >> >> /Certs [ 4 0 R ] >> after',
     );
 
@@ -76,7 +76,7 @@ it('reads a store nested three levels deep', function () {
 it('stops at the end of the store, not at the end of the file', function () {
     // Whatever follows the dictionary must not be read into it: a /Certs array
     // belonging to something else would inflate the count.
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         'a << /Type /DSS /Certs [ 1 0 R ] >> then << /Certs [ 2 0 R 3 0 R 4 0 R ] >>',
     );
 
@@ -86,7 +86,7 @@ it('stops at the end of the store, not at the end of the file', function () {
 it('survives a store the file cuts off', function () {
     // A truncated document should answer with what it has rather than loop or
     // throw: the reader falls through to the remainder.
-    $store = (new SecurityStoreReader())->read('<< /Type /DSS /Certs [ 1 0 R 2 0 R ]');
+    $store = new SecurityStoreReader()->read('<< /Type /DSS /Certs [ 1 0 R 2 0 R ]');
 
     expect($store?->certificates)->toBe(2);
 });
@@ -102,7 +102,7 @@ it('counts an empty or malformed array as nothing', function () {
 it('normalises the VRI keys it reports', function () {
     // /VRI keys are hex and a producer may write them in either case, while
     // covers() compares against an uppercase sha1.
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         '<< /Type /DSS /VRI << /' . str_repeat('a', 40) . ' 9 0 R >> >>',
     );
 
@@ -110,7 +110,7 @@ it('normalises the VRI keys it reports', function () {
 });
 
 it('ignores VRI entries that are not signature keys', function () {
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         '<< /Type /DSS /VRI << /TooShort 1 0 R /' . str_repeat('C', 40) . ' 2 0 R >> >>',
     );
 
@@ -120,7 +120,7 @@ it('ignores VRI entries that are not signature keys', function () {
 it('reads the newest store when a document carries two', function () {
     // A document signed twice carries a store per revision, and the later one
     // supersedes the earlier (docs/spec/invariants.md).
-    $store = (new SecurityStoreReader())->read(
+    $store = new SecurityStoreReader()->read(
         '<< /Type /DSS /Certs [ 1 0 R ] >> ... << /Type /DSS /Certs [ 2 0 R 3 0 R ] /CRLs [ 4 0 R ] >>',
     );
 

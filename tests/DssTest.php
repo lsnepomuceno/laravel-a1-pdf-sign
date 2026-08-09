@@ -77,7 +77,7 @@ it('replaces an existing /DSS rather than adding a second one', function () {
 it('emits the store keyed by the signature it vouches for', function () {
     $pon = 30;
 
-    $emitted = (new Dss())->emit(
+    $emitted = new Dss()->emit(
         ['certs' => ['DER-CERT'], 'ocsp' => ['DER-OCSP'], 'crls' => ['DER-CRL']],
         'SIGNATURE-CONTENTS',
         $pon,
