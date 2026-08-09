@@ -104,6 +104,23 @@ changed nothing. A gate contributors learn to re-run has stopped being a gate.
 `workflow_dispatch` runs it on demand before a release, and a failing run opens
 or updates a tracking issue per namespace.
 
+**The schedule is when it may run, not what it measures.** A `changed` job
+compares the default branch against the commit of the last run that reached a
+verdict, and skips when nothing has landed since — so a given commit is scored
+once, not once per night.
+
+Re-scoring identical code answers a question already answered, and answers it
+*differently*: the score is not reproducible, so a quiet week would produce a
+week of contradictory numbers for the same tree, and any of them could trip a
+floor. Cancelled runs are excluded from the comparison — concurrency cancels
+them mid-flight, so their commit was never actually scored.
+
+The cost is that this job stops doubling as a canary for the unpinned
+dependency resolution. It was playing that role by accident, and playing it
+well — the `php-code-coverage` break of 2026-08-08 arrived with no commit
+behind it and was caught by a nightly on untouched code. During a quiet period
+that break would now surface only at the next merge.
+
 ## CI
 
 `.github/workflows/main_action.yml`, on pull requests to `main` only — every
