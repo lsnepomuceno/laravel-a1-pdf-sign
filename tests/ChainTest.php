@@ -86,3 +86,68 @@ it('returns nothing for an empty pool', function () {
     expect((new ChainBuilder())->build([]))->toBe([])
         ->and((new ChainBuilder())->reachesRoot([]))->toBeFalse();
 });
+
+it('walks a chain more than one link long', function () {
+    // Two levels prove ordering; three prove the loop keeps going rather than
+    // stopping at the first issuer it finds.
+    $rootKey = openssl_pkey_new(['private_key_bits' => 2048, 'digest_alg' => 'sha256']);
+    assert($rootKey instanceof OpenSSLAsymmetricKey);
+    /** @var OpenSSLAsymmetricKey $rootKey */
+    $rootCsr = openssl_csr_new(['commonName' => 'Root', 'countryName' => 'BR'], $rootKey, ['digest_alg' => 'sha256']);
+    assert($rootCsr instanceof OpenSSLCertificateSigningRequest);
+    $root = openssl_csr_sign($rootCsr, null, $rootKey, 900, ['digest_alg' => 'sha256']);
+    assert($root instanceof OpenSSLCertificate);
+
+    $midKey = openssl_pkey_new(['private_key_bits' => 2048, 'digest_alg' => 'sha256']);
+    assert($midKey instanceof OpenSSLAsymmetricKey);
+    /** @var OpenSSLAsymmetricKey $midKey */
+    $midCsr = openssl_csr_new(['commonName' => 'Intermediate', 'countryName' => 'BR'], $midKey, ['digest_alg' => 'sha256']);
+    assert($midCsr instanceof OpenSSLCertificateSigningRequest);
+    $mid = openssl_csr_sign($midCsr, $root, $rootKey, 800, ['digest_alg' => 'sha256']);
+    assert($mid instanceof OpenSSLCertificate);
+
+    $leafKey = openssl_pkey_new(['private_key_bits' => 2048, 'digest_alg' => 'sha256']);
+    assert($leafKey instanceof OpenSSLAsymmetricKey);
+    /** @var OpenSSLAsymmetricKey $leafKey */
+    $leafCsr = openssl_csr_new(['commonName' => 'Leaf', 'countryName' => 'BR'], $leafKey, ['digest_alg' => 'sha256']);
+    assert($leafCsr instanceof OpenSSLCertificateSigningRequest);
+    $leaf = openssl_csr_sign($leafCsr, $mid, $midKey, 400, ['digest_alg' => 'sha256']);
+    assert($leaf instanceof OpenSSLCertificate);
+
+    openssl_x509_export($leaf, $leafPem);
+    openssl_x509_export($mid, $midPem);
+    openssl_x509_export($root, $rootPem);
+    assert(is_string($leafPem) && is_string($midPem) && is_string($rootPem));
+
+    $builder = new ChainBuilder();
+    $chain = $builder->build([$rootPem, $leafPem, $midPem]);
+
+    expect($chain)->toBe([$leafPem, $midPem, $rootPem])
+        ->and($builder->reachesRoot($chain))->toBeTrue();
+});
+
+it('treats a lone self-signed certificate as its own root', function () {
+    [, $ca] = twoLevelChain();
+    $builder = new ChainBuilder();
+
+    expect($builder->build([$ca]))->toBe([$ca])
+        ->and($builder->reachesRoot([$ca]))->toBeTrue();
+});
+
+it('ignores certificates that belong to no link', function () {
+    [$leaf, $ca] = twoLevelChain();
+    [$strayLeaf] = twoLevelChain();
+
+    // A pool can carry certificates for another signature entirely. They must
+    // not extend this chain.
+    $chain = (new ChainBuilder())->build([$leaf, $ca, $strayLeaf]);
+
+    expect($chain)->toBe([$leaf, $ca]);
+});
+
+it('answers nothing for input that is not a certificate', function () {
+    $builder = new ChainBuilder();
+
+    expect($builder->build(['not a certificate']))->toBe(['not a certificate'])
+        ->and($builder->reachesRoot(['not a certificate']))->toBeFalse();
+});
