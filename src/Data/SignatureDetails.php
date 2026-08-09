@@ -58,8 +58,11 @@ final readonly class SignatureDetails extends BaseData
 
     /**
      * An archive timestamp is not a signature over the document, so it is
-     * reported but does not decide whether the document is valid. Its own
-     * cryptographic verification is not implemented yet.
+     * reported but does not decide whether the document is valid.
+     *
+     * It is verified on its own terms: its CMS has to check out and its
+     * messageImprint has to be the digest of the range it covers. What it does
+     * not carry is a signer, which is why it stays out of isValid().
      */
     public function countsTowardValidity(): bool
     {

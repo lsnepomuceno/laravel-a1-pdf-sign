@@ -1,6 +1,7 @@
 # 0010: Validation consumes the material signing writes
 
-**Status:** proposed.
+**Status:** partially implemented. The timestamp half is built; reading the DSS
+and using it are not.
 
 ## Context
 
@@ -31,12 +32,23 @@ the missing half of surface that already exists.
 
 Three pieces, each independently useful and worth landing separately.
 
-**Verify the timestamp token.** An RFC 3161 token signs a TSTInfo carrying the
-imprint of the covered bytes. Verifying it means checking the CMS as it already
-does for signatures, and then checking that the imprint matches the digest of
-the range the token covers. Today the second half is what is missing, and it is
-what makes a timestamp meaningful rather than decorative. `SignatureDetails`
-gains the token's time.
+**Verify the timestamp token. Done.** An RFC 3161 token signs a TSTInfo carrying
+the imprint of the covered bytes, so two things have to hold: the token's own
+CMS verifies, and that TSTInfo's imprint is the digest of the range the token
+covers.
+
+**Checking only the first would be worse than checking neither**, because a
+token lifted from a different document passes it: its CMS is perfectly valid,
+it simply stamps other bytes. The test that matters is therefore the negative
+one, and it is written: the same token, offered the wrong bytes, is refused.
+
+The imprint is found rather than parsed. Walking the ASN.1 to the messageImprint
+field would be more literal, but the value searched for is a digest computed
+here, so a match cannot be coincidental. Finding it means the authority stamped
+these bytes.
+
+A timestamp is not detached, unlike a signature, which is why validation needs
+two paths rather than one with a flag.
 
 **Read the DSS.** Parse `/DSS` from the catalog and expose what it carries:
 which certificates, how many OCSP responses, how many CRLs. Purely descriptive
