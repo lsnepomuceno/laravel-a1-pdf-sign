@@ -8,13 +8,16 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
  * Reads the cross-reference chain of an existing PDF.
  *
  * Clean-room implementation from ISO 32000-1 §7.5.4 and §7.5.6. Scope is the
- * classic cross-reference table; cross-reference streams (PDF 1.5+) are
- * detected and rejected rather than mis-parsed.
+ * Both cross-reference forms are read: the classic table of §7.5.4 and the
+ * cross-reference stream of §7.5.8, which PDF 1.5 introduced and most modern
+ * generators emit.
  *
  * @internal
  */
 final class DocumentReader
 {
+    public function __construct(private readonly XrefStreamReader $streams = new XrefStreamReader()) {}
+
     /**
      * Walks the /Prev chain and returns the effective view of the document.
      *
@@ -43,12 +46,14 @@ final class DocumentReader
         $size = 0;
         $root = 0;
         $infoRef = null;
+        $usesStream = false;
 
         // The chain runs newest to oldest, so walk it reversed and let the most
         // recent entries win.
         foreach (array_reverse($chain) as $section) {
             $xref = array_replace($xref, $section['xref']);
             $size = max($size, $section['size']);
+            $usesStream = $usesStream || $section['stream'];
 
             if ($section['root'] > 0) {
                 $root = $section['root'];
@@ -63,7 +68,7 @@ final class DocumentReader
             throw new InvalidPdfFileException('no /Root entry found in any trailer');
         }
 
-        return new DocumentInfo($xref, $size, $root, $infoRef, $latest);
+        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream);
     }
 
     /**
@@ -110,15 +115,22 @@ final class DocumentReader
     }
 
     /**
-     * @return array{xref: array<int, int>, size: int, root: int, infoRef: ?string, prev: int}
+     * @return array{xref: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
      *
      * @throws InvalidPdfFileException
      */
     private function readSection(string $pdf, int $offset): array
     {
         if (! str_starts_with(ltrim(substr($pdf, $offset, 32)), 'xref')) {
+            // PDF 1.5 packs the same table into a stream object. Reading only
+            // the classic form bounded the package to documents older tools
+            // produce (docs/decisions/0009-cross-reference-streams.md).
+            if ($this->streams->handles($pdf, $offset)) {
+                return $this->streams->read($pdf, $offset);
+            }
+
             throw new InvalidPdfFileException(
-                "cross-reference stream at offset {$offset} is not supported; only classic tables are read",
+                "the cross-reference section at offset {$offset} is neither a table nor a stream",
             );
         }
 
@@ -179,6 +191,7 @@ final class DocumentReader
             'root' => isset($root[1]) ? (int) $root[1] : 0,
             'infoRef' => $info[1] ?? null,
             'prev' => isset($prev[1]) ? (int) $prev[1] : 0,
+            'stream' => false,
         ];
     }
 }

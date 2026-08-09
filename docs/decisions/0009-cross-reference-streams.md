@@ -1,7 +1,8 @@
 # 0009: Cross-reference streams
 
-**Status:** proposed. The measurement below is done and the rejection is
-already correct; reading support is not built.
+**Status:** partially implemented. Reading is built. Writing is not, and the
+measurement below says why that distinction had to be enforced rather than
+assumed.
 
 ## Context
 
@@ -68,9 +69,40 @@ rewriting.
   predates PDF 1.5 tolerance, because the failure mode is "opens here, refuses
   there" rather than an exception.
 
-## Until it is built
+## What the writing measurement said
 
-`tests/Resources/xref-stream.pdf` is committed and a test asserts the current
-rejection by message, not only by class. That keeps the boundary honest: if
-someone implements reading, the test fails and has to be rewritten
-deliberately rather than silently passing.
+Reading landed first, and signing was then tried on the fixture to answer the
+question above rather than guess at it. It appeared to work:
+
+```
+ASSINOU: 17376 bytes
+```
+
+poppler disagreed:
+
+```
+File '.output/xref-signed.pdf' does not contain any signatures
+```
+
+**So appending a classic table to a document whose latest section is a stream
+produces a file that no reader sees as signed, and produces it silently.** That
+is worse than the refusal it replaced, and it is the failure mode
+[0014](0014-refuse-encrypted-documents.md) exists to prevent: a guard is not a
+substitute for the feature, but silence is worse than either.
+
+Signing therefore refuses while reading succeeds. `DocumentInfo` carries
+`usesXrefStream` so the signer can tell, and the message says the document can
+be read but not yet appended to, which is the true state.
+
+The remaining work is the writing choice this record already framed, now with
+evidence that option 2, the classic table with `/Prev` into a stream, is not
+viable on its own.
+
+## The boundary tests
+
+`tests/Resources/xref-stream.pdf` is committed, hand-built and 434 bytes.
+
+The test that asserted the old refusal did exactly what it was written to do:
+it failed the moment reading landed, and had to be rewritten deliberately. A
+second test now pins the signing refusal the same way, by message, so whoever
+builds the writing half has to come here and change it on purpose.

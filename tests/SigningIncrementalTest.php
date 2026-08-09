@@ -123,13 +123,15 @@ it('lets the caller choose the transport after signing', function () {
     unlink($path);
 });
 
-it('refuses a cross-reference stream, and says so', function () {
-    // PDF 1.5 is from 2003 and this format is what most modern generators
-    // emit, so the boundary is worth pinning by message rather than by class.
-    // When reading support lands (docs/decisions/0009-cross-reference-streams.md)
-    // this test fails and has to be rewritten deliberately.
-    expect(fn() => app(DocumentReader::class)->read(Files::read(resource('xref-stream.pdf'))))
-        ->toThrow(InvalidPdfFileException::class, 'cross-reference stream');
+it('reads a cross-reference stream', function () {
+    // This asserted a refusal until reading landed, which is what the boundary
+    // test was for (docs/decisions/0009-cross-reference-streams.md). PDF 1.5 is
+    // from 2003 and this is the form most modern generators emit.
+    $document = app(DocumentReader::class)->read(Files::read(resource('xref-stream.pdf')));
+
+    expect($document->root)->toBe(1)
+        ->and($document->size)->toBe(6)
+        ->and($document->xref)->toHaveKeys([1, 2, 3, 4, 5]);
 });
 
 it('refuses an encrypted document rather than corrupting it', function () {
@@ -158,4 +160,18 @@ it('names the structural fault instead of blaming the file extension', function 
 it('keeps the extension message for the one case that meant it', function () {
     expect(InvalidPdfFileException::extension('/tmp/contract.docx')->getMessage())
         ->toBe('Invalid file extension, accept only ".pdf" extension files. Current file: /tmp/contract.docx.');
+});
+
+it('refuses to sign a cross-reference stream until it can append to one', function () {
+    // Reading works; appending a revision a reader accepts does not. Measured
+    // on 2026-08-09: signing produced 17376 bytes that poppler reports as
+    // carrying no signature at all, so this refuses rather than hands back a
+    // file that looks signed and is not.
+    [$pfxPath, $password] = debugCertificate();
+
+    expect(fn() => A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('xref-stream.pdf'))
+        ->sign())
+        ->toThrow(InvalidPdfFileException::class, 'cross-reference stream');
 });

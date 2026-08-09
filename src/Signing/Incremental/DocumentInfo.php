@@ -19,6 +19,7 @@ final readonly class DocumentInfo
         public int $root,
         public ?string $infoRef,
         public int $startxref,
+        public bool $usesXrefStream = false,
     ) {}
 
     /**
