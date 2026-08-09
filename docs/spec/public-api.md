@@ -148,13 +148,21 @@ you accept stays with the application.
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
+## What the signer accepts
+
+Both cross-reference forms: the classic table of ISO 32000-1 §7.5.4 and the
+cross-reference stream of §7.5.8, which PDF 1.5 introduced in 2003 and which
+Word, "print to PDF" in Chrome and most modern generators emit. The revision is
+appended in whichever form the document already uses, because mixing them
+produces a file readers do not see as signed
+([0009](../decisions/0009-cross-reference-streams.md)).
+
 ## What the signer cannot do yet
 
 Stated here because a public API is also its boundaries, and each has a record:
 
 | | |
 |---|---|
-| Cross-reference streams (PDF 1.5+) | refused with a message naming the offset. [0009](../decisions/0009-cross-reference-streams.md) |
 | Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
 | Certification signatures (`/DocMDP`) | every signature is an approval signature. [0012](../decisions/0012-certification-signatures.md) |
 | Signing into a pre-placed field | the writer always creates its own. [0013](../decisions/0013-signing-into-an-existing-field.md) |

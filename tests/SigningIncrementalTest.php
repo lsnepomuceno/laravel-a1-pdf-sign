@@ -1,11 +1,13 @@
 <?php
 
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\XrefSubsections;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 
@@ -162,16 +164,82 @@ it('keeps the extension message for the one case that meant it', function () {
         ->toBe('Invalid file extension, accept only ".pdf" extension files. Current file: /tmp/contract.docx.');
 });
 
-it('refuses to sign a cross-reference stream until it can append to one', function () {
-    // Reading works; appending a revision a reader accepts does not. Measured
-    // on 2026-08-09: signing produced 17376 bytes that poppler reports as
-    // carrying no signature at all, so this refuses rather than hands back a
-    // file that looks signed and is not.
+it('signs a cross-reference stream document by appending another stream', function () {
+    // This asserted a refusal until writing landed. Appending a classic table
+    // to a document whose latest section is a stream produced a file poppler
+    // reported as carrying no signatures at all, so the shape of what gets
+    // appended has to follow the shape already there
+    // (docs/decisions/0009-cross-reference-streams.md).
     [$pfxPath, $password] = debugCertificate();
 
-    expect(fn() => A1PdfSign::newSignature()
+    $signed = A1PdfSign::newSignature()
         ->certificate($pfxPath, $password)
         ->pdf(resource('xref-stream.pdf'))
-        ->sign())
-        ->toThrow(InvalidPdfFileException::class, 'cross-reference stream');
+        ->sign();
+
+    // The original bytes survive, which is the invariant the whole signer is
+    // built around (docs/spec/invariants.md).
+    $original = Files::read(resource('xref-stream.pdf'));
+
+    expect(substr($signed->contents, 0, strlen($original)))->toBe($original)
+        ->and($signed->contents)->toContain('/Type/XRef')
+        ->and($signed->contents)->not->toContain("\ntrailer\n");
+
+    // The appended section has to be readable in its own right, since the next
+    // revision chains onto it.
+    $document = app(DocumentReader::class)->read($signed->contents);
+
+    expect($document->usesXrefStream)->toBeTrue()
+        ->and($document->root)->toBe(1);
+
+    $report = app(SignatureValidator::class)->validate($signed->contents);
+
+    expect($report->isValid())->toBeTrue()
+        ->and($report->signatures)->toHaveCount(1);
+});
+
+it('keeps the earlier signature when a stream document is signed twice', function () {
+    // The trap this guards is the cross-reference stream indexing itself: a
+    // second revision can only find the first one's objects through it.
+    [$pfxPath, $password] = debugCertificate();
+
+    $once = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('xref-stream.pdf'))
+        ->sign();
+
+    $twice = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdfContents($once->contents, 'xref-stream.pdf')
+        ->sign();
+
+    expect(substr($twice->contents, 0, strlen($once->contents)))->toBe($once->contents);
+
+    $report = app(SignatureValidator::class)->validate($twice->contents);
+
+    expect($report->signatures)->toHaveCount(2)
+        ->and($report->isValid())->toBeTrue();
+});
+
+it('writes the signature onto the page rather than onto the catalog', function () {
+    // findFirstPage scanned a fixed window from each object's offset, which in
+    // a compact document reaches the objects that follow. The catalog was
+    // reported as the first page because a /Type/Page two objects later fell
+    // inside that window, and the revision then wrote /AcroForm and /Annots
+    // both onto object 1, the second silently dropping the first.
+    $reader = app(DocumentReader::class);
+    $pdf = Files::read(resource('xref-stream.pdf'));
+
+    expect($reader->findFirstPage($pdf, $reader->read($pdf)))->toBe(3);
+});
+
+it('groups objects into runs of consecutive numbers', function () {
+    // /Index and the classic "first count" subsection header both describe
+    // runs. A revision's numbers are never one unbroken run, because it
+    // touches the catalog and a page low in the file and writes its new
+    // objects high in it, so declaring them as one would misplace every entry
+    // past the gap. The input is deliberately unordered: the offsets arrive
+    // keyed by object number in the order they were written, not sorted.
+    expect(new XrefSubsections()->of([7 => 300, 1 => 100, 8 => 400, 2 => 200]))
+        ->toBe([[1 => 100, 2 => 200], [7 => 300, 8 => 400]]);
 });
