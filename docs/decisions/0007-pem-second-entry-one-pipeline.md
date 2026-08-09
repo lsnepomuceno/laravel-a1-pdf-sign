@@ -1,4 +1,4 @@
-# 0007 — PEM as a second entry point onto one pipeline
+# 0007: PEM as a second entry point onto one pipeline
 
 **Status:** accepted, implemented in 2.1.0.
 Answers [discussion #147](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/discussions/147),
@@ -14,7 +14,7 @@ or `openssl pkcs12`. The contract's own docblock said "the raw bytes of a
 
 ### The pipeline is already PEM
 
-That closed door hid how little had to change. **PKCS#12 is not a peer of PEM —
+That closed door hid how little had to change. **PKCS#12 is not a peer of PEM,
 it is a container that gets converted into PEM** before anything else runs. PEM
 is the destination format, not a sibling:
 
@@ -25,8 +25,8 @@ is the destination format, not a sibling:
 | `CertificateVault::open()` | reparses the stored PEM directly |
 | `Cades\CadesBuilder` | extracts the chain with a PEM regex |
 
-A caller could already reach this by hand — `parse($pem, $pw)` into
-`usingCertificate()` — an undocumented back door, and a broken one.
+A caller could already reach this by hand, `parse($pem, $pw)` into
+`usingCertificate()`, an undocumented back door, and a broken one.
 
 ### The defect this uncovered
 
@@ -36,12 +36,12 @@ real `.pem` usually carries. Measured against ext-openssl:
 
 | Call | Result |
 |---|---|
-| `check_private_key($x509, $pem)` — encrypted key | **FAIL** |
-| `check_private_key($x509, [$pem, $password])` — encrypted key | OK |
+| `check_private_key($x509, $pem)`, encrypted key | **FAIL** |
+| `check_private_key($x509, [$pem, $password])`, encrypted key | OK |
 | `check_private_key($x509, [$pem, 'wrong'])` | FAIL, as it must |
-| `check_private_key($x509, [$pem, $password])` — unencrypted key | OK |
-| `x509_read()` with the key written before the certificate | OK — order is irrelevant |
-| `x509_read()` on DER bytes | FAIL — detectable, so reportable as a format error |
+| `check_private_key($x509, [$pem, $password])`, unencrypted key | OK |
+| `x509_read()` with the key written before the certificate | OK, order is irrelevant |
+| `x509_read()` on DER bytes | FAIL, detectable, so reportable as a format error |
 
 The array form is correct for encrypted and unencrypted keys alike, so the fix
 is uniform and needs no branch. PKCS#12 never exposed the bug because
@@ -53,7 +53,7 @@ is uniform and needs no branch. PKCS#12 never exposed the bug because
 second pipeline.
 
 `Certificates\PemCertificateReader` implements the existing `CertificateReader`
-as its degenerate case — the reader whose conversion step is empty. Everything
+as its degenerate case, the reader whose conversion step is empty. Everything
 downstream of the parsed certificate is untouched.
 
 A parallel contract, DTO and pipeline was rejected: it would fork `CadesBuilder`,
@@ -75,7 +75,7 @@ Divergence is confined to where it is real:
 
 - The contract's parameter became `$contents`, since PKCS#12 is no longer the
   only encoding it reads. Every call site in the package is positional.
-- `signFromPem()` joins the `A1PdfSign` contract — a breaking change for anyone
+- `signFromPem()` joins the `A1PdfSign` contract, a breaking change for anyone
   implementing it, mapped in `UPGRADE.md`.
 - `encryptCertificate()` detects the encoding rather than gaining a sibling: it
   takes "a certificate" generically, where signing keeps explicit entry points.

@@ -1,7 +1,7 @@
-# 0004 — The seal is rendered in memory
+# 0004: The seal is rendered in memory
 
 **Status:** accepted, implemented. The plan marked this "to be confirmed during
-implementation — the imaging bridge may impose restrictions"; it was confirmed.
+implementation, the imaging bridge may impose restrictions"; it was confirmed.
 
 ## Context
 
@@ -19,8 +19,8 @@ The `SealRenderer` contract returns bytes.
 ## Consequences
 
 - No intermediate file between generating the seal and stamping it.
-- Everything v1 hard-coded — driver, font path, size, colour, background,
-  placement — comes from configuration, with `SealPlacement` carrying position
+- Everything v1 hard-coded (driver, font path, size, colour, background,
+  placement) comes from configuration, with `SealPlacement` carrying position
   and page.
 - Omitting `seal()` produces an invisible signature, which is still a valid one:
   the seal is an appearance, not part of the cryptography.

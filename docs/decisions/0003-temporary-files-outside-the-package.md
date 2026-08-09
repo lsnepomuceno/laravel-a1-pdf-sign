@@ -1,4 +1,4 @@
-# 0003 — Temporary files live outside the package, with guaranteed cleanup
+# 0003: Temporary files live outside the package, with guaranteed cleanup
 
 **Status:** accepted, implemented.
 
@@ -6,7 +6,7 @@
 
 v1 wrote its temporary files to `src/Temp/`, inside the consuming application's
 `vendor/`. That required `vendor/` to be writable, behaved differently per
-environment, and — because `File::delete()` always ran on the happy path only —
+environment, and, because `File::delete()` always ran on the happy path only, it
 left files behind on every exception path. One of those files was a decrypted
 private key.
 

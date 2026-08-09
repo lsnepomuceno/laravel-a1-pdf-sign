@@ -1,4 +1,4 @@
-# 0001 — Read certificates through `ext-openssl`, keep the CLI as a fallback
+# 0001: Read certificates through `ext-openssl`, keep the CLI as a fallback
 
 **Status:** accepted, implemented.
 **Supersedes** the v1 behaviour of shelling out for every certificate read.
@@ -11,7 +11,7 @@ the machine, and wrote the decrypted private key to a file inside the consuming
 application's `vendor/`.
 
 `openssl_pkcs12_read()` does the PKCS#12 → PEM conversion natively: no password
-in `ps`, no key on disk, and no dependency on the binary being in `PATH` — along
+in `ps`, no key on disk, and no dependency on the binary being in `PATH`, along
 with the whole `$usePathEnv` complication.
 
 **The caveat:** under OpenSSL 3.x, `openssl_pkcs12_read()` **fails** on old PFX
@@ -38,13 +38,13 @@ that need it keep working, while the majority of cases stop touching disk and
   reader and `Validation\SignatureVerifier`.
 - `ReaderFactory` holds the container rather than the `A1PdfSign` contract.
   Resolving the contract there creates a cycle that recurses until the process
-  segfaults with no output — see [the invariants](../spec/invariants.md).
+  segfaults with no output. See [the invariants](../spec/invariants.md).
 
 ## Outcome
 
 `ProcessRunner` was rebuilt on `Illuminate\Process\Factory` rather than
-`Symfony\Component\Process`. This does **not** remove Symfony from the tree —
-`illuminate/process` requires `symfony/process` — so the honest framing is not
+`Symfony\Component\Process`. This does **not** remove Symfony from the tree, since
+`illuminate/process` requires `symfony/process`, so the honest framing is not
 "one less dependency" but two concrete gains: the direct require becomes an
 Illuminate one, matching every other dependency the package declares, and a host
 application can `Process::fake()` the call in its own suite, which is impossible

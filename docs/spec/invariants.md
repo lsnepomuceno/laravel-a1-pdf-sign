@@ -1,6 +1,6 @@
 # Invariants
 
-Rules that break the product, or the project, when violated. Short on purpose —
+Rules that break the product, or the project, when violated. Short on purpose:
 this file is meant to be read whole before touching `src/Signing`, `src/Validation`
 or the dependency list.
 
@@ -13,7 +13,7 @@ it is not, that is noted.
 
 **`ddn/sapp` is LGPL-3.0-or-later; this package is MIT.**
 
-Porting or adapting SAPP code into `src/` is a licence violation — an adapted
+Porting or adapting SAPP code into `src/` is a licence violation, since an adapted
 excerpt is still a derivative work and would drag the whole package into LGPL.
 
 Studying the technique is legitimate: algorithms and file-format mechanics are
@@ -21,7 +21,7 @@ not protected by copyright, and incremental update is specified in ISO 32000-1
 §7.5.6 and §12.8, a public standard. The implementation is clean-room, written
 from that standard. In practice: keep ISO 32000-1 open, not `vendor/ddn/sapp`.
 
-**It is not taken as a dependency either** — not in `require`, not in
+**It is not taken as a dependency either**, not in `require`, not in
 `require-dev`, not as `suggest`. That would be legal, since LGPL permits library
 use without contaminating the consumer, but it is ruled out: it is a legacy
 project and we would inherit its maintenance.
@@ -31,7 +31,7 @@ project and we would inherit its maintenance.
 
 ---
 
-## 2. Signing appends a revision — it never rebuilds the document
+## 2. Signing appends a revision, never rebuilds the document
 
 `Signing\IncrementalSigner` writes a new revision onto the end of the file
 (ISO 32000-1 §7.5.6). The original bytes survive byte for byte.
@@ -55,7 +55,7 @@ on `samples/six-signatures.pdf`.
 multi-signature document belongs to an **earlier signature**. Writing there
 corrupts it.
 
-Every read of those structures uses `preg_match_all` + `end()` — `readLast()`,
+Every read of those structures uses `preg_match_all` + `end()`: `readLast()`,
 `lastContentsOffset()`.
 
 A bug of exactly this shape passed the entire suite and was caught only by
@@ -86,7 +86,7 @@ header declares. Trimming trailing `0` bytes cuts legitimate DER.
 ## 6. `K_PATH_FONTS` stays undefined
 
 tc-lib-pdf and TCPDF 6 read it in different formats, and defining it globally
-**kills TCPDF silently** — no error, no output.
+**kills TCPDF silently**, with no error and no output.
 
 The package appends revisions to bytes it already has and never emits a
 document, so no font definition is ever loaded and nothing needs the constant.
@@ -96,7 +96,7 @@ document, so no font definition is ever loaded and nothing needs the constant.
 ## 7. `Certificates\ReaderFactory` holds the container, not the `A1PdfSign` contract
 
 Resolving the contract inside the factory creates a cycle that recurses until
-the process **segfaults with no output** (exit 139) — no exception, no stack
+the process **segfaults with no output** (exit 139), with no exception, no stack
 trace, nothing to read.
 
 ---

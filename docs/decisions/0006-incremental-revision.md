@@ -1,11 +1,11 @@
-# 0006 — Sign by appending a revision, written in-package
+# 0006: Sign by appending a revision, written in-package
 
 **Status:** accepted, implemented. The most consequential decision in the
 package.
 
 ## Context
 
-A second signature destroyed the first — [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430),
+A second signature destroyed the first, reported as [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430),
 open since 2021. v1 imported every page through FPDI and rebuilt the document,
 which discarded annotations, form fields and any signature already present.
 
@@ -16,10 +16,10 @@ the kind of mistake that looks like a fix.
 Tracing the only three usages of `signature['approval']` in tc-lib-pdf, the flag
 does exactly one thing: it suppresses the `/Reference << /Type /SigRef … /DocMDP >>`
 dictionary and the corresponding `/Perms` entries. It toggles between a
-**certification** and an **approval** signature — ISO 32000-1 semantics, nothing
+**certification** and an **approval** signature, ISO 32000-1 semantics, nothing
 more. Nowhere does it read the original file's bytes to append a revision:
 `$startxref = strlen($out)` is computed over the freshly built output.
-`Import\Importer` confirms the model — `importPage()` allocates a Form XObject
+`Import\Importer` confirms the model: `importPage()` allocates a Form XObject
 and clones resources, architecture identical to FPDI's. **That is rebuilding.**
 
 The decisive proof was in this package already: v1's `SignaturePdf` passed `'A'`
@@ -80,4 +80,4 @@ Verified with poppler's `pdfsig` on a six-signature document: all six report
 that document.
 
 `approval()`, `certify()` and `ltv()` were never built as separate builder
-methods — the PAdES level chosen by `profile()` determines all three.
+methods: the PAdES level chosen by `profile()` determines all three.

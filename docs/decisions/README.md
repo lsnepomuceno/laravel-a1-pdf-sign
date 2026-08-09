@@ -1,6 +1,6 @@
 # Decisions
 
-One file per decision, numbered. The number is the identifier — it is what code
+One file per decision, numbered. The number is the identifier: it is what code
 cites, so it never changes and is never reused.
 
 Each records the context that forced a choice, the alternatives weighed, and an
@@ -19,4 +19,4 @@ document drifts away from the code it describes.
 | [0007](0007-pem-second-entry-one-pipeline.md) | PEM as a second entry point onto one pipeline |
 
 Rules that break the product when violated are not decisions and do not live
-here — they are in [the invariants](../spec/invariants.md).
+here. They are in [the invariants](../spec/invariants.md).
