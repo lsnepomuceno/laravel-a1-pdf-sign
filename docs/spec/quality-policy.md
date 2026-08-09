@@ -28,11 +28,11 @@ The gates a change has to pass, and why each one is set where it is.
 ## PHPStan runs at `level: max` with no baseline
 
 The baseline was deleted, not shrunk. **The gate is "no errors", not "no new
-errors"** — a baseline must only ever track debt that can actually be paid down,
+errors"**: a baseline must only ever track debt that can actually be paid down,
 and this one had none left.
 
 The single exception is scoped and documented in `phpstan.neon`: Pest's fluent
-API — `arch()`, `expect()->and()->not`, dataset chains — is runtime magic that
+API (`arch()`, `expect()->and()->not`, dataset chains) is runtime magic that
 PHPStan cannot type without a dedicated extension. Those are ignored by
 identifier under `tests/*`, because they are limits of the tooling rather than
 defects.
@@ -43,7 +43,7 @@ defects.
 
 ## Mutation testing
 
-Covers `src/Certificates`, `src/Signing` and `src/Validation` — the three
+Covers `src/Certificates`, `src/Signing` and `src/Validation`, the three
 namespaces where a test that only asserts "it did not throw" would keep passing
 with broken cryptography.
 
@@ -70,7 +70,7 @@ measurement, and never lower one to make a run pass.
 
 **Never split with `--shard`.** It divides the *test suite*, and every mutation
 needs the whole suite: a mutation killed by a test that landed in another shard
-is reported as uncovered. Measured on `src/Certificates` — the full run scores
+is reported as uncovered. Measured on `src/Certificates`, the full run scores
 64.71% with 8 uncovered, while shard 1/2 reports 61.76% with 26 uncovered and
 shard 2/2 reports 69.12%. Faster precisely because it is wrong. Split by mutated
 path instead.
@@ -82,14 +82,14 @@ consume the newer format.**
 
 14.2.4 changed the shape of `lineCoverage()`: the plugin expects each covered
 line to carry a list of test identifiers, and gets integers instead. It dies
-before scoring anything —
+before scoring anything:
 
 ```
 TypeError: preg_match(): Argument #2 ($subject) must be of type string, int given
   at vendor/pestphp/pest-plugin-mutate/src/MutationTest.php:54
 ```
 
-— and reproduces with and without `--parallel`, on both `pest-plugin-mutate`
+It reproduces with and without `--parallel`, on both `pest-plugin-mutate`
 5.0.0 and 5.0.1, so it is neither the plugin version nor the parallel runner.
 
 This is the only pinned dependency in the package, and it exists because the
@@ -106,24 +106,24 @@ or updates a tracking issue per namespace.
 
 **The schedule is when it may run, not what it measures.** A `changed` job
 compares the default branch against the commit of the last run that reached a
-verdict, and skips when nothing has landed since — so a given commit is scored
+verdict, and skips when nothing has landed since, so a given commit is scored
 once, not once per night.
 
 Re-scoring identical code answers a question already answered, and answers it
 *differently*: the score is not reproducible, so a quiet week would produce a
 week of contradictory numbers for the same tree, and any of them could trip a
-floor. Cancelled runs are excluded from the comparison — concurrency cancels
+floor. Cancelled runs are excluded from the comparison: concurrency cancels
 them mid-flight, so their commit was never actually scored.
 
 The cost is that this job stops doubling as a canary for the unpinned
 dependency resolution. It was playing that role by accident, and playing it
-well — the `php-code-coverage` break of 2026-08-08 arrived with no commit
+well: the `php-code-coverage` break of 2026-08-08 arrived with no commit
 behind it and was caught by a nightly on untouched code. During a quiet period
 that break would now surface only at the next merge.
 
 ## CI
 
-`.github/workflows/main_action.yml`, on pull requests to `main` only — every
+`.github/workflows/main_action.yml`, on pull requests to `main` only, since every
 change reaches `main` through a pull request, so building branch pushes as well
 duplicated each run.
 
@@ -142,7 +142,7 @@ fail offline. Exclude them with `--exclude-group=network`.
 ## Tests
 
 Orchestra Testbench, not a host application. **`openssl` on `PATH` is not
-required to run the suite** — `Testing\DebugCertificate` generates throwaway
+required to run the suite**: `Testing\DebugCertificate` generates throwaway
 PKCS#12 and PEM bundles through the ext-openssl functions.
 
 Helpers shared across test files must live in `tests/Pest.php`. A helper defined
@@ -150,11 +150,11 @@ inside one test file is invisible to the others under `--parallel`, which fails
 as `Call to undefined function`.
 
 Patches are expected to come with tests. `tests/ArchTest.php` enforces the
-structural rules — read it before adding a class.
+structural rules, so read it before adding a class.
 
 Independent verification is done with poppler's `pdfsig`; it has caught bugs the
 suite passed straight through. `samples/` holds one signed PDF per profile plus
-a six-signature document — regenerate them with `poc/sign-samples.php` and
+a six-signature document. Regenerate them with `poc/sign-samples.php` and
 re-check after any change to `src/Signing/`.
 
 ## Development environment
@@ -196,10 +196,10 @@ Node is **not** a dependency of the package: `package.json` is private and
 The criterion: a feature gets adopted when it **removes code or removes a class
 of bug**.
 
-- `#[\SensitiveParameter]` on every password argument — a security fix disguised
+- `#[\SensitiveParameter]` on every password argument, a security fix disguised
   as modernisation, one line per signature, keeping certificate passwords out of
   stack traces and logs.
-- `#[\Override]` on contract implementations — the compiler guarantees the
+- `#[\Override]` on contract implementations: the compiler guarantees the
   signature still matches.
 - Typed class constants, `final readonly` by default, enums carrying behaviour
   instead of class constants.

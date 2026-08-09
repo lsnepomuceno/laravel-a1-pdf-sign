@@ -6,7 +6,7 @@ consumers: adding to it is a minor release, changing it is a major one.
 > Written from the code, not from the v2 plan. The plan's §2 described a
 > `TcLibPdfSigner` / `TcpdfSigner` pair, an `Enums\SealPage`, a `Console\`
 > namespace and `approval()` / `certify()` / `ltv()` builder methods. None of
-> them were built — see [the modernisation record](../history/v2-modernization.md).
+> them were built. See [the modernisation record](../history/v2-modernization.md).
 > This file supersedes that section.
 
 ## Namespace layout
@@ -53,7 +53,7 @@ $signed = A1PdfSign::newSignature()
     ->sign();
 ```
 
-Certificate input — one of:
+Certificate input, one of:
 
 | Method | Takes |
 |---|---|
@@ -63,7 +63,7 @@ Certificate input — one of:
 | `certificateFromPem($contents, $key, $password)` | PEM bytes already in hand |
 | `usingCertificate($certificate)` | an already-parsed `Data\Certificate` |
 
-Document input — `pdf($path)` or `pdfContents($bytes, $fileName)`.
+Document input: `pdf($path)` or `pdfContents($bytes, $fileName)`.
 
 Everything else is optional: `info()`, `seal()`, `sealFrom()`, `profile()`,
 `timestamp()`, `fieldName()`. `sign()` closes the chain and returns a
@@ -86,7 +86,7 @@ A1PdfSign::newSignature();          // Signing\PendingSignature
 A1PdfSign::tempPath($tempFile, $fileExt);
 ```
 
-Prefer injecting `Contracts\A1PdfSign` where you can — it is what makes the
+Prefer injecting `Contracts\A1PdfSign` where you can: it is what makes the
 package mockable in a consuming application's tests.
 
 ## Output
@@ -94,11 +94,11 @@ package mockable in a consuming application's tests.
 **`sign()` does not decide transport.** The same result answers all of these:
 
 ```php
-$signed->contents();          // string — the signed bytes
+$signed->contents();          // string, the signed bytes
 $signed->size();              // int
-$signed->save($path);         // string — the path written
-$signed->download('doc.pdf'); // BinaryFileResponse — forces a download
-$signed->toResponse();        // Response — renders inline
+$signed->save($path);         // string, the path written
+$signed->download('doc.pdf'); // BinaryFileResponse, forces a download
+$signed->toResponse();        // Response, renders inline
 (string) $signed;             // same as contents()
 ```
 
@@ -116,7 +116,7 @@ $report->latest();       // ?Data\SignatureDetails
 ```
 
 `isValid()` answers "does this signature match these bytes". It does not check
-the issuer against a trust store — that decision stays with the application.
+the issuer against a trust store: that decision stays with the application.
 
 ## Signature profiles
 
@@ -173,7 +173,7 @@ Both map a `Throwable` to a failure exit code, so they compose in a pipeline.
 
 ## Stability
 
-`Data\*` are `final readonly` and are public return types — **adding a property
+`Data\*` are `final readonly` and are public return types, so **adding a property
 changes the public shape**. The contracts in `Contracts\` may be implemented by
 consumers, so adding a method to one is a breaking change for them even though
 callers are unaffected.
