@@ -148,6 +148,37 @@ you accept stays with the application.
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
+## Signing into a field the document already carries
+
+A template laid out by someone else arrives with its fields placed, and the
+application is expected to fill the right one rather than append a field beside
+it:
+
+```php
+foreach (A1PdfSign::signatureFields($template) as $field) {
+    $field->name;        // 'SignatureManager'
+    $field->isSigned;    // false
+    $field->pageNumber;  // 3
+    $field->rectangle;   // [30.0, 200.0, 200.0, 250.0]
+    $field->isVisible(); // true
+}
+
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($template)
+    ->intoField('SignatureManager')
+    ->seal()
+    ->sign();
+```
+
+The field's own rectangle decides where the seal goes, so `intoField()` cannot
+be combined with a `SealPlacement`, and a field with a zero rectangle keeps the
+signature invisible even when `seal()` was called.
+
+A field that is missing or already signed raises `SignatureFieldException`
+rather than falling back to appending, which would reproduce exactly the failure
+this exists to prevent ([0013](../decisions/0013-signing-into-an-existing-field.md)).
+
 ## What the signer accepts
 
 Both cross-reference forms: the classic table of ISO 32000-1 §7.5.4 and the
@@ -165,7 +196,6 @@ Stated here because a public API is also its boundaries, and each has a record:
 |---|---|
 | Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
 | Certification signatures (`/DocMDP`) | every signature is an approval signature. [0012](../decisions/0012-certification-signatures.md) |
-| Signing into a pre-placed field | the writer always creates its own. [0013](../decisions/0013-signing-into-an-existing-field.md) |
 | Checking the chain against a trust store | the chain is built and verified; whether its root is one you accept is the application's policy. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
 | Revocation checking at validation time | the store's OCSP responses and CRLs are counted, not evaluated |
 

@@ -191,3 +191,32 @@ printf(
     $streamReport->isValid() ? 'true' : 'false',
     substr_count((string) file_get_contents($xrefStream), '/Type/XRef') . ' xref streams',
 );
+
+// A template someone else laid out, with its fields filled by name rather than
+// appended beside. The employee signs first and the manager second, which is
+// what catches a writer that fills "the next empty one" rather than the one it
+// was told to (docs/decisions/0013-signing-into-an-existing-field.md).
+$intoFields = "{$output}/signed-into-fields.pdf";
+copy(__DIR__ . '/../tests/Resources/signature-fields.pdf', $intoFields);
+
+foreach (['SignatureEmployee' => 'Employee', 'SignatureManager' => 'Manager'] as $field => $who) {
+    $filled = $manager->newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf($intoFields)
+        ->intoField($field)
+        ->info(name: $who, reason: "Signed as {$who}", location: 'Brazil')
+        ->seal()
+        ->profile(SignatureProfile::PadesBB)
+        ->sign();
+
+    $filled->save($intoFields);
+}
+
+$fieldReport = $manager->validate($intoFields);
+
+printf(
+    "validate(signed-into-fields.pdf): %d signatures, valid=%s, fields=%d\n",
+    $fieldReport->count(),
+    $fieldReport->isValid() ? 'true' : 'false',
+    count($manager->signatureFields($intoFields)),
+);

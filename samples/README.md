@@ -59,12 +59,37 @@ ICP-Brasil certificate.
 | `six-signatures.pdf` | Six signatures on one document |
 | `two-seals.pdf` | Two signatures, each with its own visible seal in its own place |
 | `xref-stream.pdf` | Two signatures on a PDF 1.5 document whose cross-reference sections are streams, not tables |
+| `signed-into-fields.pdf` | A template's own two signature fields, filled by name rather than appended beside |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
 from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
+
+## What `signed-into-fields.pdf` proves
+
+That `intoField()` fills the field it was told to. The source is a template with
+an empty `SignatureManager` and an empty `SignatureEmployee`, and the employee
+signs first: filling them out of order is what catches a writer that takes "the
+next empty one" rather than the one named.
+
+Open it and check two things. Poppler reports the signatures under the
+template's own names, not `Signature1` and `Signature2`:
+
+```
+Signature #1:  Signature Field Name: SignatureManager
+Signature #2:  Signature Field Name: SignatureEmployee
+```
+
+And the document still carries exactly **two** fields. A third would mean a
+field was appended beside the one asked for, which is the failure the feature
+exists to stop: a signature that is valid and in the wrong place, with the
+template's field still empty. Each seal is drawn into its field's own
+rectangle, so they sit where the template put them rather than at the
+configured default placement.
+
+See [`../docs/decisions/0013-signing-into-an-existing-field.md`](../docs/decisions/0013-signing-into-an-existing-field.md).
 
 ## What `xref-stream.pdf` proves
 

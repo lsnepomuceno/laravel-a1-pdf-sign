@@ -17,6 +17,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use SensitiveParameter;
 
@@ -38,6 +39,8 @@ final class PendingSignature
     private SignatureInfo $info;
 
     private string $fieldName = 'Signature';
+
+    private ?string $targetField = null;
 
     private ?SealPlacement $placement = null;
 
@@ -239,10 +242,41 @@ final class PendingSignature
     }
 
     /**
+     * Signs into a field the document already carries, rather than creating one.
+     *
+     * The case this exists for is a template someone else laid out: a contract
+     * from the legal team with an empty SignatureManager and an empty
+     * SignatureEmployee, where the application is expected to fill the right
+     * one. Without it the package appends a field beside the empty one, and the
+     * document ends up with a signature that is valid and in the wrong place
+     * plus an unfilled field that was the point of the template.
+     *
+     * The field's own rectangle decides where the seal goes, so it cannot be
+     * combined with a placement, and a field with a zero rectangle keeps the
+     * signature invisible even when seal() was called: the template's geometry
+     * is the template's decision.
+     *
+     * List what a document carries with A1PdfSign::signatureFields().
+     *
+     * @see docs/decisions/0013-signing-into-an-existing-field.md
+     */
+    public function intoField(string $fieldName): self
+    {
+        $this->targetField = $fieldName;
+
+        return $this;
+    }
+
+    /**
      * @throws FileNotFoundException
+     * @throws SignatureFieldException
      */
     public function sign(): SignedPdf
     {
+        if ($this->targetField !== null && $this->placement !== null) {
+            throw SignatureFieldException::placementConflict($this->targetField);
+        }
+
         if ($this->certificate === null) {
             throw new FileNotFoundException('no certificate given; call certificate() first');
         }
@@ -263,6 +297,7 @@ final class PendingSignature
             $seal,
             $seal !== null ? ($this->placement ?? $this->defaultPlacement()) : null,
             SignatureProfile::resolve($this->profile ?? $this->configuredProfile()),
+            $this->targetField,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());

@@ -143,6 +143,29 @@ A1PdfSign::newSignature()
     ->sign();
 ```
 
+### Signing into a template's own fields
+
+A contract laid out by someone else arrives with its signature fields already placed. `intoField()` fills the one you
+name instead of appending another beside it:
+
+```php
+foreach (A1PdfSign::signatureFields($template) as $field) {
+    $field->name;        // 'SignatureManager'
+    $field->isSigned;    // false
+    $field->rectangle;   // [30.0, 200.0, 200.0, 250.0]
+}
+
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($template)
+    ->intoField('SignatureManager')
+    ->seal()              // drawn into the field's own rectangle
+    ->sign();
+```
+
+A field that is missing or already signed raises rather than falling back to appending, since that fallback is the
+failure this prevents: a signature that is valid and in the wrong place, with the template's field still empty.
+
 ### Validation
 
 ```php
