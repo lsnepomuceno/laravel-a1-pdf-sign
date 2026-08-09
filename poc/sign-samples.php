@@ -5,7 +5,7 @@
  * or ITI Validar.
  *
  * The certificate is a throwaway self-signed one, so every reader will report
- * the signer as untrusted — that is the certificate's provenance, not the
+ * the signer as untrusted: that is the certificate's provenance, not the
  * signature's integrity. What can be validated here is everything else: the
  * document hash, the sub-filter, the timestamp token and the coverage of each
  * signature in the multi-signature sample.

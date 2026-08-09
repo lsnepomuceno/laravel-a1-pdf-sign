@@ -2,7 +2,7 @@
 
 One signed PDF per signature profile, plus a document carrying six signatures.
 They exist so a change to the signing engine can be checked against real
-readers — Adobe Reader, ITI Validar, poppler's `pdfsig` — and not only against
+readers (Adobe Reader, ITI Validar, poppler's `pdfsig`) and not only against
 this package's own validator, which shares its assumptions with the code it
 validates.
 
@@ -23,7 +23,7 @@ generates. Its password is:
 example's password with special chars: $ & * ? " '
 ```
 
-`certificate.pem` is **the same certificate**, not a second one — same serial,
+`certificate.pem` is **the same certificate**, not a second one: same serial,
 same subject, same password. It is here so the PEM entry point can be exercised
 against the identity the rest of this directory already uses:
 
@@ -39,7 +39,7 @@ shipped unencrypted, and this sample deliberately does not model that.
 
 **Every reader will report the signer as untrusted.** That is the certificate's
 provenance, not the signature's integrity: it is self-signed and chains to
-nothing. Everything else validates normally — document hash, sub-filter,
+nothing. Everything else validates normally: document hash, sub-filter,
 timestamp token, and the coverage of each signature.
 
 To make Adobe Reader report the signer as trusted, import `certificate.pfx` and
@@ -51,16 +51,16 @@ ICP-Brasil certificate.
 
 | File | What it carries |
 |---|---|
-| `legacy.pdf` | `/SubFilter adbe.pkcs7.detached` — ISO 32000-1, widest reader support |
-| `pades-b-b.pdf` | PAdES B-B — `ETSI.CAdES.detached` with the ESS `signing-certificate-v2` attribute |
+| `legacy.pdf` | `/SubFilter adbe.pkcs7.detached`, ISO 32000-1, widest reader support |
+| `pades-b-b.pdf` | PAdES B-B, `ETSI.CAdES.detached` with the ESS `signing-certificate-v2` attribute |
 | `pades-b-t.pdf` | B-B plus an RFC 3161 token from freetsa.org |
 | `pades-b-lt.pdf` | B-T plus a Document Security Store |
-| `pades-b-lta.pdf` | B-LT plus an archive timestamp — a second `/ByteRange`, of type `ETSI.RFC3161`, covering the whole file |
+| `pades-b-lta.pdf` | B-LT plus an archive timestamp, a second `/ByteRange`, of type `ETSI.RFC3161`, covering the whole file |
 | `six-signatures.pdf` | Six signatures on one document |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
-from `pades-b-b.pdf` — a separate sample would imply a distinction that does not
+from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
 
@@ -71,7 +71,7 @@ could not produce. In v1 each new signature rebuilt the document through FPDI
 and discarded the previous one; here each signature is an appended revision, so
 all six coexist.
 
-Verified with poppler `pdfsig` 25.12 — all six report *Signature is Valid*, with
+Verified with poppler `pdfsig` 25.12: all six report *Signature is Valid*, with
 progressive coverage:
 
 ```

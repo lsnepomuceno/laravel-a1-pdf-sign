@@ -1,6 +1,6 @@
-# PoC 0b — incremental-revision signing
+# PoC 0b, incremental-revision signing
 
-Spike for PR 0b (see docs/spec/invariants.md). **This is not production code** — it exists
+Spike for PR 0b (see docs/spec/invariants.md). **This is not production code**: it exists
 to answer a single question before committing to the v2 architecture:
 
 > Can a PDF be signed several times without each new signature destroying the previous one?
@@ -38,7 +38,7 @@ signature 2: ByteRange[0 26442 42828 752] covers 27194 of 60861 bytes -> VALID
 signature 3: ByteRange[0 43709 60095 766] covers 44475 of 60861 bytes -> VALID
 ```
 
-Each signature covers exactly its own revision — 26313, 43580 and 60861 bytes respectively —
+Each signature covers exactly its own revision, at 26313, 43580 and 60861 bytes respectively,
 which is the correct ISO 32000-1 semantics. The original document bytes stay untouched
 across all three rounds.
 
@@ -47,7 +47,7 @@ across all three rounds.
 | Hypothesis | Status |
 |---|---|
 | Multiple signatures without overwriting | ✅ confirmed |
-| Original bytes preserved | ✅ confirmed — `substr($pdf, 0, $origLen)` identical to the source file |
+| Original bytes preserved | ✅ confirmed, `substr($pdf, 0, $origLen)` identical to the source file |
 | Correct `/Prev` chain across revisions | ✅ confirmed |
 | Detached PKCS#7 through `ext-openssl`, no shell-out | ✅ confirmed (`openssl_pkcs7_sign`) |
 | Certificate generated without the CLI | ✅ confirmed (`openssl_pkey_new` + `openssl_csr_sign`) |
@@ -60,7 +60,7 @@ across all three rounds.
   only and **explicitly rejects** xref streams. `test.pdf` is PDF-1.4.
 - **Encrypted PDFs**, linearized files, or a complex pre-existing `/AcroForm`.
 - **Visual seal.** Signatures are invisible (`/Rect [0 0 0 0]`).
-- **LTV and timestamping.** Out of scope here — those come from tc-lib-pdf (§3g).
+- **LTV and timestamping.** Out of scope here: those come from tc-lib-pdf (§3g).
 
 ## Two bugs found while building this
 
@@ -70,10 +70,10 @@ Both are worth keeping as regression tests in the production implementation:
    using the *first* makes the new signature overwrite a previous signature's `/Contents`.
    It must always be the **last** one.
 2. **Finding the end of the DER with `rtrim($hex, '0')`.** That cuts legitimate `0x00` bytes
-   belonging to the DER itself. The real length comes from the ASN.1 header — see
+   belonging to the DER itself. The real length comes from the ASN.1 header. See
    `derTruncate()` in `run.php`.
 
 ## Provenance
 
 Clean-room implementation written from ISO 32000-1 §7.5.6 (Incremental Updates) and §12.8
-(Digital Signatures). No line derived from `ddn/sapp` (LGPL) — see docs/spec/invariants.md.
+(Digital Signatures). No line derived from `ddn/sapp` (LGPL). See docs/spec/invariants.md.

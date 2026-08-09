@@ -3,7 +3,7 @@
 ## From 2.0 to 2.1
 
 2.1 adds PEM as a second accepted certificate encoding. PKCS#12 behaviour is
-unchanged, and the PHP and Laravel requirements do not move — an application
+unchanged, and the PHP and Laravel requirements do not move, so an application
 that signs with `.pfx` and does not implement the package's contracts upgrades
 without editing anything.
 
@@ -13,7 +13,7 @@ Two changes reach code that extends the package rather than calls it.
 
 | | 2.0 | 2.1 |
 |---|---|---|
-| `Contracts\A1PdfSign` | — | gains `signFromPem()` |
+| `Contracts\A1PdfSign` | n/a | gains `signFromPem()` |
 | `Contracts\CertificateReader::read()` | `$pfxContents` | `$contents` |
 
 Injecting the contracts, or calling them, is unaffected. Implementing them is
@@ -37,7 +37,7 @@ $reader->read(contents: $bytes, password: $password);      // 2.1
 ```
 
 The parameter was named after PKCS#12 when that was the only encoding a reader
-could ingest. It no longer is — `PemCertificateReader` implements the same
+could ingest. It no longer is: `PemCertificateReader` implements the same
 contract as the degenerate case, the reader whose conversion step is empty.
 
 ### `pdf:sign` renamed its second argument
@@ -56,7 +56,7 @@ Artisan::call('pdf:sign', ['certificatePath' => $path, ...]);  // 2.1
 ```
 
 The command also takes `--key` for a PEM key in its own file. Passing it with a
-PKCS#12 bundle is rejected rather than ignored — the bundle already carries its
+PKCS#12 bundle is rejected rather than ignored: the bundle already carries its
 key, so the combination means the caller is mistaken about what they hold.
 
 ### New: PEM certificates
@@ -79,7 +79,7 @@ A1PdfSign::newSignature()
 ```
 
 `$password` defaults to empty, because **a PEM private key is frequently
-unencrypted — legal for PEM, impossible for PKCS#12**. OpenSSL ignores a
+unencrypted, legal for PEM and impossible for PKCS#12**. OpenSSL ignores a
 passphrase given for a key that does not need one, so the argument is safe to
 pass either way. Prefer an encrypted key where you have the choice: an
 unprotected one is readable by anything that can read the file.
@@ -88,8 +88,8 @@ unprotected one is readable by anything that can read the file.
 and detects the encoding, where signing keeps explicit entry points so the
 caller states what it holds.
 
-Content that is neither valid PEM nor routable — binary DER, or PKCS#12 bytes
-handed to the PEM entry point — raises the new
+Content that is neither valid PEM nor routable, whether binary DER or PKCS#12 bytes
+handed to the PEM entry point, raises the new
 `Exceptions\InvalidPemContentException`, naming the offending half rather than
 reporting a generic parse failure. A certificate and key that are both valid
 but unrelated keep raising `InvalidX509PrivateKeyException`.
@@ -99,7 +99,7 @@ but unrelated keep raising `InvalidX509PrivateKeyException`.
 Version 2.0 is a clean break: the deprecated API is removed rather than carried
 behind a shim. Upgrading requires editing your code.
 
-That was a deliberate reversal — the original plan kept a deprecation layer
+That was a deliberate reversal: the original plan kept a deprecation layer
 until 3.0. A 3.0 is far enough out that a shim living "until then" is a shim
 maintained indefinitely, and every one of them constrains the design it wraps:
 `Entities\*` could not be `final`, the enums would carry legacy backing values,
@@ -140,7 +140,7 @@ The trailing arguments are now optional and fall back to
 `config('a1-pdf-sign')`, so `usePathEnv` no longer has to be repeated at every
 call site.
 
-Prefer injecting the contract where you can — it is what makes the package
+Prefer injecting the contract where you can: it is what makes the package
 mockable in your own tests:
 
 ```php
@@ -174,14 +174,14 @@ array yourself.
 | `SealImage::FONT_SIZE_LARGE` | `Enums\FontSize::Large` |
 | `SealImage::IMAGE_DRIVER_GD` | `Enums\ImageDriver::Gd` |
 | `SealImage::IMAGE_DRIVER_IMAGICK` | `Enums\ImageDriver::Imagick` |
-| `SignaturePdf::MODE_RESOURCE` | removed — see below |
-| `SignaturePdf::MODE_DOWNLOAD` | removed — see below |
+| `SignaturePdf::MODE_RESOURCE` | removed, see below |
+| `SignaturePdf::MODE_DOWNLOAD` | removed, see below |
 
 Every entry point accepts either the enum case or its backing value
 (`'large'`, `'gd'`), so configuration can stay as plain strings.
 
 **The signing mode has no replacement, by design.** `sign()` returns a
-`SignedPdf` and no longer decides how the result is delivered — the same result
+`SignedPdf` and no longer decides how the result is delivered: the same result
 answers `contents()`, `save()`, `download()` and `toResponse()`. Drop the mode
 argument and call the method you want.
 
@@ -209,7 +209,7 @@ $signed->toResponse();       // inline
 **Signing no longer rebuilds the document.** v1 imported every page into a new
 file, which silently discarded annotations, form fields and any signature
 already present. v2 appends a revision instead, so the original bytes survive
-and a document can carry more than one signature — the request in
+and a document can carry more than one signature, the request in
 [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430).
 
 The practical consequence is that output is no longer byte-comparable with 1.x.
@@ -221,7 +221,7 @@ Signatures are now PAdES baseline by default, carrying the ESS
 
 | Profile | Adds |
 |---|---|
-| `legacy` | ISO 32000-1 detached CMS — the 1.x behaviour |
+| `legacy` | ISO 32000-1 detached CMS, the 1.x behaviour |
 | `pades-b-b` | CAdES signed attributes. **The new default** |
 | `pades-b-t` | B-B plus an RFC 3161 timestamp |
 | `pades-b-lt` | B-T plus a Document Security Store, so the signature still verifies after the certificate expires |
@@ -245,7 +245,7 @@ php artisan vendor:publish --tag=a1-pdf-sign-config
 ```
 
 It controls the temporary path, the `openssl` PATH and legacy flags, and the
-seal defaults. Nothing is required — the defaults match 1.x behaviour, except
+seal defaults. Nothing is required: the defaults match 1.x behaviour, except
 that temporary files no longer need `vendor/` to be writable.
 
 ### Validation now verifies the signature
@@ -259,13 +259,13 @@ as validated.
 
 | 1.x | 2.0 |
 |---|---|
-| `$report->isValidated` | `$report->isValid()` — every signature verifies |
+| `$report->isValidated` | `$report->isValid()`, every signature verifies |
 | `$report->data` | `$report->signers()`, or `$report->signatures` for detail |
-| — | `$report->count()`, `isSigned()`, `latest()` |
+| n/a | `$report->count()`, `isSigned()`, `latest()` |
 
 Each entry carries the signer as structured data, whether it verified, and
 whether it covers the whole file. Documents with more than one signature are
 reported in full; 1.x read only the first.
 
 `isValid()` answers "does this signature match these bytes". It does not check
-the issuer against a trust store — that decision stays with your application.
+the issuer against a trust store: that decision stays with your application.

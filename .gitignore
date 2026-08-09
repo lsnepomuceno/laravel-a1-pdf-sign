@@ -22,7 +22,7 @@ Temp
 *.pem
 *.key
 
-# Committed on purpose — see samples/README.md.
+# Committed on purpose. See samples/README.md.
 !/samples/*.pdf
 !/samples/*.pfx
 !/samples/*.pem

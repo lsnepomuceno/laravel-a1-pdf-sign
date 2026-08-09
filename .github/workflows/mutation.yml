@@ -3,7 +3,7 @@ name: Mutation testing
 # Nightly rather than per pull request, for two measured reasons
 # (docs/spec/quality-policy.md):
 #
-#   Cost. Timeouts dominate the run — a mutation that breaks a loop condition
+#   Cost. Timeouts dominate the run: a mutation that breaks a loop condition
 #   burns the full timeout, which the plugin derives from the suite duration
 #   and cannot be configured down. Locally that is ~2600 process-seconds; on a
 #   four-core runner, over ten minutes for a job every other check beats by an
@@ -21,7 +21,7 @@ name: Mutation testing
 # The schedule is when it may run, not what it measures: the `changed` job below
 # compares the default branch against the last run that reached a verdict and
 # skips when nothing has moved. Re-scoring identical code answers a question
-# already answered — and answers it differently, since the score is not
+# already answered, and answers it differently, since the score is not
 # reproducible, so a quiet week would produce a week of contradictory numbers.
 on:
   schedule:
@@ -53,7 +53,7 @@ jobs:
       # Compared against the last run that reached a verdict, not against a
       # 24-hour window: a cancelled or delayed run would make a window lie, and
       # GitHub delays scheduled runs under load. Cancelled runs are excluded
-      # deliberately — concurrency cancels them mid-flight, so their commit was
+      # deliberately: concurrency cancels them mid-flight, so their commit was
       # never actually scored.
       - name: Compare against the commit last scored
         id: check
@@ -69,7 +69,7 @@ jobs:
           echo "last scored: ${scored:-none}"
           echo "current:     ${{ github.sha }}"
 
-          # A manual dispatch always runs — it is the escape hatch, used before
+          # A manual dispatch always runs, since it is the escape hatch, used before
           # a release and to re-check after a toolchain fix.
           if [ "${{ github.event_name }}" != 'schedule' ]; then
             echo 'run=true' >> "$GITHUB_OUTPUT"
@@ -94,13 +94,13 @@ jobs:
       fail-fast: false
       matrix:
         # One runner per namespace: wall-clock becomes the slowest namespace
-        # instead of the sum. src/Signing is by far the slowest — every test
+        # instead of the sum. src/Signing is by far the slowest, since every test
         # covering it signs a real PDF.
         #
         # Splitting by mutated path, not by --shard. --shard divides the test
         # suite, and mutation testing needs the whole suite available for every
         # mutation: a mutation killed by a test that landed in another shard is
-        # reported as uncovered. Measured on src/Certificates — the full run
+        # reported as uncovered. Measured on src/Certificates, the full run
         # scores 64.71% with 8 uncovered, while shard 1/2 reports 61.76% with
         # 26 uncovered and shard 2/2 reports 69.12%. Faster, and wrong.
         #
@@ -135,7 +135,7 @@ jobs:
       # Raise a floor as its score improves; never lower one to make a run
       # pass.
       #
-      # shell: bash for pipefail — the default shell would let tee's exit code
+      # shell: bash for pipefail: the default shell would let tee's exit code
       # mask a failing run.
       - name: Run mutation testing
         id: mutate
@@ -150,7 +150,7 @@ jobs:
 
       # The score lives nowhere but the log, so a red job cannot tell a
       # three-point timeout wobble from a real regression without someone
-      # opening it — and calibrating a floor means reading two runs by hand.
+      # opening it, and calibrating a floor means reading two runs by hand.
       # Both become a glance at the run summary.
       - name: Record the score
         id: score
@@ -195,7 +195,7 @@ jobs:
 
             const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`
 
-            // A run that produced no score did not score badly — it crashed, and
+            // A run that produced no score did not score badly: it crashed, and
             // the two need different titles. Reporting a crash as a regression
             // sends whoever opens it hunting for a test that never weakened;
             // that happened on 2026-08-08, when php-code-coverage 14.2.4 broke
@@ -214,7 +214,7 @@ jobs:
                   ``,
                   `**This is not a score regression.** No number was reported, so nothing can be`,
                   `said about coverage quality from this run. Read the log before touching any`,
-                  `test — the usual cause is the toolchain rather than this repository, since`,
+                  `test. The usual cause is the toolchain rather than this repository, since`,
                   `the job resolves its dependencies unpinned on every run.`,
                 ].join('\n')
               : [
@@ -227,7 +227,7 @@ jobs:
                   `three points between identical runs. One or two points is noise; a sustained`,
                   `drop, or one that survives a re-run, is not.`,
                   ``,
-                  `**Do not lower the floor to make this pass** — docs/spec/quality-policy.md.`,
+                  `**Do not lower the floor to make this pass**, see docs/spec/quality-policy.md.`,
                 ].join('\n')
 
             // One open issue per namespace, commented on rather than reopened

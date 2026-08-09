@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PoC 0b — driver: signs the same PDF three times through incremental
+ * PoC 0b driver: signs the same PDF three times through incremental
  * revisions and checks that all three signatures survive.
  */
 
@@ -71,7 +71,7 @@ for ($i = 1; $i <= 3; $i++) {
         $before,
         strlen($pdf),
         strlen($pdf) - $before,
-        substr($pdf, 0, $origLen) === (string) file_get_contents($src) ? 'YES' : 'NO'
+        substr($pdf, 0, $origLen) === (string) file_get_contents($src) ? 'YES' : 'NO',
     );
 }
 
@@ -103,7 +103,7 @@ foreach ($br as $n => $m) {
     $signed = substr($pdf, 0, $a) . substr($pdf, $b, $c);
 
     // Embedded CMS, between '<' and '>'. The placeholder is zero-padded on the
-    // right, so the real end comes from the ASN.1 header length — not from
+    // right, so the real end comes from the ASN.1 header length, not from
     // rtrim(), which would cut legitimate 0x00 bytes of the DER itself.
     $hex = substr($pdf, $a + 1, $b - $a - 2);
     $der = derTruncate((string) hex2bin($hex));
@@ -120,10 +120,10 @@ foreach ($br as $n => $m) {
             escapeshellarg($sigFile),
             escapeshellarg($dataFile),
             escapeshellarg($certFile),
-            escapeshellarg($certFile)
+            escapeshellarg($certFile),
         ),
         $outLines,
-        $code
+        $code,
     );
 
     $code === 0 && $ok++;
@@ -136,7 +136,7 @@ foreach ($br as $n => $m) {
         $c,
         $a + $c,
         strlen($pdf),
-        $code === 0 ? 'VALID' : 'FAILED'
+        $code === 0 ? 'VALID' : 'FAILED',
     );
 
     if ($code !== 0) {
@@ -152,5 +152,5 @@ foreach ($br as $n => $m) {
 
 echo "\n";
 echo $ok === count($br) && $ok === 3
-    ? "RESULT: {$ok}/3 signatures valid — multiple signatures CONFIRMED\n"
+    ? "RESULT: {$ok}/3 signatures valid: multiple signatures CONFIRMED\n"
     : 'RESULT: only ' . $ok . '/' . count($br) . " valid\n";

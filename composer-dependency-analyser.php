@@ -9,9 +9,9 @@ return (new Configuration())
     ->addPathToExclude(__DIR__ . '/poc')
 
     /*
-     * Extensions are used through the libraries that wrap them — gd by
+     * Extensions are used through the libraries that wrap them: gd by
      * Intervention, fileinfo by UploadedFile, mbstring by Laravel's string
-     * handling — so no direct symbol reference exists to detect. They stay
+     * handling, so no direct symbol reference exists to detect. They stay
      * declared because a host missing them fails at runtime.
      */
     ->ignoreErrorsOnExtensions(

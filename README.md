@@ -94,7 +94,7 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 ```
 
 **Signing appends a revision rather than rebuilding the document.** The original bytes survive, so annotations and form
-fields are preserved and a document can carry more than one signature — the request in
+fields are preserved and a document can carry more than one signature, the request in
 [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
 
 ### PEM certificates
@@ -112,18 +112,18 @@ A1PdfSign::signFromPem($pemPath, $password, $pdfPath);        // one-shot
 A1PdfSign::newSignature()->certificateFromPem($bytes);        // from an upload or a secret store
 ```
 
-The format is decided by content, not by extension — PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`. The
+The format is decided by content, not by extension: PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`. The
 `pdf:sign` command detects it the same way, and takes `--key` for the two-file form:
 
 ```bash
 php artisan pdf:sign contract.pdf certificate.pem "" signed.pdf --key=private.key
 ```
 
-Pass an empty password when the private key is unencrypted. **PEM permits that and PKCS#12 does not** — an unprotected
+Pass an empty password when the private key is unencrypted. **PEM permits that and PKCS#12 does not**, and an unprotected
 key on disk is readable by anything that can read the file, so prefer an encrypted one where you have the choice.
 
 Signed samples for every profile, including a document carrying six signatures, live in
-[`samples/`](samples/README.md) — open them in any reader to see what the package produces.
+[`samples/`](samples/README.md). Open them in any reader to see what the package produces.
 
 ### PAdES profiles
 
@@ -153,7 +153,7 @@ $report->count();       // how many signatures the document carries
 $report->signers();     // structured signer identity
 ```
 
-`isValid()` answers whether each signature matches the document. It does not check the issuer against a trust store —
+`isValid()` answers whether each signature matches the document. It does not check the issuer against a trust store:
 that decision stays with your application.
 
 Configuration is publishable:

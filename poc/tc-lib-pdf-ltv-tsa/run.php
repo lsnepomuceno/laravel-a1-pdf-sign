@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 /**
- * PoC 0 — does tc-lib-pdf actually deliver LTV and RFC 3161 timestamping,
+ * PoC 0: does tc-lib-pdf actually deliver LTV and RFC 3161 timestamping,
  * or does it only document them?
  *
  * Blocks PRs 7 and 8 (see docs/history/v2-modernization.md). Every claim in that section
  * was read from the source; this script executes them.
  *
  * Fonts: tc-lib-pdf ships no font definition files, and it cannot emit any PDF
- * without one — not even a signature-only document. Generate helvetica.json
+ * without one, not even a signature-only document. Generate helvetica.json
  * once and mount the directory (see this PoC's README):
  *
  *   php vendor/tecnickcom/tc-lib-pdf-font/util/convert.php \
@@ -39,14 +39,14 @@ function check(string $label, bool $ok, string $detail = ''): void
 {
     global $pass, $fail;
     $ok ? $pass++ : $fail++;
-    printf("  [%s] %s%s\n", $ok ? 'PASS' : 'FAIL', $label, $detail !== '' ? " — {$detail}" : '');
+    printf("  [%s] %s%s\n", $ok ? 'PASS' : 'FAIL', $label, $detail !== '' ? ": {$detail}" : '');
 }
 
 function skip(string $label, string $why): void
 {
     global $skip;
     $skip++;
-    printf("  [SKIP] %s — %s\n", $label, $why);
+    printf("  [SKIP] %s: %s\n", $label, $why);
 }
 
 // ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ function buildSigned(
         'cert_type' => 2,
         'info'      => ['Name' => 'PoC', 'Reason' => 'LTV/TSA probe'],
         'password'  => '',
-        // PEM strings, not file:// — this also exercises the "key in memory"
+        // PEM strings, not file://, which also exercises the "key in memory"
         // claim from docs/history/v2-modernization.md.
         'privkey'   => $keyPem,
         'signcert'  => $certPem,
@@ -180,7 +180,7 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// 3. LTV option validation — proves the option is really parsed
+// 3. LTV option validation, proves the option is really parsed
 // ---------------------------------------------------------------------------
 echo "\n=== 3. LTV option validation ===\n";
 
@@ -209,7 +209,7 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// 5. RFC 3161 timestamp — requires network access
+// 5. RFC 3161 timestamp, requires network access
 // ---------------------------------------------------------------------------
 echo "\n=== 5. RFC 3161 timestamp ===\n";
 

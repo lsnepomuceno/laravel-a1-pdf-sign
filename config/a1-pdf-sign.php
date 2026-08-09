@@ -38,7 +38,7 @@ return [
     |
     | legacy     ISO 32000-1 detached CMS. Widest reader support.
     | pades-b-b  PAdES baseline. The default.
-    | pades-b-t  B-B plus an RFC 3161 timestamp — needs timestamp.url below.
+    | pades-b-t  B-B plus an RFC 3161 timestamp, needs timestamp.url below.
     | pades-b-lt B-T plus a Document Security Store.
     | pades-b-lta B-LT plus an archive timestamp.
     |
