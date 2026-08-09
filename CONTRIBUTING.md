@@ -27,13 +27,13 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 ## Running the checks
 
 ``` bash
-$ composer check       # style, static analysis and tests — the same as CI
+$ composer check       # style, static analysis and tests, the same as CI
 $ composer test        # tests only
 $ composer lint        # fix code style
 $ composer analyse     # static analysis only
 $ composer test:types  # type coverage across src/
 $ composer test:cov    # line coverage (needs pcov or xdebug)
-$ composer test:mutate # mutation testing (slow — runs nightly in CI, not on PRs)
+$ composer test:mutate # mutation testing (slow: runs nightly in CI, not on PRs)
 ```
 
 Tests are written with [Pest](https://pestphp.com). `tests/ArchTest.php` holds
@@ -53,7 +53,7 @@ files and stages the result, so style is never what a pull request gets blocked 
 $ npm install     # once, to install the hook
 ```
 
-Node is only used for the hook — it is not a dependency of the package, and skipping this
+Node is only used for the hook: it is not a dependency of the package, and skipping this
 step costs you nothing but the convenience. If your machine runs a PHP older than Pint
 requires, the hook detects it and routes through the Docker service described below.
 
@@ -63,7 +63,7 @@ Our validator shares its assumptions with the code it validates, so a green
 suite is not proof that Adobe Reader agrees. `samples/` holds one signed PDF per
 profile plus a six-signature document, with instructions for regenerating them
 and for reading what each one should show. **Regenerate and re-check them after
-any change to `src/Signing/`** — poppler's `pdfsig` has caught bugs the suite
+any change to `src/Signing/`**. Poppler's `pdfsig` has caught bugs the suite
 passed straight through.
 
 The package targets PHP 8.4+ and Laravel 13. If your machine runs an older PHP,
@@ -77,7 +77,7 @@ $ docker compose -f .docker/compose.yaml run --rm php composer check
 
 Each Docker service keeps `vendor/` in its own named volume, so switching PHP
 versions does not clobber the other install. The trade-off is that the
-`vendor/` your editor indexes — the one on your machine — is never touched by
+`vendor/` your editor indexes, the one on your machine, is never touched by
 those runs, and it goes stale as dependencies change. Classes then show up as
 "not found" even though the suite is green.
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PoC 0b — incremental revision writer for PDF signatures.
+ * PoC 0b: incremental revision writer for PDF signatures.
  *
  * Clean-room implementation based on ISO 32000-1:
  *   §7.5.6  Incremental Updates
@@ -12,7 +12,7 @@ declare(strict_types=1);
  * No line is derived from ddn/sapp (LGPL). See docs/spec/invariants.md.
  *
  * Spike scope: classic cross-reference tables only. Cross-reference streams
- * (PDF 1.5+) are detected and explicitly rejected — support lands in the
+ * (PDF 1.5+) are detected and explicitly rejected: support lands in the
  * production implementation.
  */
 final class IncrementalSigner
@@ -93,7 +93,7 @@ final class IncrementalSigner
     private function readDocument(string $pdf): array
     {
         if (!preg_match_all('/startxref\s+(\d+)\s*%%EOF/', $pdf, $m)) {
-            throw new RuntimeException('startxref not found — invalid or truncated PDF.');
+            throw new RuntimeException('startxref not found: invalid or truncated PDF.');
         }
 
         $latest = (int) end($m[1]);
@@ -264,7 +264,7 @@ final class IncrementalSigner
     {
         return "{$num} 0 obj\n"
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
-            . '/Rect[0 0 0 0]'          // invisible signature — the visual seal comes later
+            . '/Rect[0 0 0 0]'          // invisible signature; the visual seal comes later
             . "/T ({$name})"
             . "/V {$sigNum} 0 R"
             . "/P {$pageNum} 0 R"
@@ -405,7 +405,7 @@ final class IncrementalSigner
         );
 
         if (strlen($replacement) !== strlen($placeholder)) {
-            throw new RuntimeException('ByteRange would change length — offsets would be invalidated.');
+            throw new RuntimeException('ByteRange would change length, so offsets would be invalidated.');
         }
 
         $pos = strrpos($full, $placeholder);
@@ -420,7 +420,7 @@ final class IncrementalSigner
     private function applySignature(string $full, string $certPem, string $keyPem): string
     {
         // An already-signed document holds several /ByteRange entries. Ours is
-        // always the LAST one — the freshly appended revision. Taking the first
+        // always the LAST one, the freshly appended revision. Taking the first
         // would overwrite the /Contents of a previous signature.
         if (!preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $full, $all, PREG_SET_ORDER)) {
             throw new RuntimeException('ByteRange could not be read back.');
