@@ -1,0 +1,70 @@
+---
+# Backward compatibility, checked against the last release rather than against
+# review.
+#
+# The package is a library: its public surface is other people's code. Every
+# release so far has changed a contract, and each time the break was found by
+# reading the diff, which is the method that eventually misses one. This is the
+# gate that does not get tired.
+#
+# It compares the last SemVer tag against HEAD, so the baseline moves on its own
+# as releases are cut and there is no list to maintain.
+#
+# **The tool is installed in a directory of its own, not into require-dev.**
+# Two reasons, and both are specific to this repository: it needs ext-intl and a
+# dependency tree of its own that would have to coexist with a pinned
+# phpunit/php-code-coverage and Pest 5, and composer-dependency-analyser would
+# report a binary nothing imports as an unused dependency.
+#
+# **Not the nyholm/roave-bc-check image.** It is pinned to an older parser and
+# fails outright on PHP 8.4's `new Foo()->bar()`, which this codebase uses
+# throughout. Measured on 2026-08-09: "Syntax error, unexpected
+# T_OBJECT_OPERATOR". The composer install carries a current nikic/php-parser
+# and reads the same file without complaint.
+name: BC
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bc-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  roave:
+    name: Backward compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      # The tool resolves its own baseline from the tags, so a shallow clone
+      # leaves it with nothing to compare against.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          # intl is the tool's requirement, not the package's. The package's own
+          # extensions are declared in composer.json.
+          extensions: intl, zip, openssl, mbstring, fileinfo, gd
+          coverage: none
+
+      - name: Install the checker
+        run: |
+          mkdir -p "${RUNNER_TEMP}/bc"
+          composer require --no-interaction --no-progress \
+            --working-dir="${RUNNER_TEMP}/bc" \
+            roave/backward-compatibility-check:^8.21
+
+      # Reports the break and fails the build. A break that is deliberate is
+      # answered by saying so in UPGRADE.md and in the release notes, and by
+      # choosing the version accordingly, not by silencing the check.
+      - name: Check for BC breaks
+        run: "${RUNNER_TEMP}/bc/vendor/bin/roave-backward-compatibility-check"

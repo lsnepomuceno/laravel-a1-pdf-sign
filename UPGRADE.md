@@ -36,6 +36,31 @@ public function sign(
 ): SignedPdf;
 ```
 
+### `InvalidPdfFileException` takes a message
+
+The constructor took the offending filename and built the sentence itself. It
+now takes the message, and the one case the old wording described moved to a
+named constructor:
+
+```php
+new InvalidPdfFileException('/tmp/contract.docx');        // 2.1
+InvalidPdfFileException::extension('/tmp/contract.docx'); // 2.2, same string
+```
+
+The wording is preserved byte for byte, so a test asserting on it still passes.
+Fifteen of the sixteen places that raised this were reporting structural faults,
+and every one of them said "Invalid file extension"
+([0008](docs/decisions/0008-exceptions-name-the-real-fault.md)).
+
+Positional callers of `new InvalidPdfFileException(...)` outside the package are
+unaffected in behaviour, since the first argument is still a string that becomes
+the message. Only a named argument breaks:
+
+```php
+new InvalidPdfFileException(currentFile: $path);  // 2.1
+new InvalidPdfFileException(message: $text);      // 2.2
+```
+
 ### `SignatureReport` gained a property
 
 `Data\SignatureReport` is a public return type, so a new property changes what

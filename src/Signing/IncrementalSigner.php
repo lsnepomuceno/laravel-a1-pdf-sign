@@ -53,8 +53,14 @@ final readonly class IncrementalSigner implements PdfSigner
         private CadesBuilder $cades,
         private DssWriter $dss,
         private DocTimeStampWriter $archiveTimestamp,
-        private SignatureFieldReader $fields,
-        private CertificationReader $certifications,
+        // Defaulted, not required. 2.2 added both as required parameters and
+        // so raised the constructor's arity from six to eight, which breaks
+        // anyone who builds this by hand rather than through the container.
+        // The Roave check caught it on its first run; nothing in the suite
+        // could have, because the suite resolves everything from the container
+        // (docs/spec/quality-policy.md).
+        private SignatureFieldReader $fields = new SignatureFieldReader(new DocumentReader()),
+        private CertificationReader $certifications = new CertificationReader(new DocumentReader()),
     ) {}
 
     public function sign(
