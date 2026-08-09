@@ -15,7 +15,11 @@ final readonly class SignatureDetails extends BaseData
      * @param  int  $coverageEnd  Byte offset the signature covers up to. Less
      *                            than the file size means it was signed before
      *                            a later revision was appended.
-     * @param  list<Signer>  $signers
+     * @param  list<Signer>  $signers  Every certificate the signature embeds, in
+     *                                 the order the CMS happened to carry them.
+     * @param  list<Signer>  $chain  The same certificates ordered leaf first, with
+     *                               each link confirmed by the issuer's key. Empty
+     *                               when no chain could be built.
      * @param  ?int  $signedAt  The signing time the signer claimed, or null when
      *                          the CMS carries no such attribute. It is signed
      *                          by the signer and taken from their own clock, so
@@ -32,6 +36,8 @@ final readonly class SignatureDetails extends BaseData
         public ?string $error = null,
         public ?int $signedAt = null,
         public ?string $rawContents = null,
+        public array $chain = [],
+        public bool $chainReachesRoot = false,
     ) {}
 
     /**
@@ -81,8 +87,15 @@ final readonly class SignatureDetails extends BaseData
         return ! $this->isTimestamp;
     }
 
+    /**
+     * The certificate that signed, preferring the ordered chain.
+     *
+     * A CMS carries its certificates as a set, so the first entry is not
+     * necessarily the leaf. When a chain was built it names the leaf outright;
+     * without one this falls back to the old assumption rather than to nothing.
+     */
     public function signer(): ?Signer
     {
-        return $this->signers[0] ?? null;
+        return $this->chain[0] ?? $this->signers[0] ?? null;
     }
 }

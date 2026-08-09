@@ -130,6 +130,21 @@ carry, makes the time attributable to a third party.
 `signerWasValidWhenSigned()` returns `null` rather than `false` when the time or
 the certificate dates are unknown. An absence is not a violation.
 
+The certificates a signature embeds are also ordered into a chain, and the
+document's long-term validation material is reported:
+
+```php
+$signature->chain;              // list<Data\Signer>, leaf first
+$signature->chainReachesRoot;   // bool, whether it ends at a self-signed root
+
+$report->securityStore;         // ?Data\SecurityStore
+$report->hasLongTermMaterial(); // bool, material present for every signature
+```
+
+Each link in the chain is confirmed with the issuer's public key rather than by
+matching names. None of this decides **trust**: whether the root is an authority
+you accept stays with the application.
+
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
@@ -143,7 +158,8 @@ Stated here because a public API is also its boundaries, and each has a record:
 | Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
 | Certification signatures (`/DocMDP`) | every signature is an approval signature. [0012](../decisions/0012-certification-signatures.md) |
 | Signing into a pre-placed field | the writer always creates its own. [0013](../decisions/0013-signing-into-an-existing-field.md) |
-| Validating the DSS and archive timestamps | written, not read back. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
+| Checking the chain against a trust store | the chain is built and verified; whether its root is one you accept is the application's policy. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
+| Revocation checking at validation time | the store's OCSP responses and CRLs are counted, not evaluated |
 
 ## Signature profiles
 
