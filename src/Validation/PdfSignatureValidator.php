@@ -58,10 +58,18 @@ final readonly class PdfSignatureValidator implements SignatureValidator
             [$open, $close, $trailing] = $signature['byteRange'];
 
             $signatures[] = new SignatureDetails(
-                verified: $signature['isTimestamp'] ? false : $this->verifier->verify(
-                    $signature['cms'],
-                    $this->extractor->coveredBytes($pdfContents, $open, $close, $trailing),
-                ),
+                // A timestamp is verified against its own imprint rather than
+                // as a detached signature, which is why the two paths differ
+                // (docs/decisions/0010-validation-consumes-what-signing-writes.md).
+                verified: $signature['isTimestamp']
+                    ? $this->verifier->verifyTimestamp(
+                        $signature['cms'],
+                        $this->extractor->coveredBytes($pdfContents, $open, $close, $trailing),
+                    )
+                    : $this->verifier->verify(
+                        $signature['cms'],
+                        $this->extractor->coveredBytes($pdfContents, $open, $close, $trailing),
+                    ),
                 signers: $this->reader->signers($signature['cms']),
                 coverageEnd: $signature['coverageEnd'],
                 // Only the last signature reaches the end of the file; the
