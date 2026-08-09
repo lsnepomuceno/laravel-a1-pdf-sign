@@ -31,7 +31,19 @@ final readonly class SignatureDetails extends BaseData
         public bool $isTimestamp = false,
         public ?string $error = null,
         public ?int $signedAt = null,
+        public ?string $rawContents = null,
     ) {}
+
+    /**
+     * How the Document Security Store names this signature.
+     *
+     * /VRI keys entries by the uppercase hex SHA-1 of the signature's
+     * /Contents, which is the only handle the store has on a signature.
+     */
+    public function securityStoreKey(): ?string
+    {
+        return $this->rawContents === null ? null : strtoupper(sha1($this->rawContents));
+    }
 
     /**
      * Whether the signer's certificate was inside its validity window at the

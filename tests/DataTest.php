@@ -39,7 +39,7 @@ it('reads the common name, falling back to the organisation', function () {
 it('exposes its properties through toArray', function () {
     $report = new SignatureReport([]);
 
-    expect($report->toArray())->toBe(['signatures' => []])
+    expect($report->toArray())->toBe(['signatures' => [], 'securityStore' => null])
         ->and($report->isValid())->toBeFalse()
         ->and($report->isSigned())->toBeFalse();
 });

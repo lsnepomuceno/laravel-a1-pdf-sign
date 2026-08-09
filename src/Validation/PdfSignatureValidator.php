@@ -20,6 +20,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         private PdfSignatureExtractor $extractor,
         private Pkcs7Reader $reader,
         private SignatureVerifier $verifier,
+        private SecurityStoreReader $store = new SecurityStoreReader(),
     ) {}
 
     /**
@@ -78,9 +79,10 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                 coversWholeDocument: $signature['coverageEnd'] === $size,
                 isTimestamp: $signature['isTimestamp'],
                 signedAt: $signature['signedAt'],
+                rawContents: $signature['cms'],
             );
         }
 
-        return new SignatureReport($signatures);
+        return new SignatureReport($signatures, $this->store->read($pdfContents));
     }
 }

@@ -19,7 +19,30 @@ final readonly class SignatureReport extends BaseData
     /**
      * @param  list<SignatureDetails>  $signatures
      */
-    public function __construct(public array $signatures) {}
+    public function __construct(
+        public array $signatures,
+        public ?SecurityStore $securityStore = null,
+    ) {}
+
+    /**
+     * Whether the document carries validation material for every signature in
+     * it, which is what B-LT promises and what makes a signature checkable
+     * after its certificate expires.
+     */
+    public function hasLongTermMaterial(): bool
+    {
+        if ($this->securityStore === null || $this->securityStore->isEmpty()) {
+            return false;
+        }
+
+        foreach ($this->signatures as $signature) {
+            if ($signature->countsTowardValidity() && ! $this->securityStore->covers($signature)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     public static function empty(): self
     {

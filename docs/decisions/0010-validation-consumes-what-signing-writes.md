@@ -1,7 +1,7 @@
 # 0010: Validation consumes the material signing writes
 
-**Status:** partially implemented. The timestamp half is built; reading the DSS
-and using it are not.
+**Status:** partially implemented. Verifying the timestamp and reading the store
+are built; using the store to build chains is not.
 
 ## Context
 
@@ -50,10 +50,32 @@ these bytes.
 A timestamp is not detached, unlike a signature, which is why validation needs
 two paths rather than one with a flag.
 
-**Read the DSS.** Parse `/DSS` from the catalog and expose what it carries:
-which certificates, how many OCSP responses, how many CRLs. Purely descriptive
-at first, which is enough to answer "does this document carry what B-LT
-promises" without deciding whether the material is good.
+**Read the DSS. Done.** `Data\SecurityStore` reports how many certificates,
+OCSP responses and CRLs the store holds, and which signatures it names.
+
+Naming matters more than counting. `/VRI` keys entries by the SHA-1 of a
+signature's `/Contents`, so a store can carry material for one signature in a
+document that holds three. `SecurityStore::covers()` answers for a specific
+signature, and `SignatureReport::hasLongTermMaterial()` answers for all of them
+at once.
+
+Two details the implementation had to get right, both verified by a test that
+fails without them:
+
+The dictionary is read by counting its own delimiters rather than to the first
+`>>`, because `/VRI` nests and a naive reader cuts the store in half and reports
+no certificates at all.
+
+The **last** store is read, not the first, for the reason every other reader in
+this package does the same (docs/spec/invariants.md).
+
+An absent store and an empty one stay different answers: `null` for a B-B
+document, a store of zeroes for one that carries the structure with nothing in
+it.
+
+The SHA-1 here is an identifier the PDF specification fixes, not a digest chosen
+for security, which is why `tests/ArchTest.php` exempts one class from the weak
+hashing rule rather than loosening it.
 
 **Use it.** Once the store is readable, validation can build the chain from the
 embedded certificates rather than the network, which is the entire purpose of
