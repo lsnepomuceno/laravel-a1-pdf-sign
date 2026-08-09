@@ -21,6 +21,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         private Pkcs7Reader $reader,
         private SignatureVerifier $verifier,
         private SecurityStoreReader $store = new SecurityStoreReader(),
+        private ChainBuilder $chains = new ChainBuilder(),
     ) {}
 
     /**
@@ -58,6 +59,9 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         foreach ($extracted as $signature) {
             [$open, $close, $trailing] = $signature['byteRange'];
 
+            $ordered = $this->chains->build($this->reader->certificates($signature['cms']));
+            $chain = $this->reader->signersFromPem($ordered);
+
             $signatures[] = new SignatureDetails(
                 // A timestamp is verified against its own imprint rather than
                 // as a detached signature, which is why the two paths differ
@@ -80,6 +84,8 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                 isTimestamp: $signature['isTimestamp'],
                 signedAt: $signature['signedAt'],
                 rawContents: $signature['cms'],
+                chain: $chain,
+                chainReachesRoot: $chain !== [] && $this->chains->reachesRoot($ordered),
             );
         }
 

@@ -1,7 +1,7 @@
 # 0010: Validation consumes the material signing writes
 
-**Status:** partially implemented. Verifying the timestamp and reading the store
-are built; using the store to build chains is not.
+**Status:** accepted, implemented. All three pieces are built. Trust remains out
+of scope, as stated below.
 
 ## Context
 
@@ -77,10 +77,23 @@ The SHA-1 here is an identifier the PDF specification fixes, not a digest chosen
 for security, which is why `tests/ArchTest.php` exempts one class from the weak
 hashing rule rather than loosening it.
 
-**Use it.** Once the store is readable, validation can build the chain from the
-embedded certificates rather than the network, which is the entire purpose of
-the DSS: a document that verified in 2026 still verifies in 2036 without
-reaching a responder that no longer exists.
+**Use it. Done.** `Validation\ChainBuilder` orders the certificates a signature
+embeds into a chain, leaf first, and says whether it reaches a self-signed root.
+No network is involved, which is the entire purpose of embedding the material.
+
+**Each link is confirmed with the issuer's public key, not by matching names.**
+Two certificates can carry identical subject and issuer names without one having
+signed the other, so a name-matched chain looks right and proves nothing. The
+test that carries the weight is therefore the one offering a second certificate
+authority with the same subject name: it must not be chained.
+
+This also fixed a quieter assumption. `SignatureDetails::signer()` returned
+`signers[0]`, and a CMS carries its certificates as a **set**, in no guaranteed
+order, so the first entry is not necessarily the leaf. It now prefers the
+ordered chain and falls back to the old behaviour rather than to nothing.
+
+A chain that stops short is not invalid: it means the material to finish it
+lives outside the document, which is what a store exists to avoid.
 
 ## Not in scope
 

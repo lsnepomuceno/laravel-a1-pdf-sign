@@ -32,6 +32,28 @@ final class Pkcs7Reader
     }
 
     /**
+     * The same, for certificates already extracted as PEM.
+     *
+     * @param  list<string>  $pem
+     * @return list<Signer>
+     */
+    public function signersFromPem(array $pem): array
+    {
+        $signers = [];
+
+        foreach ($pem as $one) {
+            $parsed = openssl_x509_parse($one, false);
+
+            if ($parsed !== false) {
+                /** @var array<string, mixed> $parsed */
+                $signers[] = Signer::fromParsedCertificate($parsed);
+            }
+        }
+
+        return $signers;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function parsedCertificates(string $der): array
