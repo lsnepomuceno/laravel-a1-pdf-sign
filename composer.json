@@ -31,6 +31,7 @@
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-openssl": "*",
+    "ext-zlib": "*",
     "illuminate/console": "^13",
     "illuminate/encryption": "^13",
     "illuminate/http": "^13",
