@@ -42,3 +42,23 @@ what this reorganisation exists to close.
 > twice: first by the real tooling requirements, then by the realisation that
 > the PHP *ceiling* of older Laravel versions, not the floor, is the limiting
 > factor. See [0005](../decisions/0005-php-and-laravel-floor.md).
+
+## Answered by 2.2
+
+The four records that were proposed and unbuilt when the specification was
+split. Each is now implemented, and each was decided by a measurement rather
+than by the plan.
+
+| # | Question | Outcome |
+|---|---|---|
+| 16 | Cross-reference streams: append a stream, or a classic table plus `/XRefStm`? | ✅ **Append a stream.** Measured, not assumed: appending a classic table to a document whose latest section is a stream produced a file poppler reported as carrying no signatures at all. Reading shipped one release before writing, with signing refusing in between, so the gap was a loud refusal rather than silent corruption ([0009](../decisions/0009-cross-reference-streams.md)) |
+| 17 | Does validation have to read back everything signing writes? | ✅ **Yes**, and the asymmetry was real: the package wrote B-LTA material it could not then report. Signing time came from `/M` rather than the PKCS#9 attribute, which measurement showed absent ([0010](../decisions/0010-validation-consumes-what-signing-writes.md)) |
+| 18 | Certification: is a byte-level test enough? | ❌ **No, and it still is not.** All three levels write and read back, and poppler confirms the signature verifies, but `pdfsig` does not surface `/DocMDP`, so reader *enforcement* is unverified and needs Adobe Reader or ITI Validar. Recorded as an open gap rather than closed by a passing test ([0012](../decisions/0012-certification-signatures.md)) |
+| 19 | Signing into a pre-placed field: fill it, or fall back to appending when it is missing? | ✅ **Fill, and refuse rather than fall back.** The fallback is exactly the failure the feature prevents, and it would happen quietly: a signature that is valid and in the wrong place, with the template's field still empty ([0013](../decisions/0013-signing-into-an-existing-field.md)) |
+
+One defect surfaced that belonged to none of them. `DocumentReader::findFirstPage()`
+scanned a fixed 400-byte window from each object's offset, which in a compact
+document reaches the objects that follow, so the catalog was reported as the
+first page. It was latent in any document whose objects sit close together, and
+only a 434-byte fixture built for [0009](../decisions/0009-cross-reference-streams.md)
+was small enough to expose it.
