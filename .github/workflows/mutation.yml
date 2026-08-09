@@ -17,6 +17,12 @@ name: Mutation testing
 #
 # It still fails loudly when the score drops, and workflow_dispatch runs it on
 # demand before a release.
+#
+# The schedule is when it may run, not what it measures: the `changed` job below
+# compares the default branch against the last run that reached a verdict and
+# skips when nothing has moved. Re-scoring identical code answers a question
+# already answered — and answers it differently, since the score is not
+# reproducible, so a quiet week would produce a week of contradictory numbers.
 on:
   schedule:
     - cron: '0 4 * * *'
@@ -24,6 +30,8 @@ on:
 
 permissions:
   contents: read
+  # To read this workflow's own history and find the commit last scored.
+  actions: read
   # Only to file the failure. A red job notifies whoever last touched the cron
   # and nobody else, and a scheduled run nobody watches is discovered whenever
   # someone next opens the Actions tab.
@@ -34,9 +42,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changed:
+    name: Has main moved?
+    runs-on: ubuntu-latest
+
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+
+    steps:
+      # Compared against the last run that reached a verdict, not against a
+      # 24-hour window: a cancelled or delayed run would make a window lie, and
+      # GitHub delays scheduled runs under load. Cancelled runs are excluded
+      # deliberately — concurrency cancels them mid-flight, so their commit was
+      # never actually scored.
+      - name: Compare against the commit last scored
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          scored=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/mutation.yml/runs?per_page=30" \
+            --jq '[.workflow_runs[]
+                   | select(.id != ${{ github.run_id }})
+                   | select(.conclusion == "success" or .conclusion == "failure")][0].head_sha // ""')
+
+          echo "last scored: ${scored:-none}"
+          echo "current:     ${{ github.sha }}"
+
+          # A manual dispatch always runs — it is the escape hatch, used before
+          # a release and to re-check after a toolchain fix.
+          if [ "${{ github.event_name }}" != 'schedule' ]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$scored" = "${{ github.sha }}" ]; then
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo "Skipped: \`${GITHUB_SHA:0:7}\` was already scored, and nothing has landed since." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          fi
+
   mutate:
     name: ${{ matrix.namespace }}
     runs-on: ubuntu-latest
+
+    needs: changed
+    if: needs.changed.outputs.run == 'true'
 
     strategy:
       fail-fast: false
