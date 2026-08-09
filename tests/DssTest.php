@@ -112,7 +112,7 @@ it('embeds a document security store at PAdES B-LT', function () {
         ->sign();
 
     // A self-signed certificate has no OCSP responder and no CRL distribution
-    // point, so only the chain itself is embedded — which is still worth
+    // point, so only the chain itself is embedded, which is still worth
     // carrying, since a verifier then needs to fetch nothing.
     expect($longTerm->contents)->toContain('/Type /DSS')
         ->toContain('/Certs')

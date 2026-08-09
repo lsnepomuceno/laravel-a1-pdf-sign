@@ -8,7 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Signer;
  * Reads the certificates embedded in a detached CMS.
  *
  * 1.x shelled out to `openssl pkcs7 -print_certs` and parsed the human-readable
- * output with three chained preg_replace calls — which broke outright when
+ * output with three chained preg_replace calls, which broke outright when
  * OpenSSL 3.5 changed its field separator (§1.9, §1.14). Here the DER is
  * scanned for certificate structures and each one is handed to
  * openssl_x509_parse(), so the result is structured data rather than text.
@@ -55,7 +55,7 @@ final class Pkcs7Reader
      *
      * Certificates sit inside the SignedData's certificate set as DER
      * SEQUENCEs. Rather than walking the whole CMS grammar, candidates are
-     * offered to openssl_x509_read() and kept when it accepts them — the
+     * offered to openssl_x509_read() and kept when it accepts them: the
      * parser itself decides what is a certificate.
      *
      * @return list<string>

@@ -13,7 +13,7 @@ use SensitiveParameter;
  * Encrypts a parsed certificate for storage, and reads it back.
  *
  * Each vault carries its own key. seal() returns that key alongside the
- * ciphertext, and open() needs it — losing it means losing the certificate.
+ * ciphertext, and open() needs it: losing it means losing the certificate.
  */
 final readonly class CertificateVault
 {
@@ -62,7 +62,7 @@ final readonly class CertificateVault
     /**
      * Restores a sealed certificate.
      *
-     * What seal() stored is the PEM bundle, so it is parsed directly — no
+     * What seal() stored is the PEM bundle, so it is parsed directly: no
      * PKCS#12 conversion, no temporary file and no shell-out. The v1 pair
      * wrote the PEM to a .pfx and fed it back to `openssl pkcs12 -in`, which
      * expects binary PKCS#12 and always failed. See docs/history/v2-modernization.md.

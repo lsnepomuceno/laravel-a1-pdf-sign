@@ -108,7 +108,7 @@ final readonly class A1PdfSignManager implements A1PdfSign
     /**
      * encryptCertificate() stores the PEM bundle, so this parses it directly.
      * The v1 helper wrote it to a .pfx and fed it to `openssl pkcs12 -in`,
-     * which expects binary PKCS#12 and always failed — see
+     * which expects binary PKCS#12 and always failed. See
      * docs/history/v2-modernization.md.
      */
     public function decryptCertificate(
@@ -160,7 +160,7 @@ final readonly class A1PdfSignManager implements A1PdfSign
     /**
      * Reads whichever encoding turned up.
      *
-     * Signing keeps explicit siblings — signFromFile() and signFromPem() — so
+     * Signing keeps explicit siblings, signFromFile() and signFromPem(), so
      * the caller states what it holds. encryptCertificate() has no sibling and
      * takes "a certificate" generically, so it detects instead. The two
      * encodings are trivially distinguishable, text marker against binary, so

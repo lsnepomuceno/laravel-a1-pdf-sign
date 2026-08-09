@@ -58,7 +58,7 @@ it('embeds the ESS signing-certificate-v2 attribute openssl cannot produce', fun
     $hex = rtrim($matches[1] ?? '', '0');
     $der = (string) hex2bin(strlen($hex) % 2 === 1 ? $hex . '0' : $hex);
 
-    // OID 1.2.840.113549.1.9.16.2.47 — id-aa-signingCertificateV2.
+    // OID 1.2.840.113549.1.9.16.2.47, id-aa-signingCertificateV2.
     $oid = hex2bin('2A864886F70D010910022F');
 
     expect($der)->toContain((string) $oid);

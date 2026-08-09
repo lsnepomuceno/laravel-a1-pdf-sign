@@ -8,7 +8,7 @@ use Stringable;
 /**
  * The input is not the PEM it was supposed to be.
  *
- * This covers only what can be decided before parsing — a missing block, or
+ * This covers only what can be decided before parsing: a missing block, or
  * binary bytes handed to the PEM entry point. A certificate and key that are
  * both present but do not belong together is a different failure, and keeps
  * its own class: {@see InvalidX509PrivateKeyException}.

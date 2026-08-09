@@ -5,7 +5,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Validation;
 /**
  * Pulls every signature out of a document.
  *
- * The 1.x code read `$result[2][0]` — the first match only — so a document
+ * The 1.x code read `$result[2][0]`, the first match only, so a document
  * with more than one signature reported on the first and ignored the rest.
  * Now that the package emits multi-signature documents, that would mean it
  * could not describe its own output.
@@ -51,7 +51,7 @@ final class PdfSignatureExtractor
      * Whether the entry is an archive timestamp rather than a signature.
      *
      * A /DocTimeStamp carries an RFC 3161 token, whose SignedData signs the
-     * TSTInfo holding the document's hash — not the document itself. Verifying
+     * TSTInfo holding the document's hash, not the document itself. Verifying
      * it the way a signature is verified always fails, so it has to be told
      * apart before anything tries.
      */

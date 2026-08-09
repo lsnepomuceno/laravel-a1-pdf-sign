@@ -85,7 +85,7 @@ it('signs a pdf using a combined PEM bundle', function () {
 });
 
 it('signs a pdf using an unencrypted PEM key', function () {
-    // No password at all — the case PKCS#12 cannot express.
+    // No password at all, the case PKCS#12 cannot express.
     [, , $bundlePath, $pass] = pemCertificate(encryptKey: false);
 
     $pdfPath = A1PdfSign::tempPath(true, '.pdf');

@@ -8,7 +8,7 @@ use SensitiveParameter;
 /**
  * Turns encoded certificate bytes into a parsed certificate.
  *
- * Implementations differ only in the encoding they ingest — PKCS#12, whether
+ * Implementations differ only in the encoding they ingest: PKCS#12, whether
  * read natively or through the CLI, and PEM, which needs no conversion at all.
  * All of them converge on the same PEM bundle and the same
  * {@see \LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser}.

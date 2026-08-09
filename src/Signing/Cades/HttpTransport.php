@@ -9,7 +9,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
  * The HTTP the signature primitives deliberately do not do.
  *
  * tc-lib-pdf-sign keeps its codecs pure and takes transports as callables, so
- * the host owns networking — and therefore owns the SSRF surface. Every URL
+ * the host owns networking, and therefore owns the SSRF surface. Every URL
  * reached here comes from configuration or from an extension inside the
  * signer's own certificate, never from the document being signed.
  */

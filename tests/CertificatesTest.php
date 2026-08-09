@@ -117,7 +117,7 @@ it('rejects a bundle whose key does not match its certificate', function () {
 | PEM bundles
 |--------------------------------------------------------------------------
 |
-| The parser has always accepted PEM — every reader converges on it. What it
+| The parser has always accepted PEM: every reader converges on it. What it
 | could not do is validate a passphrase-protected private key, because the
 | bundle was handed to openssl_x509_check_private_key() as a bare string.
 | PKCS#12 never reached that path: openssl_pkcs12_read() returns a key that is
@@ -211,7 +211,7 @@ it('rejects text that is neither PEM nor binary', function () {
 })->throws(InvalidPemContentException::class, 'No PEM certificate block found in the bundle');
 
 it('still reports a key that does not match its certificate as such', function () {
-    // The format is fine here, so this is not a PEM problem — it keeps the
+    // The format is fine here, so this is not a PEM problem: it keeps the
     // exception that already says exactly this, rather than a second one.
     [$certificate] = DebugCertificate::makePem();
     [, $otherKey, $otherPassword] = DebugCertificate::makePem();

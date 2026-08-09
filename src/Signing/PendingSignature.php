@@ -98,7 +98,7 @@ final class PendingSignature
      * as .pem, .crt, .cer, .key and .txt, so the format is decided by content
      * (docs/decisions/0007-pem-second-entry-one-pipeline.md).
      *
-     * @param  string  $password  Empty when the private key is unencrypted — legal and
+     * @param  string  $password  Empty when the private key is unencrypted, legal and
      *                            common for PEM, impossible for PKCS#12.
      *
      * @throws FileNotFoundException
@@ -118,7 +118,7 @@ final class PendingSignature
     }
 
     /**
-     * The same, from bytes the caller already holds — an upload, a secret
+     * The same, from bytes the caller already holds: an upload, a secret
      * manager, a database column.
      *
      * @throws InvalidPemContentException

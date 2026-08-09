@@ -12,14 +12,14 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * Picks the certificate reader.
  *
  * Native is the default. The CLI is only reached when legacy mode is on,
- * because that is the single capability ext-openssl cannot provide — reading
+ * because that is the single capability ext-openssl cannot provide: reading
  * RC2/40-bit bundles under OpenSSL 3.x. See docs/decisions/0001-openssl-native-with-cli-fallback.md.
  */
 final readonly class ReaderFactory
 {
     /**
      * The temp path comes from the A1PdfSign contract, but resolving it here
-     * would close a cycle — the manager depends on this factory. The container
+     * would close a cycle: the manager depends on this factory. The container
      * is held instead and the contract resolved only when the CLI reader is
      * actually built, which is the rare path.
      */

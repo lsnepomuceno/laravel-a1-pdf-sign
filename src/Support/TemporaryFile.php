@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
  * A file that deletes itself.
  *
  * The v1 code deleted its temporary files with a call placed after the work
- * that might throw, so any failure leaked them — including PEM files holding
+ * that might throw, so any failure leaked them, including PEM files holding
  * a private key. Here deletion happens in a finally block, with the destructor
  * as a backstop. See docs/history/v2-modernization.md.
  */

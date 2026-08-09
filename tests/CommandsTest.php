@@ -33,7 +33,7 @@ it('reports failure from the pdf:sign command when the inputs are invalid', func
 });
 
 it('signs with a PEM certificate through the pdf:sign command', function () {
-    // No flag says "this is PEM" — the command reads the encoding from the
+    // No flag says "this is PEM": the command reads the encoding from the
     // bytes, because PEM ships under half a dozen extensions.
     [, , $bundlePath, $pass] = pemCertificate();
 

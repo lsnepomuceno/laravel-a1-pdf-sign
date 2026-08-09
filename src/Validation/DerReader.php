@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Validation;
  *
  * A signature's /Contents is a fixed-width placeholder padded with zeros, so
  * the CMS has to be cut at its declared length. Trimming the padding with
- * rtrim() instead would cut legitimate 0x00 bytes off the end of the DER — a
+ * rtrim() instead would cut legitimate 0x00 bytes off the end of the DER, a
  * bug PoC 0b hit and this exists to keep fixed.
  *
  * ISO/IEC 8825-1 §8.1.3: a first length byte below 0x80 is the length itself;

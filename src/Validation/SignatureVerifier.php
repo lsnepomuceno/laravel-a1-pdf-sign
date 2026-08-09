@@ -11,8 +11,8 @@ use Throwable;
  * Decides whether a detached CMS matches the bytes it covers.
  *
  * This is the one part of validation that shells out, and deliberately so.
- * PHP's openssl_pkcs7_verify() cannot take detached content — it only writes
- * the verified content out — and reconstructing an S/MIME envelope around
+ * PHP's openssl_pkcs7_verify() cannot take detached content (it only writes
+ * the verified content out) and reconstructing an S/MIME envelope around
  * binary PDF bytes fails on MIME canonicalisation. The alternative is walking
  * the CMS grammar by hand to check the message-digest attribute and verify the
  * signed attributes, which is exactly the kind of code whose bugs produce a
