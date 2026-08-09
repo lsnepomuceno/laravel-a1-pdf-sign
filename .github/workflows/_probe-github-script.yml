@@ -6,8 +6,11 @@
 # created, nothing is written.
 name: Probe github-script v9
 
+# pull_request, not workflow_dispatch: a dispatchable workflow has to exist on
+# the default branch, and this one must never get there.
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
 
 permissions:
   contents: read
