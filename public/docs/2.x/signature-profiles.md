@@ -7,7 +7,7 @@ A profile decides what evidence travels inside the signature. Each level adds to
 | `legacy` | `adbe.pkcs7.detached` | ISO 32000-1 detached CMS. Widest reader support |
 | `pades-b-b` | `ETSI.CAdES.detached` | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default** |
 | `pades-b-t` | `ETSI.CAdES.detached` | plus an RFC 3161 timestamp |
-| `pades-b-lt` | `ETSI.CAdES.detached` | plus a Document Security Store — the chain, OCSP responses and CRLs |
+| `pades-b-lt` | `ETSI.CAdES.detached` | plus a Document Security Store: the chain, OCSP responses and CRLs |
 | `pades-b-lta` | `ETSI.CAdES.detached` | plus an archive timestamp over the whole file |
 
 ```PHP
@@ -58,7 +58,7 @@ Without a configured URL, requesting a timestamped profile throws rather than si
 
 ## What happens when the material is unavailable
 
-A self-signed certificate has neither an OCSP responder nor a CRL distribution point, and a responder can simply be unreachable. In both cases the document stays at the level below rather than failing the signature — signing must not depend on a third party being up.
+A self-signed certificate has neither an OCSP responder nor a CRL distribution point, and a responder can simply be unreachable. In both cases the document stays at the level below rather than failing the signature, since signing must not depend on a third party being up.
 
 <hr>
 

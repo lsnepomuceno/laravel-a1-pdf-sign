@@ -29,7 +29,7 @@ When the private key lives in a file of its own, point `--key` at it. Pass an em
 php artisan pdf:sign '/path/to/file.pdf' '/path/to/certificate.crt' '' --key='/path/to/private.key'
 ```
 
-Passing `--key` together with a PKCS#12 bundle fails rather than being ignored — the bundle already carries its key, so the combination means the caller is mistaken about what they hold.
+Passing `--key` together with a PKCS#12 bundle fails rather than being ignored: the bundle already carries its key, so the combination means the caller is mistaken about what they hold.
 
 > The second argument was named `pfxPath` before 2.1. Only `Artisan::call()` with named keys is affected; on the command line the arguments are positional.
 
@@ -47,6 +47,6 @@ pdf:validate-signature
 php artisan pdf:validate-signature '/example/full/path/to/my/signed-file.pdf'
 ```
 
-It reports every signature in the document — the signer's common name and whether each one verified — not only the first. Documents carrying several signatures are listed in full.
+It reports every signature in the document, the signer's common name and whether each one verified, not only the first. Documents carrying several signatures are listed in full.
 
 Both commands map a `Throwable` to a failure exit code, so they compose in a shell pipeline.

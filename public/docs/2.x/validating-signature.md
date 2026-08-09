@@ -20,7 +20,7 @@ class ExampleController
 }
 ```
 
-> **`isValid()` means the CMS actually verifies.** In 1.x, "validated" meant the parsed subject contained a `CN` or `OU` field — which a document tampered with after signing still has. That check could not fail for any real certificate.
+> **`isValid()` means the CMS actually verifies.** In 1.x, "validated" meant the parsed subject contained a `CN` or `OU` field, which a document tampered with after signing still has. That check could not fail for any real certificate.
 
 <hr>
 
@@ -32,11 +32,11 @@ class ExampleController
 $report = A1PdfSign::validate('path/to/signed.pdf');
 
 foreach ($report->signatures as $signature) {
-    $signature->verified;             // bool — the CMS verifies against the covered bytes
-    $signature->coverageEnd;          // int — byte offset this signature covers up to
+    $signature->verified;             // bool, the CMS verifies against the covered bytes
+    $signature->coverageEnd;          // int, byte offset this signature covers up to
     $signature->coversWholeDocument;  // bool
-    $signature->isTimestamp;          // bool — a DocTimeStamp, not a signature by a signer
-    $signature->error;                // ?string — why it failed, when it did
+    $signature->isTimestamp;          // bool, a DocTimeStamp, not a signature by a signer
+    $signature->error;                // ?string, why it failed, when it did
 
     $signer = $signature->signer();
     $signer?->commonName;
@@ -53,12 +53,12 @@ foreach ($report->signatures as $signature) {
 
 #### 3 - What `coversWholeDocument` tells you.
 
-In a document with several signatures, **only the last one covers the whole file**. Each earlier signature covers the document as it stood when that signature was made — that is exactly what keeps them valid, and it is how a reader knows what each signer actually saw.
+In a document with several signatures, **only the last one covers the whole file**. Each earlier signature covers the document as it stood when that signature was made, and that is exactly what keeps them valid, and it is how a reader knows what each signer actually saw.
 
 ```PHP
-$report->signatures[0]->coversWholeDocument; // false — signed before the others existed
+$report->signatures[0]->coversWholeDocument; // false, signed before the others existed
 $report->signatures[1]->coversWholeDocument; // false
-$report->signatures[2]->coversWholeDocument; // true  — the most recent
+$report->signatures[2]->coversWholeDocument; // true,  the most recent
 ```
 
 A `false` here is not a defect. What would be a defect is an earlier signature that stopped verifying.
@@ -71,14 +71,14 @@ A B-LTA document ends with a DocTimeStamp: a timestamp over the whole file, not 
 
 ```PHP
 $report->timestamps(); // list<SignatureDetails> where isTimestamp is true
-$report->signers();    // signers only — the authority is not one of them
+$report->signers();    // signers only, the authority is not one of them
 ```
 
 <hr>
 
 #### 5 - What validation does not do.
 
-`isValid()` answers whether each signature matches the document. **It does not check the issuer against a trust store** — whether you trust the certificate authority is a policy decision, and it stays with your application:
+`isValid()` answers whether each signature matches the document. **It does not check the issuer against a trust store**: whether you trust the certificate authority is a policy decision, and it stays with your application:
 
 ```PHP
 $signer = $report->latest()?->signer();

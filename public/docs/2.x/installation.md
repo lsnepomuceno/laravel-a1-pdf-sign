@@ -14,7 +14,7 @@ The `openssl` **binary** is no longer required. Certificates are read through `e
 composer require lsnepomuceno/laravel-a1-pdf-sign
 ```
 
-The service provider and the `A1PdfSign` facade are registered by package discovery — nothing to add to `config/app.php`.
+The service provider and the `A1PdfSign` facade are registered by package discovery, so nothing to add to `config/app.php`.
 
 # Configuration
 

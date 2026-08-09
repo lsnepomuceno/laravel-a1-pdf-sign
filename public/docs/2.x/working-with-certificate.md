@@ -1,6 +1,6 @@
 #### 1 - Reading a certificate from a file.
 
-Most of the time you do not read the certificate yourself — the builder does it. Reading it directly is useful when you need the parsed data.
+Most of the time you do not read the certificate yourself: the builder does it. Reading it directly is useful when you need the parsed data.
 
 ```PHP
 <?php
@@ -50,7 +50,7 @@ class ExampleController
             ->pdf('path/to/document.pdf')
             ->sign();
 
-        // From bytes you already hold — an upload, a secret manager, a database column
+        // From bytes you already hold: an upload, a secret manager, a database column
         $signed = A1PdfSign::newSignature()
             ->certificateFromPem($certificateBytes, $keyBytes)
             ->pdf('path/to/document.pdf')
@@ -59,11 +59,11 @@ class ExampleController
 }
 ```
 
-**Nothing gates on the file extension.** PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`, so the encoding is decided by the content — a certificate under any of those suffixes is read the same way.
+**Nothing gates on the file extension.** PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`, so the encoding is decided by the content, so a certificate under any of those suffixes is read the same way.
 
 The password defaults to empty, because **a PEM private key is frequently unencrypted, which PKCS#12 cannot express**. OpenSSL ignores a passphrase given for a key that does not need one, so passing it either way is safe. Prefer an encrypted key where you have the choice: an unprotected one is readable by anything that can read the file.
 
-Content that is not PEM at all — binary DER, or a PKCS#12 bundle handed to this entry point — raises `InvalidPemContentException`, naming the half at fault instead of reporting a generic parse failure. A certificate and key that are each valid but unrelated raise `InvalidX509PrivateKeyException`.
+Content that is not PEM at all, whether binary DER or a PKCS#12 bundle handed to this entry point, raises `InvalidPemContentException`, naming the half at fault instead of reporting a generic parse failure. A certificate and key that are each valid but unrelated raise `InvalidX509PrivateKeyException`.
 
 <hr>
 
@@ -114,7 +114,7 @@ class ExampleController
 }
 ```
 
-`encryptCertificate()` also accepts an `UploadedFile` directly, and — since 2.1 — a PEM certificate. It gained no PEM sibling: it takes "a certificate" generically and detects the encoding, where signing keeps explicit entry points so the caller states what it holds.
+`encryptCertificate()` also accepts an `UploadedFile` directly, and, since 2.1, a PEM certificate. It gained no PEM sibling: it takes "a certificate" generically and detects the encoding, where signing keeps explicit entry points so the caller states what it holds.
 
 <hr>
 

@@ -21,11 +21,11 @@ class ExampleController
 `sign()` returns a `SignedPdf`, and **it does not decide how the result is delivered**. The `MODE_RESOURCE` / `MODE_DOWNLOAD` choice from 1.x is gone; the same result can be consumed in several ways:
 
 ```PHP
-$signed->contents();               // string — the signed bytes
+$signed->contents();               // string, the signed bytes
 $signed->size();                   // int
-$signed->save('path/to/out.pdf');  // string — the path written
-$signed->download('contract.pdf'); // BinaryFileResponse — forces a download
-$signed->toResponse();             // Response — renders inline in the browser
+$signed->save('path/to/out.pdf');  // string, the path written
+$signed->download('contract.pdf'); // BinaryFileResponse, forces a download
+$signed->toResponse();             // Response, renders inline in the browser
 (string) $signed;                  // same as contents()
 ```
 
@@ -49,7 +49,7 @@ class ExampleController
             ->pdf('path/to/document.pdf')
             ->sign();
 
-        // PDF already in memory — from another package, a stream, storage
+        // PDF already in memory: from another package, a stream, storage
         $signed = A1PdfSign::newSignature()
             ->certificate('path/to/certificate.pfx', 'password')
             ->pdfContents($pdfBytes, 'contract.pdf')
@@ -84,7 +84,7 @@ $signed = A1PdfSign::newSignature()
 
 The encoding is read from the file's content rather than its extension, and the password may be empty when the private key is unencrypted. [Working with certificates](/docs/2.x/working-with-certificate) covers both in detail.
 
-Everything after the certificate is identical — profiles, seals, timestamps and multiple signatures all behave the same, because the two encodings converge on one pipeline as soon as the certificate is parsed.
+Everything after the certificate is identical: profiles, seals, timestamps and multiple signatures all behave the same, because the two encodings converge on one pipeline as soon as the certificate is parsed.
 
 <hr>
 
@@ -157,4 +157,41 @@ $signed = A1PdfSign::newSignature()
     ->sign();
 ```
 
-Omitting `seal()` produces an invisible signature, which is still a valid one — the seal is an appearance, not part of the cryptography.
+Omitting `seal()` produces an invisible signature, which is still a valid one: the seal is an appearance, not part of the cryptography.
+
+<hr>
+
+#### 6 - Each signature carries its own seal.
+
+A seal belongs to one signature, not to the document. Sign twice and each signature gets its own image, its own position and its own page, with nothing shared between them.
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+// First signer: a seal rendered from their certificate
+$first = A1PdfSign::newSignature()
+    ->certificate('path/to/first.pfx', 'password')
+    ->pdf('path/to/contract.pdf')
+    ->info(name: 'First signer')
+    ->seal(placement: new SealPlacement(x: 150, y: 240, width: 50))
+    ->sign();
+
+$path = $first->save(storage_path('contract-signed.pdf'));
+
+// Second signer: their own image, somewhere else on the page
+$second = A1PdfSign::newSignature()
+    ->certificate('path/to/second.pfx', 'password')
+    ->pdf($path)
+    ->info(name: 'Second signer')
+    ->sealFrom('path/to/handwritten.png', new SealPlacement(x: 30, y: 60, width: 60))
+    ->sign();
+```
+
+Both seals are visible in the finished document, in different places. One signature can be visible while another is invisible: simply omit `seal()` on the one that should not show, and it stays cryptographically valid all the same.
+
+This works because each signature is an appended revision carrying its own widget annotation, with its own image and form objects. Nothing is reused between them, so changing the second seal cannot disturb the first.
+
+[`samples/two-seals.pdf`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/samples/two-seals.pdf) is exactly this case, signed and ready to open in a reader.
