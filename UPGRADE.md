@@ -1,5 +1,109 @@
 # Upgrading
 
+## From 2.1 to 2.2
+
+2.2 is additive for applications. Nothing was removed, no behaviour changed for
+code that already worked, and the PHP and Laravel requirements do not move. An
+application that signs and validates upgrades without editing anything.
+
+Two changes reach code that **extends** the package rather than calls it, and
+one reaches anyone who compares a report's array form byte for byte.
+
+### The contracts gained methods and parameters
+
+| | 2.1 | 2.2 |
+|---|---|---|
+| `Contracts\A1PdfSign` | n/a | gains `signatureFields()` |
+| `Contracts\PdfSigner::sign()` | 7 parameters | gains `?string $intoField` and `?CertificationLevel $certification`, both trailing and optional |
+
+Injecting or calling them is unaffected: the new parameters are optional and
+positional callers are untouched. Implementing them is not, so a test double or
+a custom signer bound in the container has to be updated:
+
+```php
+public function signatureFields(string $pdfPath): array;   // list<SignatureField>
+
+public function sign(
+    string $pdfContents,
+    Certificate $certificate,
+    SignatureInfo $info,
+    string $fieldName = 'Signature',
+    ?SealImage $seal = null,
+    ?SealPlacement $placement = null,
+    ?SignatureProfile $profile = null,
+    ?string $intoField = null,              // new
+    ?CertificationLevel $certification = null,   // new
+): SignedPdf;
+```
+
+### `SignatureReport` gained a property
+
+`Data\SignatureReport` is a public return type, so a new property changes what
+`toArray()` returns:
+
+```php
+// 2.1
+['signatures' => [...], 'securityStore' => ...]
+
+// 2.2
+['signatures' => [...], 'securityStore' => ..., 'certification' => null]
+```
+
+Reading properties and calling methods is unaffected. Only code asserting on the
+whole array, a snapshot test or a strict equality check, has to be updated.
+
+### A document may now refuse to be signed
+
+`sign()` can raise two exceptions it never raised before, both of them
+deliberate refusals rather than failures:
+
+| | |
+|---|---|
+| `SignatureFieldException` | only when `intoField()` was used |
+| `CertificationException` | when the document is certified at `no-changes`, which forbids the further revision a signature would append |
+
+The second can reach code that does not use certification at all, if it signs a
+document someone else certified. That is the certification working: at
+`no-changes` a further signature would silently invalidate the one already
+there, so it is refused instead.
+
+### New: signing into a template's own fields
+
+```php
+foreach (A1PdfSign::signatureFields($template) as $field) {
+    $field->name;        // 'SignatureManager'
+    $field->isSigned;    // false
+    $field->rectangle;   // [30.0, 200.0, 200.0, 250.0]
+}
+
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($template)
+    ->intoField('SignatureManager')
+    ->seal()              // drawn into the field's own rectangle
+    ->sign();
+```
+
+Previously the package appended a new field beside the empty one, so a template
+ended up with a signature in the wrong place and its own field still unfilled.
+
+### New: certification signatures
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($path)
+    ->certify('form-filling')   // no-changes | form-filling | annotations
+    ->sign();
+```
+
+### New: documents with cross-reference streams
+
+No API change. Documents produced by Word, by "print to PDF" in Chrome and by
+most modern generators use the cross-reference stream of ISO 32000-1 §7.5.8
+rather than the classic table, and 2.1 refused them. 2.2 signs them, appending a
+revision in whichever form the document already uses.
+
 ## From 2.0 to 2.1
 
 2.1 adds PEM as a second accepted certificate encoding. PKCS#12 behaviour is
