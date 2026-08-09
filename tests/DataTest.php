@@ -19,9 +19,9 @@ it('reports the certificate expiry from the parsed data', function () {
     $future = time() + 3600;
     $past = time() - 3600;
 
-    expect((new Certificate('pem', false, ['validTo_time_t' => $future], ''))->expiresAt())->toBe($future)
-        ->and((new Certificate('pem', false, ['validTo_time_t' => $future], ''))->isExpired())->toBeFalse()
-        ->and((new Certificate('pem', false, ['validTo_time_t' => $past], ''))->isExpired())->toBeTrue();
+    expect(new Certificate('pem', false, ['validTo_time_t' => $future], '')->expiresAt())->toBe($future)
+        ->and(new Certificate('pem', false, ['validTo_time_t' => $future], '')->isExpired())->toBeFalse()
+        ->and(new Certificate('pem', false, ['validTo_time_t' => $past], '')->isExpired())->toBeTrue();
 });
 
 it('treats a certificate without an expiry as not expired', function () {
@@ -32,11 +32,11 @@ it('treats a certificate without an expiry as not expired', function () {
 });
 
 it('reads the common name, falling back to the organisation', function () {
-    expect((new Certificate('pem', false, ['subject' => ['commonName' => 'ACME']], ''))->commonName())
+    expect(new Certificate('pem', false, ['subject' => ['commonName' => 'ACME']], '')->commonName())
         ->toBe('ACME')
-        ->and((new Certificate('pem', false, ['subject' => ['organizationName' => 'ACME Ltd']], ''))->commonName())
+        ->and(new Certificate('pem', false, ['subject' => ['organizationName' => 'ACME Ltd']], '')->commonName())
         ->toBe('ACME Ltd')
-        ->and((new Certificate('pem', false, [], ''))->commonName())->toBeNull();
+        ->and(new Certificate('pem', false, [], '')->commonName())->toBeNull();
 });
 
 it('exposes its properties through toArray', function () {
@@ -100,8 +100,8 @@ it('reports no long-term material when the store covers another signature', func
         signatureKeys: [strtoupper(sha1('first'))],
     );
 
-    expect((new SignatureReport([$covered], $store))->hasLongTermMaterial())->toBeTrue()
-        ->and((new SignatureReport([$covered, $uncovered], $store))->hasLongTermMaterial())->toBeFalse()
-        ->and((new SignatureReport([$covered], null))->hasLongTermMaterial())->toBeFalse()
+    expect(new SignatureReport([$covered], $store)->hasLongTermMaterial())->toBeTrue()
+        ->and(new SignatureReport([$covered, $uncovered], $store)->hasLongTermMaterial())->toBeFalse()
+        ->and(new SignatureReport([$covered], null)->hasLongTermMaterial())->toBeFalse()
         ->and($store->covers($uncovered))->toBeFalse();
 });

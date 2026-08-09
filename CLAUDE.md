@@ -161,6 +161,7 @@ Conventional Commits, in English (`feat:`, `fix:`, `chore(deps):`, `test:`, `doc
 - PER-CS via Pint; grouped `use` imports with braces are used throughout.
 - `final readonly` classes by default; fluent setters returning `self`; named arguments at call sites.
 - Modern PHP is expected: typed class constants, `#[\SensitiveParameter]` on every password argument, `#[\Override]`, enums instead of class constants.
+- **No parentheses around `new` when chaining.** The floor is PHP 8.4, which allows `new Reader()->parse($der)`, so `(new Reader())->parse($der)` is the pre-8.4 workaround and PhpStorm reports it as a removable wrapper. Pint has no fixer for this, so it is a review point rather than a gate. The parentheses stay where the expression is not a chain: `new self(new Encrypter($key, self::CIPHER))` is already the plain form.
 - `@throws` docblocks are maintained on every method that can throw, so keep them accurate when changing exception paths.
 - Nullable config-backed arguments mean "use the configured default" rather than forcing every call site to repeat an infrastructure decision.
 

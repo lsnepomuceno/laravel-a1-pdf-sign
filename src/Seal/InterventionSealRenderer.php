@@ -36,7 +36,7 @@ final readonly class InterventionSealRenderer implements SealRenderer
     ): SealImage {
         $size = FontSize::resolve($fontSize ?? $this->configured('seal.font.size', 'large') ?? 'large');
 
-        $image = (new ImageManager(driver: $this->driver()->create()))->read($this->background());
+        $image = new ImageManager(driver: $this->driver()->create())->read($this->background());
 
         foreach ($this->rows($certificate, $size, $showExpiry, $expiryFormat) as $index => $text) {
             $image->text($text, self::TEXT_X, self::TEXT_ROWS[$index], $this->font($size));

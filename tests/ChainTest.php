@@ -56,7 +56,7 @@ it('confirms each link with the issuer key rather than by name', function () {
 
     // A second CA with the same subject name did not sign this leaf, so it must
     // not be chained to it. Matching names alone would accept it.
-    $chain = (new ChainBuilder())->build([$leaf, $unrelatedCa]);
+    $chain = new ChainBuilder()->build([$leaf, $unrelatedCa]);
 
     expect($chain)->toHaveCount(1)
         ->and($chain[0])->toBe($leaf);
@@ -83,8 +83,8 @@ it('builds the chain of a real signed document', function () {
 });
 
 it('returns nothing for an empty pool', function () {
-    expect((new ChainBuilder())->build([]))->toBe([])
-        ->and((new ChainBuilder())->reachesRoot([]))->toBeFalse();
+    expect(new ChainBuilder()->build([]))->toBe([])
+        ->and(new ChainBuilder()->reachesRoot([]))->toBeFalse();
 });
 
 it('walks a chain more than one link long', function () {
@@ -140,7 +140,7 @@ it('ignores certificates that belong to no link', function () {
 
     // A pool can carry certificates for another signature entirely. They must
     // not extend this chain.
-    $chain = (new ChainBuilder())->build([$leaf, $ca, $strayLeaf]);
+    $chain = new ChainBuilder()->build([$leaf, $ca, $strayLeaf]);
 
     expect($chain)->toBe([$leaf, $ca]);
 });
