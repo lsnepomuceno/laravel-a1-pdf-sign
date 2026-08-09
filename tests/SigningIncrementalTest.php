@@ -122,3 +122,40 @@ it('lets the caller choose the transport after signing', function () {
 
     unlink($path);
 });
+
+it('refuses a cross-reference stream, and says so', function () {
+    // PDF 1.5 is from 2003 and this format is what most modern generators
+    // emit, so the boundary is worth pinning by message rather than by class.
+    // When reading support lands (docs/decisions/0009-cross-reference-streams.md)
+    // this test fails and has to be rewritten deliberately.
+    expect(fn() => app(DocumentReader::class)->read(Files::read(resource('xref-stream.pdf'))))
+        ->toThrow(InvalidPdfFileException::class, 'cross-reference stream');
+});
+
+it('refuses an encrypted document rather than corrupting it', function () {
+    // The cross-reference table is not encrypted, so reading gets far enough to
+    // look successful while everything around it is unreadable. Silence here
+    // produced a file whose new objects no reader could decrypt.
+    expect(fn() => app(DocumentReader::class)->read(Files::read(resource('encrypted.pdf'))))
+        ->toThrow(InvalidPdfFileException::class, 'the document is encrypted');
+});
+
+it('names the structural fault instead of blaming the file extension', function () {
+    // Fifteen of the sixteen call sites raise this for reasons that have
+    // nothing to do with a filename, and every one of them used to say
+    // "Invalid file extension" (docs/decisions/0008-exceptions-name-the-real-fault.md).
+    try {
+        app(DocumentReader::class)->read('not a pdf at all');
+        $message = 'no exception';
+    } catch (InvalidPdfFileException $exception) {
+        $message = $exception->getMessage();
+    }
+
+    expect($message)->toContain('no startxref pointer found')
+        ->not->toContain('Invalid file extension');
+});
+
+it('keeps the extension message for the one case that meant it', function () {
+    expect(InvalidPdfFileException::extension('/tmp/contract.docx')->getMessage())
+        ->toBe('Invalid file extension, accept only ".pdf" extension files. Current file: /tmp/contract.docx.');
+});
