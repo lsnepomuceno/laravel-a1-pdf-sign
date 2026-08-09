@@ -6,16 +6,20 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\ByteRangeCalculator;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocTimeStampWriter;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentInfo;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DssWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 
 /**
  * Signs by appending a revision, leaving the original bytes untouched.
@@ -46,6 +50,7 @@ final readonly class IncrementalSigner implements PdfSigner
         private CadesBuilder $cades,
         private DssWriter $dss,
         private DocTimeStampWriter $archiveTimestamp,
+        private SignatureFieldReader $fields,
     ) {}
 
     public function sign(
@@ -56,20 +61,30 @@ final readonly class IncrementalSigner implements PdfSigner
         ?SealImage $seal = null,
         ?SealPlacement $placement = null,
         ?SignatureProfile $profile = null,
+        ?string $intoField = null,
     ): SignedPdf {
         $profile ??= SignatureProfile::PadesBB;
 
         $document = $this->reader->read($pdfContents);
+
+        $target = $intoField === null ? null : $this->target($pdfContents, $document, $intoField);
+
+        // A pre-placed field already says where the seal goes: the template drew
+        // the box, which is the reason the caller chose the field.
+        if ($target !== null) {
+            $placement = $seal !== null && $target->isVisible() ? $target->placement() : null;
+        }
 
         $withRevision = $this->writer->append(
             $pdfContents,
             $document,
             $info,
             self::CONTENTS_HEX_LENGTH,
-            $this->uniqueFieldName($pdfContents, $fieldName),
+            $target === null ? $this->uniqueFieldName($pdfContents, $fieldName) : $target->name,
             $seal,
             $placement,
             $profile,
+            $target,
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
@@ -122,6 +137,36 @@ final readonly class IncrementalSigner implements PdfSigner
             $open + 1,
             self::CONTENTS_HEX_LENGTH,
         );
+    }
+
+    /**
+     * The field to fill, or a refusal naming why it cannot be.
+     *
+     * Neither case falls back to appending a field beside the one asked for.
+     * That fallback is the failure intoField() exists to prevent, and it would
+     * happen quietly: a valid signature in the wrong place, and the template's
+     * own field still empty
+     * (docs/decisions/0013-signing-into-an-existing-field.md).
+     *
+     * @throws InvalidPdfFileException
+     * @throws SignatureFieldException
+     */
+    private function target(string $pdf, DocumentInfo $document, string $name): SignatureField
+    {
+        $field = $this->fields->named($pdf, $name, $document);
+
+        if ($field === null) {
+            throw SignatureFieldException::missing(
+                $name,
+                array_map(static fn(SignatureField $one): string => $one->name, $this->fields->read($pdf, $document)),
+            );
+        }
+
+        if ($field->isSigned) {
+            throw SignatureFieldException::alreadySigned($name);
+        }
+
+        return $field;
     }
 
     /**

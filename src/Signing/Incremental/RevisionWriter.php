@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
@@ -20,10 +21,10 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 final class RevisionWriter
 {
     public function __construct(
-        private readonly DocumentReader $reader,
-        private readonly SealAppearance $appearance = new SealAppearance(),
+        private readonly DocumentReader   $reader,
+        private readonly SealAppearance   $appearance = new SealAppearance(),
         private readonly XrefStreamWriter $streams = new XrefStreamWriter(),
-        private readonly XrefSubsections $subsections = new XrefSubsections(),
+        private readonly XrefSubsections  $subsections = new XrefSubsections(),
     ) {}
 
     /**
@@ -32,27 +33,38 @@ final class RevisionWriter
      * @throws InvalidPdfFileException
      */
     public function append(
-        string $pdf,
-        DocumentInfo $document,
-        SignatureInfo $info,
-        int $contentsHexLength,
-        string $fieldName,
-        ?SealImage $seal = null,
-        ?SealPlacement $placement = null,
+        string           $pdf,
+        DocumentInfo     $document,
+        SignatureInfo    $info,
+        int              $contentsHexLength,
+        string           $fieldName,
+        ?SealImage       $seal = null,
+        ?SealPlacement   $placement = null,
         SignatureProfile $profile = SignatureProfile::PadesBB,
+        ?SignatureField  $target = null,
     ): string {
         $visible = $seal !== null && $placement !== null;
 
-        $signatureNumber = $document->nextObjectNumber();
-        $widgetNumber = $signatureNumber + 1;
-        $imageNumber = $signatureNumber + 2;
-        $formNumber = $signatureNumber + 3;
+        $number = $document->nextObjectNumber();
+        $signatureNumber = $number++;
+        // Filling a field keeps the widget's own number: the revision replaces
+        // that object rather than adding a second one beside it, which is the
+        // whole point (docs/decisions/0013-signing-into-an-existing-field.md).
+        $widgetNumber = $target === null ? $number++ : $target->objectNumber;
+        $imageNumber = $number++;
+        $formNumber = $number;
+
+        // Null keeps the signature invisible, and it is what both widget
+        // builders read to decide whether to write an /AP at all.
+        $appearanceNumber = $visible ? $formNumber : null;
 
         $catalogNumber = $document->root;
-        $pageNumber = $this->reader->findFirstPage($pdf, $document);
-
-        $catalog = $this->withAcroForm($this->reader->rawObject($pdf, $document, $catalogNumber), $widgetNumber);
-        $page = $this->withAnnotation($this->reader->rawObject($pdf, $document, $pageNumber), $widgetNumber);
+        // A field states its own page through /P. Falling back to the first page
+        // covers the field that declares none, which is legal and leaves the
+        // widget wherever the form puts it.
+        $pageNumber = $target !== null && $target->pageNumber > 0
+            ? $target->pageNumber
+            : $this->reader->findFirstPage($pdf, $document);
 
         $base = strlen($pdf);
         $body = "\n";
@@ -62,14 +74,16 @@ final class RevisionWriter
         $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile);
 
         $offsets[$widgetNumber] = $base + strlen($body);
-        $body .= $this->widgetObject(
-            $widgetNumber,
-            $signatureNumber,
-            $pageNumber,
-            $fieldName,
-            $visible ? $formNumber : null,
-            $visible ? $this->appearance->rectangle($placement, $seal) : null,
-        );
+        $body .= $target === null
+            ? $this->widgetObject(
+                $widgetNumber,
+                $signatureNumber,
+                $pageNumber,
+                $fieldName,
+                $appearanceNumber,
+                $visible ? $this->appearance->rectangle($placement, $seal) : null,
+            )
+            : $this->filledWidget($pdf, $document, $target, $signatureNumber, $appearanceNumber);
 
         if ($visible) {
             $offsets[$imageNumber] = $base + strlen($body);
@@ -79,11 +93,23 @@ final class RevisionWriter
             $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);
         }
 
-        $offsets[$catalogNumber] = $base + strlen($body);
-        $body .= "{$catalogNumber} 0 obj\n{$catalog}\nendobj\n";
+        // A field the document already carries is already registered on the
+        // form and on its page, so those objects are rewritten only when they
+        // do not yet say so. Emitting them unchanged would grow every revision
+        // with two objects that decide nothing.
+        $catalog = $this->reader->rawObject($pdf, $document, $catalogNumber);
 
-        $offsets[$pageNumber] = $base + strlen($body);
-        $body .= "{$pageNumber} 0 obj\n{$page}\nendobj\n";
+        if ($target === null || !str_contains($catalog, '/SigFlags')) {
+            $offsets[$catalogNumber] = $base + strlen($body);
+            $body .= "{$catalogNumber} 0 obj\n" . $this->withAcroForm($catalog, $widgetNumber, $target !== null) . "\nendobj\n";
+        }
+
+        $page = $this->reader->rawObject($pdf, $document, $pageNumber);
+
+        if ($target === null || preg_match('/\/Annots\s*\[[^\]]*\b' . $widgetNumber . '\s+\d+\s+R/', $page) !== 1) {
+            $offsets[$pageNumber] = $base + strlen($body);
+            $body .= "{$pageNumber} 0 obj\n" . $this->withAnnotation($page, $widgetNumber) . "\nendobj\n";
+        }
 
         $body .= $this->crossReference(
             $base + strlen($body),
@@ -102,7 +128,7 @@ final class RevisionWriter
      * timestamp revisions of PAdES B-LT and B-LTA are the others. Object
      * numbering is the caller's, so it stays authoritative.
      *
-     * @param  array<int, string>  $objects  Full "N 0 obj … endobj" fragments, keyed by number.
+     * @param array<int, string> $objects Full "N 0 obj … endobj" fragments, keyed by number.
      *
      * @throws InvalidPdfFileException
      */
@@ -143,15 +169,15 @@ final class RevisionWriter
      * emitting one shape for everything
      * (docs/decisions/0009-cross-reference-streams.md).
      *
-     * @param  array<int, int>  $offsets  Object number to byte offset.
-     * @param  int  $size  One past the highest object number, before the stream
+     * @param array<int, int> $offsets Object number to byte offset.
+     * @param int $size One past the highest object number, before the stream
      *                     object this may have to allocate for itself.
      */
     private function crossReference(int $xrefOffset, array $offsets, int $size, DocumentInfo $document): string
     {
         $ending = "startxref\n{$xrefOffset}\n%%EOF\n";
 
-        if (! $document->usesXrefStream) {
+        if (!$document->usesXrefStream) {
             return $this->xrefTable($offsets)
                 . $this->trailer($size, $document->root, $document)
                 . $ending;
@@ -190,10 +216,10 @@ final class RevisionWriter
      * @throws InvalidPdfFileException
      */
     public function pageWithAnnotation(
-        string $pdf,
+        string       $pdf,
         DocumentInfo $document,
-        int $pageNumber,
-        int $widgetNumber,
+        int          $pageNumber,
+        int          $widgetNumber,
     ): string {
         $page = $this->withAnnotation($this->reader->rawObject($pdf, $document, $pageNumber), $widgetNumber);
 
@@ -217,9 +243,9 @@ final class RevisionWriter
     }
 
     private function signatureObject(
-        int $number,
-        SignatureInfo $info,
-        int $contentsHexLength,
+        int              $number,
+        SignatureInfo    $info,
+        int              $contentsHexLength,
         SignatureProfile $profile,
     ): string {
         $metadata = '';
@@ -240,14 +266,14 @@ final class RevisionWriter
     }
 
     /**
-     * @param  array{0: float, 1: float, 2: float, 3: float}|null  $rectangle
+     * @param array{0: float, 1: float, 2: float, 3: float}|null $rectangle
      */
     private function widgetObject(
-        int $number,
-        int $signatureNumber,
-        int $pageNumber,
+        int    $number,
+        int    $signatureNumber,
+        int    $pageNumber,
         string $fieldName,
-        ?int $formNumber = null,
+        ?int   $formNumber = null,
         ?array $rectangle = null,
     ): string {
         // A zero rectangle keeps the signature invisible, which is the default
@@ -271,16 +297,59 @@ final class RevisionWriter
     }
 
     /**
+     * The widget of a field the document already carries, with /V pointing at
+     * the new signature.
+     *
+     * Everything else the template put there survives: the rectangle, the page
+     * reference, the flags. /V is added rather than replaced because a field
+     * that already has one was refused before reaching here.
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function filledWidget(
+        string         $pdf,
+        DocumentInfo   $document,
+        SignatureField $target,
+        int            $signatureNumber,
+        ?int           $formNumber,
+    ): string {
+        $widget = $this->injectBeforeClose(
+            $this->reader->rawObject($pdf, $document, $target->objectNumber),
+            "/V {$signatureNumber} 0 R",
+        );
+
+        if ($formNumber !== null) {
+            // An empty signature field often ships with an appearance of its
+            // own, the "sign here" graphic, which the seal replaces.
+            $widget = preg_match('/\/AP\s*<<.*?>>/s', $widget) === 1
+                ? (string) preg_replace('/\/AP\s*<<.*?>>/s', "/AP<</N {$formNumber} 0 R>>", $widget, 1)
+                : $this->injectBeforeClose($widget, "/AP<</N {$formNumber} 0 R>>");
+        }
+
+        return "{$target->objectNumber} 0 obj\n{$widget}\nendobj\n";
+    }
+
+    /**
      * Adds the field to /AcroForm, extending an existing one rather than
      * replacing it, so signatures already present keep their fields.
+     *
+     * @param bool $alreadyListed True when filling a field the form already
+     *                               declares: /SigFlags still has to be right,
+     *                               but listing the field twice would leave the
+     *                               form carrying a duplicate.
+     * @throws InvalidPdfFileException
      */
-    private function withAcroForm(string $catalog, int $widgetNumber): string
+    private function withAcroForm(string $catalog, int $widgetNumber, bool $alreadyListed = false): string
     {
         if (preg_match('/\/AcroForm\s*<<(.*?)>>/s', $catalog, $matches) !== 1) {
             return $this->injectBeforeClose($catalog, "/AcroForm <</Fields [{$widgetNumber} 0 R]/SigFlags 3>>");
         }
 
         $acroForm = $matches[1];
+
+        if ($alreadyListed) {
+            return str_replace($matches[0], '/AcroForm <<' . $acroForm . '/SigFlags 3>>', $catalog);
+        }
 
         if (preg_match('/\/Fields\s*\[(.*?)\]/s', $acroForm, $fields) === 1) {
             $acroForm = (string) preg_replace(
@@ -293,7 +362,7 @@ final class RevisionWriter
             $acroForm .= "/Fields [{$widgetNumber} 0 R]";
         }
 
-        if (! str_contains($acroForm, '/SigFlags')) {
+        if (!str_contains($acroForm, '/SigFlags')) {
             $acroForm .= '/SigFlags 3';
         }
 
@@ -328,7 +397,7 @@ final class RevisionWriter
     }
 
     /**
-     * @param  array<int, int>  $offsets
+     * @param array<int, int> $offsets
      */
     private function xrefTable(array $offsets): string
     {

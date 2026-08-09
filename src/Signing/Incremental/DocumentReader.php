@@ -7,7 +7,8 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 /**
  * Reads the cross-reference chain of an existing PDF.
  *
- * Clean-room implementation from ISO 32000-1 §7.5.4 and §7.5.6. Scope is the
+ * Clean-room implementation from ISO 32000-1 §7.5.4, §7.5.6 and §7.5.8.
+ *
  * Both cross-reference forms are read: the classic table of §7.5.4 and the
  * cross-reference stream of §7.5.8, which PDF 1.5 introduced and most modern
  * generators emit.

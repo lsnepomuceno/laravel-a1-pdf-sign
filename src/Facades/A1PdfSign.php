@@ -12,6 +12,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate encryptCertificate(\Illuminate\Http\UploadedFile|string $uploadedOrPfxPath, string $password, ?bool $usePathEnv = null)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\Certificate decryptCertificate(string $hashKey, string $encryptedCertificate, string $password, bool $isBase64 = false, ?bool $usePathEnv = null)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport validate(string $pdfPath)
+ * @method static list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField> signatureFields(string $pdfPath)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature newSignature()
  * @method static string tempPath(bool $tempFile = false, string $fileExt = '.pfx')
  *

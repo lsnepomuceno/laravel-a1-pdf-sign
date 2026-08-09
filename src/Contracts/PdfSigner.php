@@ -21,8 +21,17 @@ interface PdfSigner
      *                             occupy separate fields.
      * @param  SealImage|null  $seal  Rendered seal; null leaves the signature
      *                                invisible.
+     * @param  string|null  $intoField  Fills a field the document already
+     *                                  carries, instead of creating one. The
+     *                                  field's own rectangle then decides where
+     *                                  the seal goes and whether there is one,
+     *                                  so $placement is ignored and $fieldName
+     *                                  with it. A field that is missing or
+     *                                  already signed is an error rather than a
+     *                                  fallback to appending.
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException
      */
     public function sign(
         string $pdfContents,
@@ -32,5 +41,6 @@ interface PdfSigner
         ?SealImage $seal = null,
         ?SealPlacement $placement = null,
         ?SignatureProfile $profile = null,
+        ?string $intoField = null,
     ): SignedPdf;
 }

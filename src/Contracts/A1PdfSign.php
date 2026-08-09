@@ -98,6 +98,22 @@ interface A1PdfSign
     public function validate(string $pdfPath): SignatureReport;
 
     /**
+     * Lists the signature fields a document already carries, filled or empty.
+     *
+     * An application that signs into a template usually has to show its fields
+     * before it can pick one, so discovery is exposed on its own rather than
+     * only as an error message from intoField()
+     * (docs/decisions/0013-signing-into-an-existing-field.md).
+     *
+     * @return list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField> In the
+     *                                                                  order the
+     *                                                                  form declares.
+     *
+     * @throws \Throwable
+     */
+    public function signatureFields(string $pdfPath): array;
+
+    /**
      * Starts a fluent signature. Nothing happens until sign() is called.
      */
     public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;

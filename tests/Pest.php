@@ -80,3 +80,47 @@ function resource(string $name): string
 {
     return __DIR__ . '/Resources/' . $name;
 }
+
+/**
+ * The contract template: two empty signature fields, laid out by someone else.
+ *
+ * See docs/decisions/0013-signing-into-an-existing-field.md.
+ */
+function template(): string
+{
+    return LSNepomuceno\LaravelA1PdfSign\Support\Files::read(resource('signature-fields.pdf'));
+}
+
+/**
+ * A minimal PDF around the given objects, with a correct cross-reference table.
+ *
+ * Structural cases are built rather than patched into the committed fixture:
+ * changing a dictionary's length shifts every offset after it, and the xref
+ * would then point into the middle of objects. A test that reads the wrong
+ * bytes can still pass, which is the worst kind.
+ *
+ * @param  array<int, string>  $objects  Bodies keyed by number, from 1 upwards.
+ */
+function pdfWith(array $objects): string
+{
+    ksort($objects);
+
+    $pdf = "%PDF-1.4\n";
+    $offsets = [];
+
+    foreach ($objects as $number => $body) {
+        $offsets[$number] = strlen($pdf);
+        $pdf .= "{$number} 0 obj\n{$body}\nendobj\n";
+    }
+
+    $start = strlen($pdf);
+    $size = count($objects) + 1;
+
+    $pdf .= "xref\n0 {$size}\n0000000000 65535 f \n";
+
+    foreach ($offsets as $offset) {
+        $pdf .= sprintf("%010d 00000 n \n", $offset);
+    }
+
+    return $pdf . "trailer\n<</Size {$size}/Root 1 0 R>>\nstartxref\n{$start}\n%%EOF\n";
+}

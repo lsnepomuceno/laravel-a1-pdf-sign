@@ -107,6 +107,14 @@ it('lets the container swap the implementation', function () {
             return new \LSNepomuceno\LaravelA1PdfSign\Data\Certificate('pem', false, [], '');
         }
 
+        /**
+         * @return list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField>
+         */
+        public function signatureFields(string $pdfPath): array
+        {
+            return [];
+        }
+
         public function validate(string $pdfPath): SignatureReport
         {
             return new SignatureReport([]);
