@@ -1,3 +1,44 @@
+# 2.2.1
+
+## A break 2.2.0 shipped, and the gate that found it
+
+2.2.0 raised `IncrementalSigner`'s constructor from six required arguments to eight. Resolving the signer from the container, which every documented path does, is unaffected. **Building it by hand is not**, and that is a break a patch release should undo rather than a note in an upgrade guide.
+
+Both new parameters now default to an instance:
+
+```PHP
+new IncrementalSigner($reader, $writer, $byteRange, $cades, $dss, $archiveTimestamp);
+```
+
+Nothing else changed. There is no reason to upgrade from 2.2.0 unless you construct that class directly.
+
+<hr>
+
+## How it was found
+
+The Roave backward compatibility check now runs on every pull request, comparing the last release against `HEAD`. It was deliberately held back from the 2.2 work so its first run could be read rather than merged blind, and it earned its place immediately: **nothing in the test suite could have caught this**, because the suite resolves everything from the container.
+
+It also surfaced a second change 2.2.0 made and failed to document: `InvalidPdfFileException::__construct()` renamed its first parameter from `currentFile` to `message`. Behaviour is unchanged for a positional caller, since the argument is still a string that becomes the message. Only a named argument breaks:
+
+```PHP
+new InvalidPdfFileException(currentFile: $path);  // 2.1
+new InvalidPdfFileException(message: $text);      // 2.2
+```
+
+The one case the old wording described kept it byte for byte, as `InvalidPdfFileException::extension($path)`.
+
+<hr>
+
+## Fixed
+
+- **`Signing\IncrementalSigner::__construct()` accepts six arguments again.** `SignatureFieldReader` and `CertificationReader` default to an instance instead of being required.
+
+## Added
+
+- **A backward compatibility gate on every pull request**, comparing the last SemVer tag against `HEAD`. The baseline moves on its own as releases are cut, so there is no list to maintain.
+
+<hr>
+
 # 2.2.0
 
 ## Templates, certification, and the documents 2.1 refused
