@@ -195,3 +195,94 @@ Both seals are visible in the finished document, in different places. One signat
 This works because each signature is an appended revision carrying its own widget annotation, with its own image and form objects. Nothing is reused between them, so changing the second seal cannot disturb the first.
 
 [`samples/two-seals.pdf`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/samples/two-seals.pdf) is exactly this case, signed and ready to open in a reader.
+
+<hr>
+
+#### 7 - Signing into a field the document already carries. <small>(since 2.2)</small>
+
+A contract laid out by someone else arrives with its signature fields already placed. `intoField()` fills the one you name, instead of appending another beside it.
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+// What does this template carry?
+foreach (A1PdfSign::signatureFields('path/to/contract-template.pdf') as $field) {
+    $field->name;        // 'SignatureManager'
+    $field->isSigned;    // false
+    $field->pageNumber;  // 3
+    $field->rectangle;   // [30.0, 200.0, 200.0, 250.0]
+    $field->isVisible(); // true, the field has an area to draw into
+}
+
+$signed = A1PdfSign::newSignature()
+    ->certificate('path/to/certificate.pfx', 'password')
+    ->pdf('path/to/contract-template.pdf')
+    ->intoField('SignatureManager')
+    ->seal()
+    ->sign();
+```
+
+**The field's own rectangle decides where the seal goes**, because the template already drew the box. For that reason `intoField()` cannot be combined with a `SealPlacement`, and a field with a zero rectangle keeps the signature invisible even when `seal()` was called: the template's geometry is the template's decision.
+
+Three things raise `SignatureFieldException` rather than falling back to appending a field:
+
+| Refused | Why |
+|---|---|
+| A field that does not exist | the message names the fields that do, since a misspelling is the usual cause |
+| A field already signed | filling it again would replace that signature rather than add one |
+| A placement passed as well | resolving by precedence would silently move the seal off the box the template drew |
+
+> **Falling back would be worse than failing.** Before 2.2 the package appended a new field beside the empty one, so the document ended up with a signature that was valid and in the wrong place, plus an unfilled field that was the point of the template.
+
+[`samples/signed-into-fields.pdf`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/samples/signed-into-fields.pdf) is a template with two fields, both filled by name.
+
+<hr>
+
+#### 8 - Certifying a document. <small>(since 2.2)</small>
+
+Every signature above is an **approval** signature: it asserts what the bytes were. A **certification** is a different claim, the author's statement about what may happen to the document from here on (ISO 32000-1 §12.8.2.2).
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+$certified = A1PdfSign::newSignature()
+    ->certificate('path/to/certificate.pfx', 'password')
+    ->pdf('path/to/contract.pdf')
+    ->certify(CertificationLevel::FormFilling)   // or the string 'form-filling'
+    ->info(name: 'Document author')
+    ->seal()
+    ->sign();
+```
+
+| Level | Permits |
+|---|---|
+| `no-changes` | nothing. The document **cannot be signed again** |
+| `form-filling` | filling form fields and signing. **The default** |
+| `annotations` | form filling, signing and annotations |
+
+`certify()` defaults to `form-filling` because a document that still has to be signed is the common case, and defaulting to the level that refuses the next signer would fail closed in the wrong direction.
+
+Three rules are enforced, not merely documented, each raising `CertificationException`:
+
+- **A certification has to be the first signature.** It states what may happen from here on, and an approval signature already applied is a thing that happened;
+- **There can be only one** per document;
+- **`no-changes` refuses every later signature**, approval or otherwise.
+
+> **That last rule can reach code that never calls `certify()`.** Signing a document someone else certified at `no-changes` raises rather than succeeding. This is the certification working: a further signature is a further revision, and without the refusal it would silently invalidate the signature already there. If the document still has to be signed, certify at `form-filling` instead.
+
+[`samples/certified.pdf`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/samples/certified.pdf) is certified at `form-filling` and then signed by a second party.
+
+<hr>
+
+#### 9 - Documents produced by Word, Chrome and LaTeX. <small>(since 2.2)</small>
+
+No API change, and nothing to call. It is worth knowing about because 2.1 refused these documents outright.
+
+PDF 1.5 replaced the cross-reference table with a **cross-reference stream**, and that is the form Word, "print to PDF" in Chrome, LaTeX with compression and most modern generators emit. 2.2 reads it and appends the new revision in whichever form the document already uses.
+
+The two cannot be mixed: appending a classic table to a document whose latest section is a stream produces a file that readers do not see as signed at all. If you are signing documents from a source that previously failed, this is why.

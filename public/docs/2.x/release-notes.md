@@ -1,3 +1,99 @@
+# 2.2.0
+
+## Templates, certification, and the documents 2.1 refused
+
+Three things a real workflow needs and 2.1 could not do: sign a PDF produced by Word or Chrome, fill the signature field a contract template already carries, and certify a document as its author.
+
+```PHP
+// The field the template already drew, filled by name
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($contract)
+    ->intoField('SignatureManager')
+    ->seal()
+    ->sign();
+
+// The author's statement about what may happen from here on
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdf($contract)
+    ->certify('form-filling')
+    ->sign();
+```
+
+Nothing was removed and the PHP and Laravel requirements do not move, so an application that signs and validates upgrades without editing anything.
+
+<hr>
+
+## Documents 2.1 could not sign at all
+
+**PDF 1.5 replaced the cross-reference table with a stream**, and that is what Word, "print to PDF" in Chrome, LaTeX with compression and most modern generators emit. 2.1 refused them, which bounded who could use the package, and the bound was not small.
+
+2.2 reads that form and appends a revision in whichever form the document already uses. The mixture is not a matter of taste: appending a classic table to a document whose latest section is a stream produced a file poppler reported as carrying **no signatures at all**. Reading shipped one release before writing, with signing refusing in between, so the gap was a loud refusal rather than silent corruption.
+
+<hr>
+
+## Added
+
+- **`intoField()`**, which fills a signature field the document already carries instead of appending one beside it. Until now the package left the template's own field empty while putting a valid signature somewhere else. The field's rectangle decides where the seal goes;
+- **`A1PdfSign::signatureFields()`**, returning each field's name, rectangle, page and whether it is already signed;
+- **`certify()`**, writing a `/DocMDP` certification at `no-changes`, `form-filling` or `annotations` (ISO 32000-1 §12.8.2.2), requested in [discussion #160](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/discussions/160);
+- **Cross-reference stream support**, reading and writing, with no API change;
+- **`signedAt` and `signerWasValidWhenSigned()`** on each signature. The second returns `null` rather than `false` when the signing time is absent, because a validity window that cannot be checked is unknown, not invalid;
+- **`chain` and `chainReachesRoot`**, the embedded certificates ordered leaf first, with each link confirmed by the issuer's public key rather than by matching names;
+- **`securityStore` and `hasLongTermMaterial()`**, so a `pades-b-lt` document can be asked whether its validation material actually covers every signature in it;
+- **`isCertified()`, `certification` and `acceptsFurtherSignatures()`** on the report;
+- **Archive timestamps are verified** rather than assumed, against the imprint they actually stamp;
+- **`samples/certified.pdf`, `samples/signed-into-fields.pdf` and `samples/xref-stream.pdf`**, one per new capability.
+
+<hr>
+
+## Refusals, which are the feature
+
+Each of these raises rather than falling back, because every fallback here produces a file that looks right and is not.
+
+| Refused | Why |
+|---|---|
+| `intoField()` naming a field that does not exist | appending one beside it is exactly the failure the feature prevents. The message names the fields that do exist |
+| `intoField()` naming a field already signed | filling it again would replace that signature rather than add one |
+| A seal placement passed with `intoField()` | the field has its own rectangle; resolving by precedence would silently move the seal off the box the template drew |
+| A second certification, or one after an approval signature | a certification states what may happen from here on, and a signature already applied is a thing that happened |
+| **Any signature on a document certified at `no-changes`** | a further signature is a further revision, which is exactly what that level forbids |
+| An encrypted document | the cross-reference table is not encrypted, so reading gets far enough to look successful while everything around it is unreadable |
+
+The `no-changes` one can reach code that uses no new feature at all, if it signs a document someone else certified. That is the certification working: without the refusal, the second signature would silently invalidate the first.
+
+<hr>
+
+## Fixed
+
+- **The first page of a compact document was misidentified as the catalog.** The page search scanned a fixed 400-byte window from each object's offset, which in a document whose objects sit close together reaches the objects that follow. The revision then wrote the form entry and the annotation onto the same object, the second silently dropping the first, producing a document with a signature dictionary and no form to reach it from. It was latent in any such document, and only a 434-byte test fixture was small enough to expose it;
+- **Exceptions name the fault that actually occurred.** Fifteen of sixteen call sites reported structural faults as "Invalid file extension".
+
+<hr>
+
+## Breaking for implementers
+
+Calling or injecting the contracts is unaffected: the new parameters are optional and trailing. **Implementing them is not.**
+
+| | 2.1 | 2.2 |
+| --- | --- | --- |
+| `Contracts\A1PdfSign` | n/a | gains `signatureFields()` |
+| `Contracts\PdfSigner::sign()` | 7 parameters | gains `?string $intoField` and `?CertificationLevel $certification` |
+| `Data\SignatureReport::toArray()` | 2 keys | gains `certification` |
+
+The last one reaches anyone asserting on the whole array, a snapshot test or a strict equality check. Reading properties and calling methods is unaffected. The [upgrade guide](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/UPGRADE.md) maps each one.
+
+<hr>
+
+## One verification this release does not claim
+
+**Whether a reader enforces a certification is untested.** `pdfsig` does not surface `/DocMDP` at all, so poppler confirms only that the file is well formed and both signatures verify. Enforcement needs Adobe Reader or ITI Validar, which this project cannot run in CI.
+
+The bytes are right and were checked by hand: `/Perms` names the signature that carries the transform, and the transform carries the permission for the level asked for. `samples/certified.pdf` exists so you can check the rest yourself. [Decision 0012](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/docs/decisions/0012-certification-signatures.md) records the gap rather than rounding it up.
+
+<hr>
+
 # 2.1.0
 
 ## PEM certificates
