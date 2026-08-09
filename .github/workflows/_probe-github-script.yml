@@ -1,0 +1,46 @@
+# TEMPORARY — delete before merging.
+#
+# The issue-filing step in mutation.yml only runs on failure, so bumping
+# github-script from v7 to v9 cannot be validated by any ordinary run. This
+# exercises the exact API surface that step uses, read-only: no issue is
+# created, nothing is written.
+name: Probe github-script v9
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Exercise the surface the mutation reporter uses
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              labels: 'mutation',
+            })
+
+            const existing = open.find(issue => issue.title === 'Mutation score below floor: Validation')
+
+            core.summary
+              .addHeading('github-script v9')
+              .addTable([
+                [{ data: 'check', header: true }, { data: 'result', header: true }],
+                ['context.repo', `${owner}/${repo}`],
+                ['context.serverUrl + runId', run],
+                ['github.paginate + rest.issues.listForRepo', `${open.length} open issue(s) labelled mutation`],
+                ['find by title', existing ? `#${existing.number}` : 'none, as expected'],
+              ])
+              .write()

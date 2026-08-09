@@ -119,7 +119,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -183,7 +183,7 @@ jobs:
       # Those still fall back to the e-mail.
       - name: Open or update the tracking issue
         if: failure() && steps.mutate.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           NAMESPACE: ${{ matrix.namespace }}
           FLOOR: ${{ matrix.min }}
