@@ -144,7 +144,20 @@ Conventional Commits, in English (`feat:`, `fix:`, `chore(deps):`, `test:`, `doc
 
 ## Conventions
 
-- **Everything in English** — code, comments, docblocks, commit messages, documentation. The package is used internationally.
+### Writing
+
+- **No em dashes.** Not in prose, comments, docblocks, commit messages, documentation, pull request bodies or issue replies. Use a comma, a colon, parentheses, or two sentences.
+
+  | Instead of | Write |
+  |---|---|
+  | `the score is not reproducible — it tracks timeouts` | `the score is not reproducible: it tracks timeouts` |
+  | `PEM ships as .pem, .crt — so gate on content` | `PEM ships as .pem and .crt, so gate on content` |
+  | `two reasons — cost and reproducibility` | `two reasons: cost and reproducibility` |
+  | `the fix — which is uniform — needs no branch` | `the fix (which is uniform) needs no branch` |
+
+  A colon carries the same "here is the reason" weight the em dash was doing, and reads the same to someone skimming. Ranges keep the en dash: `8.4 – 8.5`.
+
+- **Everything in English:** code, comments, docblocks, commit messages, documentation. The package is used internationally.
 - PER-CS via Pint; grouped `use` imports with braces are used throughout.
 - `final readonly` classes by default; fluent setters returning `self`; named arguments at call sites.
 - Modern PHP is expected: typed class constants, `#[\SensitiveParameter]` on every password argument, `#[\Override]`, enums instead of class constants.
