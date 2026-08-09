@@ -14,6 +14,7 @@
  */
 
 use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\LaravelA1PdfSignServiceProvider;
 use LSNepomuceno\LaravelA1PdfSign\Testing\DebugCertificate;
@@ -99,6 +100,43 @@ printf(
     "\nvalidate(six-signatures.pdf): %d signatures, valid=%s\n",
     $report->count(),
     $report->isValid() ? 'true' : 'false',
+);
+
+// Two signatures on one document, each carrying its own seal. The first is
+// rendered from the certificate, the second is an image the caller supplies,
+// and they sit in different places on the page. Worth a sample of its own
+// because it is the combination nothing else here shows: seal.pdf proves a
+// seal, six-signatures.pdf proves the revisions, and only this proves the two
+// are independent when a reader opens the file.
+$twoSeals = "{$output}/two-seals.pdf";
+
+$first = $manager->newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($source)
+    ->info(name: 'First signer', reason: 'Rendered seal')
+    ->seal(placement: new SealPlacement(x: 150, y: 240, width: 50))
+    ->profile(SignatureProfile::PadesBB)
+    ->sign();
+
+$first->save($twoSeals);
+
+$second = $manager->newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdf($twoSeals)
+    ->info(name: 'Second signer', reason: 'Supplied image')
+    ->sealFrom(__DIR__ . '/../src/Resources/img/sign-seal.png', new SealPlacement(x: 30, y: 60, width: 60))
+    ->profile(SignatureProfile::PadesBB)
+    ->sign();
+
+$second->save($twoSeals);
+
+$twoSealsReport = $manager->validate($twoSeals);
+
+printf(
+    "validate(two-seals.pdf):      %d signatures, valid=%s, images=%d\n",
+    $twoSealsReport->count(),
+    $twoSealsReport->isValid() ? 'true' : 'false',
+    substr_count((string) $second->contents, '/Subtype/Image'),
 );
 
 // One round through the PEM entry point. There is no pem-signed.pdf in
