@@ -75,13 +75,22 @@ author certifies at `form-filling`, ISO 32000-1 §12.8.2.2, and a second party
 then signs: that combination is the whole reason levels 2 and 3 exist, since
 `no-changes` would forbid the very revision the second signature needs.
 
-**This is the sample that most needs a real reader**, and the one this project
-can least verify on its own. `pdfsig` does not surface `/DocMDP` at all, so
-poppler confirms only that both signatures verify and the file is well formed.
-Whether the certification is *enforced* is precisely what varies between
-readers, so open it in Adobe Reader or ITI Validar and check two things: that
-the certification is reported, and that the approval signature which followed it
-is accepted rather than treated as a violation.
+**Poppler confirms this file, and cannot confirm the certification.** Opened in
+Okular, both signatures report as cryptographically valid with the right field
+names and reasons, the form is reachable, and the approval signature applied
+after the certification is accepted rather than flagged as a violation of it.
+That last point was a real risk and is now settled.
+
+What poppler cannot answer is whether it would *enforce* the transform, since
+`pdfsig` does not surface `/DocMDP` at all. It was asked indirectly instead:
+`poc/certify-fillable.php` certifies one document twice, at `no-changes` and at
+`form-filling`, differing in nothing but the permission, and a reader that
+enforces the transform has to refuse typing in the first and allow it in the
+second. **Both allow it, identically. Poppler does not enforce `/DocMDP`.**
+
+That is a fact about poppler rather than about these bytes, and it means the
+enforcement path can only be exercised in Adobe Reader or ITI Validar. Open this
+file in one if you have it.
 
 The structure, for reading by hand:
 

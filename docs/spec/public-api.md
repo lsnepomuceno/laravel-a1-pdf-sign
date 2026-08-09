@@ -173,7 +173,14 @@ signed again** because a further signature is a further revision, which is what
 that level forbids.
 
 `certify()` defaults to `form-filling`, since a document that still has to be
-signed is the common case ([0012](../decisions/0012-certification-signatures.md)).
+signed is the common case.
+
+**What a certification does depends on the reader honouring it**, and poppler
+does not: measured with a differential test, it allows form filling on a
+document certified at `no-changes` exactly as it does at `form-filling`. The
+bytes are correct and the package enforces its own rules, but enforcement in the
+reader is Adobe Reader and ITI Validar territory
+([0012](../decisions/0012-certification-signatures.md)).
 
 ## Signing into a field the document already carries
 

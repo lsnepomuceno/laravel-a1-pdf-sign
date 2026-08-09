@@ -1,7 +1,8 @@
 # 0012: Certification signatures and DocMDP
 
-**Status:** implemented, with one part of the verification outstanding and
-named below. Requested in
+**Status:** implemented. The verification is complete in the sense that
+matters: the outstanding question was answered, and the answer is about the
+readers rather than about the package. See "What the readers actually do". Requested in
 [discussion #160](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/discussions/160).
 
 ## Context
@@ -125,18 +126,45 @@ the transform. `poc/certify.php` produces these and exercises the exclusion:
 signing a `no-changes` document is refused, and signing a `form-filling` one
 succeeds with the certification intact.
 
-**What was not verified, and this is the gap.** `pdfsig` does not surface
-`/DocMDP` at all, so poppler cannot tell us whether the certification would be
-*enforced*, only that the file is well formed and the signature verifies. That
-needs Adobe Reader or ITI Validar on a document certified at each level and then
-modified, which is not runnable here. **A test asserting the bytes were written
-is necessary and nowhere near sufficient**, exactly as this record said before
-the work started, and saying so afterwards costs nothing while claiming
-otherwise would cost a user.
+**What the readers actually do.** `pdfsig` does not surface `/DocMDP` at all,
+so poppler could not be asked directly whether it would *enforce* a
+certification. It was asked indirectly, with a differential test.
 
-`samples/certified.pdf` exists for that check: certified at `form-filling` and
-then signed by a second party, so a reader can be asked both whether it reports
-the certification and whether it accepts the approval signature that followed.
+`poc/certify-fillable.php` certifies one document twice, at `no-changes` and at
+`form-filling`, so the two differ in nothing but `/P`. `/P 1` forbids filling a
+form field and `/P 2` permits it, so a reader that enforces the transform must
+behave differently on the two files.
+
+Measured on 2026-08-09, in Okular, which uses poppler as its backend:
+
+> **Both allow typing. Identically.**
+
+**Poppler does not enforce `/DocMDP`.** That is a fact about poppler, not about
+these bytes, and it is worth more than "unverified" was: the question is
+answered, and the answer names what would have to change for anyone to check
+further. **No reader available to this project enforces the transform**, so the
+enforcement path can only be exercised in Adobe Reader or ITI Validar.
+`samples/certified.pdf` exists for whoever has one.
+
+What poppler did confirm, in Okular's signature panel and not only on the
+command line: a certified document opens and renders, both signatures report as
+cryptographically valid with the right field names and reasons, the form is
+reachable, and **the approval signature applied after the certification is
+accepted rather than flagged as a violation of it**. That last one was a real
+risk, since a reader could have treated the second revision as breaking the
+first.
+
+### The first attempt at this test produced no signal
+
+It certified `tests/Resources/test.pdf`, which carries **no form field at all**.
+The only widget in the file was the signature's own, and clicking a signature
+field shows the certificate at every level regardless of any certification, so
+all three behaved the same. That identical behaviour was not evidence of
+anything; it was the absence of something to observe.
+
+`tests/Resources/fillable.pdf` is committed for this reason: 1072 bytes, one
+page, one text field. A differential test needs a document where the permission
+being tested is actually exercisable, and building that is the whole difficulty.
 
 ## Consequences
 
