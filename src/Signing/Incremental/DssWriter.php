@@ -60,7 +60,7 @@ final readonly class DssWriter
      *
      * A self-signed certificate has neither an OCSP responder nor a CRL
      * distribution point, and an unreachable responder must not fail the
-     * signature — in both cases the document simply stays at B-T.
+     * signature: in both cases the document simply stays at B-T.
      *
      * @return array{certs: list<string>, ocsp: list<string>, crls: list<string>}|null
      */

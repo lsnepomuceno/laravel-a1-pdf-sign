@@ -29,7 +29,7 @@ class ValidatePdfSignatureCommand extends Command
                 $status = $signature->verified ? 'verified' : 'NOT verified';
                 $scope = $signature->coversWholeDocument ? 'covers the whole file' : 'covers its own revision';
 
-                $this->line(sprintf('  %d. %s — %s, %s', $index + 1, $signer, $status, $scope), 'info');
+                $this->line(sprintf('  %d. %s: %s, %s', $index + 1, $signer, $status, $scope), 'info');
             }
 
             return $validated->isValid() ? self::SUCCESS : self::INVALID;

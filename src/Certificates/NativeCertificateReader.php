@@ -52,7 +52,7 @@ final readonly class NativeCertificateReader implements CertificateReader
     /**
      * Rebuilds the bundle as the combined PEM the signer expects.
      *
-     * The order — certificate, private key, then the CA chain — matches what
+     * The order (certificate, private key, then the CA chain) matches what
      * `openssl pkcs12 -nodes` writes, so output stays interchangeable with the
      * legacy reader's.
      *

@@ -63,7 +63,7 @@ final class ByteRangeCalculator
      * The spacing is not fixed: this package writes "/Contents <" while
      * tc-lib-pdf-sign writes "/Contents<". Matching a literal meant the
      * document timestamp revision found the *signature's* placeholder instead
-     * of its own and overwrote it — poppler reported the signer as the
+     * of its own and overwrote it: poppler reported the signer as the
      * timestamp authority and the digest as mismatched.
      *
      * @throws InvalidPdfFileException
@@ -84,7 +84,7 @@ final class ByteRangeCalculator
      * Reads back the /ByteRange of the revision just written.
      *
      * An already-signed document holds several; ours is always the last. Taking
-     * the first would overwrite a previous signature's /Contents — the bug that
+     * the first would overwrite a previous signature's /Contents, the bug that
      * PoC 0b surfaced, which is why this is a named method with its own test.
      *
      * @return array{0: int, 1: int, 2: int} Offset of '<', offset past '>', trailing length.

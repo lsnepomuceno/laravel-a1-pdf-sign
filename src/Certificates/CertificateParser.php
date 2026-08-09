@@ -33,7 +33,7 @@ final class CertificateParser
         // The key is passed as [bundle, password] rather than as a bare string:
         // the string form cannot decrypt a passphrase-protected private key, so
         // a PEM carrying one failed here with an exception naming the wrong
-        // cause. PKCS#12 never exposed it — openssl_pkcs12_read() hands back an
+        // cause. PKCS#12 never exposed it: openssl_pkcs12_read() hands back an
         // already-decrypted key. The array form is correct for both, so there is
         // nothing to branch on. See docs/decisions/0007-pem-second-entry-one-pipeline.md.
         if (! openssl_x509_check_private_key($x509, [$pem, $password])) {

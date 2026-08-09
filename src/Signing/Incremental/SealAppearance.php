@@ -11,7 +11,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
  * A visible signature is a widget whose /AP points at a form XObject, which in
  * turn draws an image XObject (ISO 32000-1 §12.5.5 and §12.7.4.5). The JPEG is
  * embedded through /DCTDecode, so the bytes Intervention produced are stored
- * as they are — no decode and re-encode.
+ * as they are: no decode and re-encode.
  *
  * @internal
  */

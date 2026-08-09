@@ -15,8 +15,8 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\ImageDriver;
 /**
  * Renders the seal with Intervention Image.
  *
- * Everything the v1 code hard-coded — driver, font file, size, colour and the
- * background image — now comes from configuration, and the result is returned
+ * Everything the v1 code hard-coded (driver, font file, size, colour and the
+ * background image) now comes from configuration, and the result is returned
  * as bytes rather than written to a temporary file.
  */
 final readonly class InterventionSealRenderer implements SealRenderer

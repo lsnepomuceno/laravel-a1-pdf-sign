@@ -14,7 +14,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
  * docs/decisions/0001-openssl-native-with-cli-fallback.md.
  *
  * It runs through Laravel's process factory rather than Symfony's Process
- * directly: the behaviour is identical — the factory builds the same object —
+ * directly: the behaviour is identical (the factory builds the same object)
  * but a host application can fake it in its own tests, which is impossible
  * when the class is instantiated inline.
  */

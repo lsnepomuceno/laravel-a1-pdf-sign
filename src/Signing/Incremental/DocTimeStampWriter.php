@@ -15,13 +15,13 @@ use Throwable;
  * Appends the archive timestamp that makes a document PAdES B-LTA.
  *
  * B-LT proves the certificate was good when it was used. B-LTA proves the
- * whole file — signature and validation material together — existed at a point
+ * whole file, signature and validation material together, existed at a point
  * in time attested by an authority, which is what keeps it verifiable once the
  * signing algorithms themselves age out.
  *
  * Unlike a signature timestamp, which covers only the signature bytes, this one
  * covers the entire file through its own /ByteRange, and it is a bare RFC 3161
- * token rather than a CAdES structure — hence /SubFilter /ETSI.RFC3161.
+ * token rather than a CAdES structure, hence /SubFilter /ETSI.RFC3161.
  *
  * @internal
  */

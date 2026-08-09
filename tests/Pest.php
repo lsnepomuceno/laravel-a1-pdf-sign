@@ -41,7 +41,7 @@ function debugCertificate(): array
  *
  * @return array{0: string, 1: string, 2: string, 3: string} Certificate path, private key
  *                                                           path, combined bundle path, and
- *                                                           the key's password — empty when
+ *                                                           the key's password, empty when
  *                                                           it is unencrypted.
  */
 function pemCertificate(bool $encryptKey = true): array

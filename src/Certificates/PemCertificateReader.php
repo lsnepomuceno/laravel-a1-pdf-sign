@@ -10,12 +10,12 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
 use SensitiveParameter;
 
 /**
- * Reads PEM — the degenerate case of {@see CertificateReader}.
+ * Reads PEM, the degenerate case of {@see CertificateReader}.
  *
  * The other two readers exist to convert PKCS#12 into PEM before handing it to
  * {@see CertificateParser}. PEM is already that destination format, so this
  * reader has no conversion step: it checks the input is what it claims to be,
- * and delegates. Everything downstream is unchanged, which is the whole point —
+ * and delegates. Everything downstream is unchanged, which is the whole point:
  * one pipeline, reached through a second entry (docs/decisions/0007-pem-second-entry-one-pipeline.md).
  *
  * It carries no legacy/native axis, so it is not built by {@see ReaderFactory};
@@ -36,7 +36,7 @@ final readonly class PemCertificateReader implements CertificateReader
     /**
      * Whether these bytes carry a PEM certificate.
      *
-     * Callers that accept either encoding — the pdf:sign command, the vault —
+     * Callers that accept either encoding (the pdf:sign command, the vault)
      * route on this, so "what counts as PEM" is decided in one place rather
      * than re-implemented per entry point.
      */
@@ -49,7 +49,7 @@ final readonly class PemCertificateReader implements CertificateReader
      * Reads a bundle holding both the certificate and its private key.
      *
      * The password defaults to empty because, unlike PKCS#12, a PEM private key
-     * is frequently unencrypted — and OpenSSL ignores a passphrase given for a
+     * is frequently unencrypted, and OpenSSL ignores a passphrase given for a
      * key that does not need one, so the default is safe either way.
      *
      * @param  string  $contents  A PEM bundle: certificate and private key, in any order.
@@ -72,7 +72,7 @@ final readonly class PemCertificateReader implements CertificateReader
     /**
      * Reads a certificate and a private key that arrived as separate files.
      *
-     * The two are checked separately so the message names the file at fault —
+     * The two are checked separately so the message names the file at fault:
      * passing the same path twice is a real mistake, and it reads as "no
      * private key" rather than as something about the certificate.
      *
@@ -105,7 +105,7 @@ final readonly class PemCertificateReader implements CertificateReader
         // on DER without saying why, and a .pfx handed to the PEM entry point
         // would otherwise be reported as malformed rather than as misrouted.
         throw new InvalidPemContentException(str_starts_with($contents, self::DER_PREFIX)
-            ? "Expected PEM in {$label}, found binary DER or PKCS#12 bytes — read those through certificate() instead."
+            ? "Expected PEM in {$label}, found binary DER or PKCS#12 bytes. Read those through certificate() instead."
             : "No PEM certificate block found in {$label}.");
     }
 

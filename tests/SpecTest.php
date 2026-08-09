@@ -9,7 +9,7 @@
  * section of its own, and three roadmap rows shipped unmarked, all noticed by
  * hand months later.
  *
- * The gate landed before the split and earned its keep during it — it failed
+ * The gate landed before the split and earned its keep during it: it failed
  * four times on references that had rotted mid-move, twice on this file's own
  * assertions.
  *
@@ -18,7 +18,7 @@
  * "§3i" did not survive this one.
  *
  * The helpers stay local to this file. They are used nowhere else, and the
- * shared-helper rule in tests/Pest.php exists for the opposite problem — a
+ * shared-helper rule in tests/Pest.php exists for the opposite problem: a
  * helper needed by a second file, which is invisible to it under --parallel.
  */
 
@@ -45,7 +45,7 @@ function specDocReferences(string $contents, string $from): array
     }
 
     // Inside docs/, links are ordinary Markdown and resolve against the file
-    // that carries them — "../spec/invariants.md" names no docs/ segment at all,
+    // that carries them, since "../spec/invariants.md" names no docs/ segment at all,
     // and the decision index links its records as bare siblings.
     if (str_starts_with($from, packageRoot() . '/docs/')
         && preg_match_all('#\]\(([\w./-]+\.md)\)#', $contents, $links) > 0) {

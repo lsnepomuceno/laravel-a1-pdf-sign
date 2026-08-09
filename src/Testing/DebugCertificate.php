@@ -47,7 +47,7 @@ final class DebugCertificate
      * fixtures rather than one (docs/decisions/0007-pem-second-entry-one-pipeline.md).
      *
      * @return array{0: string, 1: string, 2: string} Certificate PEM, private key PEM, and the
-     *                                                key's password — empty when it is unencrypted.
+     *                                                key's password, empty when it is unencrypted.
      */
     public static function makePem(bool $encryptKey = true, int $daysValid = 600): array
     {

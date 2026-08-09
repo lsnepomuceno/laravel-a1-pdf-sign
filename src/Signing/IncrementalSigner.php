@@ -23,7 +23,7 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
  * This is the default path, and it is what makes multiple signatures possible:
  * each one covers the file up to its own revision, so signing again does not
  * invalidate what came before. It also stops the silent damage the v1 flow
- * caused — rebuilding a document through FPDI discarded annotations, form
+ * caused: rebuilding a document through FPDI discarded annotations, form
  * fields and any signature already present. See docs/decisions/0006-incremental-revision.md.
  *
  * Proven by poc/incremental-signature: three signatures, all valid.
