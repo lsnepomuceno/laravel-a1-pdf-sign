@@ -157,6 +157,17 @@ final class DocumentReader
 
         $trailer = substr($pdf, $trailerPosition, 2048);
 
+        // Encryption is refused rather than mis-handled. The cross-reference
+        // table is not encrypted, so reading gets far enough to look successful
+        // while the strings and streams around it are unreadable, and the
+        // revision appended beside them would not match the rest of the file.
+        // See docs/decisions/0014-refuse-encrypted-documents.md.
+        if (preg_match('/\/Encrypt\s/', $trailer) === 1) {
+            throw new InvalidPdfFileException(
+                'the document is encrypted; signing it would append a revision the rest of the file cannot decrypt',
+            );
+        }
+
         preg_match('/\/Size\s+(\d+)/', $trailer, $size);
         preg_match('/\/Root\s+(\d+)\s+\d+\s+R/', $trailer, $root);
         preg_match('/\/Prev\s+(\d+)/', $trailer, $prev);

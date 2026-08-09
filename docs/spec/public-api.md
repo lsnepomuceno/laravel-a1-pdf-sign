@@ -115,8 +115,35 @@ $report->timestamps();   // DocTimeStamps, classified separately
 $report->latest();       // ?Data\SignatureDetails
 ```
 
+Each `Data\SignatureDetails` also carries when it claims to have been signed:
+
+```php
+$signature->signedAt;                   // ?int, unix timestamp, null when absent
+$signature->signerWasValidWhenSigned(); // ?bool, null when either date is unknown
+```
+
+`signedAt` is read from `/M` in the signature dictionary. That is inside the
+range the signature covers, so altering it breaks the signature, but it is still
+the signer's own clock: only an RFC 3161 timestamp, which `pades-b-t` and above
+carry, makes the time attributable to a third party.
+
+`signerWasValidWhenSigned()` returns `null` rather than `false` when the time or
+the certificate dates are unknown. An absence is not a violation.
+
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
+
+## What the signer cannot do yet
+
+Stated here because a public API is also its boundaries, and each has a record:
+
+| | |
+|---|---|
+| Cross-reference streams (PDF 1.5+) | refused with a message naming the offset. [0009](../decisions/0009-cross-reference-streams.md) |
+| Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
+| Certification signatures (`/DocMDP`) | every signature is an approval signature. [0012](../decisions/0012-certification-signatures.md) |
+| Signing into a pre-placed field | the writer always creates its own. [0013](../decisions/0013-signing-into-an-existing-field.md) |
+| Validating the DSS and archive timestamps | written, not read back. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
 
 ## Signature profiles
 

@@ -17,6 +17,21 @@ document drifts away from the code it describes.
 | [0005](0005-php-and-laravel-floor.md) | PHP 8.4 and Laravel 13 as the floor |
 | [0006](0006-incremental-revision.md) | Sign by appending a revision, written in-package |
 | [0007](0007-pem-second-entry-one-pipeline.md) | PEM as a second entry point onto one pipeline |
+| [0008](0008-exceptions-name-the-real-fault.md) | Exceptions name the fault that actually occurred |
+| [0011](0011-signing-time-and-certificate-validity.md) | The report carries signing time and certificate validity |
+| [0014](0014-refuse-encrypted-documents.md) | Encrypted documents are refused, not signed badly |
+
+## Proposed
+
+Decided in shape, not yet built. Each records what was measured, so the next
+person starts from the measurement rather than from the guess.
+
+| # | Decision |
+|---|---|
+| [0009](0009-cross-reference-streams.md) | Cross-reference streams |
+| [0010](0010-validation-consumes-what-signing-writes.md) | Validation consumes the material signing writes |
+| [0012](0012-certification-signatures.md) | Certification signatures and DocMDP |
+| [0013](0013-signing-into-an-existing-field.md) | Signing into a field the document already carries |
 
 Rules that break the product when violated are not decisions and do not live
 here. They are in [the invariants](../spec/invariants.md).

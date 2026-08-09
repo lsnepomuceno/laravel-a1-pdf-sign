@@ -15,7 +15,7 @@ final class PdfSignatureExtractor
     public function __construct(private readonly DerReader $der = new DerReader()) {}
 
     /**
-     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int, isTimestamp: bool}>
+     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int, isTimestamp: bool, signedAt: ?int}>
      */
     public function extract(string $pdf): array
     {
@@ -41,6 +41,7 @@ final class PdfSignatureExtractor
                 'cms' => $cms,
                 'coverageEnd' => $close + $trailing,
                 'isTimestamp' => $this->isDocumentTimestamp($pdf, $match[0][1]),
+                'signedAt' => $this->claimedTime($pdf, $match[0][1]),
             ];
         }
 
@@ -62,6 +63,39 @@ final class PdfSignatureExtractor
         $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
 
         return str_contains($dictionary, '/DocTimeStamp') || str_contains($dictionary, 'ETSI.RFC3161');
+    }
+
+    /**
+     * The time the signature dictionary claims, as a unix timestamp.
+     *
+     * Read from /M in the same dictionary rather than from a CMS signed
+     * attribute. Measured on a freshly signed document, the PKCS#9
+     * signing-time OID is absent from the CMS entirely: tc-lib-pdf-sign does
+     * not emit it, and /M is both what this package writes and what poppler
+     * reports as the signing time.
+     *
+     * Searched forward, unlike the /SubFilter above. /M is written after
+     * /Contents, whose placeholder is 16 KB of hex, so it sits far past the
+     * /ByteRange this entry was found at rather than just ahead of it.
+     *
+     * /M is inside the range the signature covers, so altering it breaks the
+     * signature. It remains the signer's own clock, which is why the report
+     * calls it claimed rather than proven.
+     */
+    private function claimedTime(string $pdf, int $byteRangeOffset): ?int
+    {
+        // Wide enough to clear the /Contents placeholder and the metadata after
+        // it, and bounded so a document with several signatures cannot answer
+        // for one entry with the dictionary of a later one.
+        $window = substr($pdf, $byteRangeOffset, 32_768);
+
+        if (preg_match('/\/M\s*\(D:(\d{14})/', $window, $found) !== 1) {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('YmdHis', $found[1], new \DateTimeZone('UTC'));
+
+        return $parsed === false ? null : $parsed->getTimestamp();
     }
 
     /**

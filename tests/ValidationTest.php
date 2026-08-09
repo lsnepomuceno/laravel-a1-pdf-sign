@@ -1,7 +1,9 @@
 <?php
 
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
+use LSNepomuceno\LaravelA1PdfSign\Data\Signer;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
@@ -162,4 +164,65 @@ it('deduplicates a certificate that appears twice', function () {
 
     // The same bytes twice must still yield one certificate.
     expect(app(Pkcs7Reader::class)->certificates($cms . $cms))->toHaveCount(1);
+});
+
+it('reports the signing time the signer claimed', function () {
+    $before = time();
+    $contents = signedOnce();
+    $after = time();
+
+    $signature = app(SignatureValidator::class)->validate($contents)->signatures[0];
+
+    expect($signature->signedAt)->toBeInt()
+        ->and($signature->signedAt)->toBeGreaterThanOrEqual($before - 60)
+        ->and($signature->signedAt)->toBeLessThanOrEqual($after + 60);
+});
+
+it('answers whether the certificate was inside its window when it signed', function () {
+    $signature = app(SignatureValidator::class)->validate(signedOnce())->signatures[0];
+
+    expect($signature->signerWasValidWhenSigned())->toBeTrue()
+        ->and($signature->signer()?->validFrom)->toBeInt()
+        ->and($signature->signer()?->validTo)->toBeInt();
+});
+
+it('answers "unknown" rather than "invalid" when the signing time is absent', function () {
+    // The distinction matters: a CMS without the signing-time attribute is not
+    // a signature made outside the validity window, and returning false would
+    // report an absence as a violation.
+    $signer = new Signer(
+        commonName: 'No clock',
+        organization: null,
+        organizationalUnit: null,
+        email: null,
+        serialNumber: null,
+        validFrom: 1_000,
+        validTo: 2_000,
+    );
+
+    $withoutTime = new SignatureDetails(
+        verified: true,
+        signers: [$signer],
+        coverageEnd: 10,
+        coversWholeDocument: true,
+    );
+
+    expect($withoutTime->signerWasValidWhenSigned())->toBeNull();
+
+    // And when both are known it answers, in both directions.
+    $inside = new SignatureDetails(true, [$signer], 10, true, false, null, 1_500);
+    $outside = new SignatureDetails(true, [$signer], 10, true, false, null, 2_500);
+
+    expect($inside->signerWasValidWhenSigned())->toBeTrue()
+        ->and($outside->signerWasValidWhenSigned())->toBeFalse();
+});
+
+it('reports no signing time when the dictionary carries none', function () {
+    // A signature dictionary without /M is legal, so the field is nullable
+    // rather than defaulted to the moment validation happened to run.
+    $extracted = app(PdfSignatureExtractor::class)->extract(
+        str_replace('/M (D:', '/X (D:', signedOnce()),
+    );
+
+    expect($extracted[0]['signedAt'])->toBeNull();
 });

@@ -16,6 +16,12 @@ final readonly class SignatureDetails extends BaseData
      *                            than the file size means it was signed before
      *                            a later revision was appended.
      * @param  list<Signer>  $signers
+     * @param  ?int  $signedAt  The signing time the signer claimed, or null when
+     *                          the CMS carries no such attribute. It is signed
+     *                          by the signer and taken from their own clock, so
+     *                          it says what they asserted rather than when the
+     *                          bytes existed. Only an RFC 3161 timestamp makes
+     *                          the time attributable to a third party.
      */
     public function __construct(
         public bool $verified,
@@ -24,7 +30,31 @@ final readonly class SignatureDetails extends BaseData
         public bool $coversWholeDocument,
         public bool $isTimestamp = false,
         public ?string $error = null,
+        public ?int $signedAt = null,
     ) {}
+
+    /**
+     * Whether the signer's certificate was inside its validity window at the
+     * moment the signature claims to have been made.
+     *
+     * Null when either date is unknown, deliberately: a signature with no
+     * signing time is not a signature made outside the window, and answering
+     * false would report an absence as a violation.
+     */
+    public function signerWasValidWhenSigned(): ?bool
+    {
+        $signer = $this->signer();
+
+        if ($this->signedAt === null || $signer === null) {
+            return null;
+        }
+
+        if ($signer->validFrom === null || $signer->validTo === null) {
+            return null;
+        }
+
+        return $this->signedAt >= $signer->validFrom && $this->signedAt <= $signer->validTo;
+    }
 
     /**
      * An archive timestamp is not a signature over the document, so it is

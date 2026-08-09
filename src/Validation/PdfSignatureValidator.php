@@ -30,7 +30,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
     public function validateFile(string $pdfPath): SignatureReport
     {
         if (! str_ends_with(strtolower($pdfPath), '.pdf')) {
-            throw new InvalidPdfFileException($pdfPath);
+            throw InvalidPdfFileException::extension($pdfPath);
         }
 
         if (! File::exists($pdfPath)) {
@@ -69,6 +69,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                 // which is expected rather than a defect.
                 coversWholeDocument: $signature['coverageEnd'] === $size,
                 isTimestamp: $signature['isTimestamp'],
+                signedAt: $signature['signedAt'],
             );
         }
 
