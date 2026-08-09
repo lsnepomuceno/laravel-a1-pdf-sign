@@ -112,3 +112,56 @@ it('still validates a document signed with a visible seal', function () {
 
     unlink($path);
 });
+
+it('gives each signature its own seal, independent of the ones before it', function () {
+    // Nothing shares state between signatures by construction: newSignature()
+    // is bound with bind() rather than singleton(), and SealAppearance emits an
+    // image and a form XObject per revision. This asserts the construction,
+    // since neither the seal tests nor the multi-signature tests cover both at
+    // once, and a regression would be silent until someone opened the file.
+    [$pfxPath, $password] = debugCertificate();
+
+    $first = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('test.pdf'))
+        ->info(name: 'First signer')
+        ->seal(placement: new SealPlacement(x: 150, y: 240, width: 50))
+        ->sign();
+
+    $path = $first->save(A1PdfSign::tempPath(true, '.pdf'));
+
+    $second = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf($path)
+        ->info(name: 'Second signer')
+        ->sealFrom(__DIR__ . '/../src/Resources/img/sign-seal.png', new SealPlacement(x: 30, y: 60, width: 60))
+        ->sign();
+
+    $contents = (string) $second->contents;
+
+    // One image and one form per signature, not one pair reused by both.
+    expect(substr_count($contents, '/Subtype/Image'))->toBe(2)
+        ->and(substr_count($contents, '/Subtype/Form'))->toBe(2);
+
+    // Two distinct rectangles, neither of them the invisible one.
+    preg_match_all('/\/Rect\[([^\]]+)\]/', $contents, $rectangles);
+
+    expect($rectangles[1])->toHaveCount(2)
+        ->and($rectangles[1][0])->not->toBe($rectangles[1][1])
+        ->and($rectangles[1])->not->toContain('0 0 0 0');
+
+    // The rendered seal is a JPEG and the supplied one a PNG, so the filters
+    // differ too: the second signature really carries the caller's image
+    // rather than a re-render of the certificate.
+    expect($contents)->toContain('/DCTDecode')
+        ->toContain('/FlateDecode');
+
+    $signedPath = $second->save(A1PdfSign::tempPath(true, '.pdf'));
+    $report = A1PdfSign::validate($signedPath);
+
+    expect($report->count())->toBe(2)
+        ->and($report->isValid())->toBeTrue();
+
+    unlink($path);
+    unlink($signedPath);
+});

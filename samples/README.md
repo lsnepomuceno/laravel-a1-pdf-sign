@@ -57,12 +57,37 @@ ICP-Brasil certificate.
 | `pades-b-lt.pdf` | B-T plus a Document Security Store |
 | `pades-b-lta.pdf` | B-LT plus an archive timestamp, a second `/ByteRange`, of type `ETSI.RFC3161`, covering the whole file |
 | `six-signatures.pdf` | Six signatures on one document |
+| `two-seals.pdf` | Two signatures, each with its own visible seal in its own place |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
 from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
+
+## What `two-seals.pdf` proves
+
+That a seal belongs to one signature and not to the document. The first
+signature carries a seal rendered from the certificate, at x 150 / y 240; the
+second carries `src/Resources/img/sign-seal.png`, supplied through
+`sealFrom()`, at x 30 / y 60. Open it in any reader and both are visible, in
+different places.
+
+Nothing shares state between the two: `newSignature()` is bound with `bind()`
+rather than `singleton()`, and each revision emits its own image and form
+XObject, so the file holds two of each rather than one pair reused twice.
+
+Verified with poppler `pdfsig` 25.12: both report *Signature is Valid*, with
+the coverage the revisions imply.
+
+```
+#1  [0 - 9190],  [25576 - 42777]   Not total document signed
+#2  [0 - 42906], [59292 - 76506]   Total document signed
+```
+
+The first covers the file as it stood at its own revision, which is why poppler
+says the document is not signed in full: the second signature came after it.
+That is the expected reading, not a defect.
 
 ## What `six-signatures.pdf` proves
 
