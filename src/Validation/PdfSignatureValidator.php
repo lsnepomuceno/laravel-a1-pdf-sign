@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\CertificationReader;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 
 /**
@@ -22,6 +25,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         private SignatureVerifier $verifier,
         private SecurityStoreReader $store = new SecurityStoreReader(),
         private ChainBuilder $chains = new ChainBuilder(),
+        private CertificationReader $certifications = new CertificationReader(new DocumentReader()),
     ) {}
 
     /**
@@ -89,6 +93,22 @@ final readonly class PdfSignatureValidator implements SignatureValidator
             );
         }
 
-        return new SignatureReport($signatures, $this->store->read($pdfContents));
+        return new SignatureReport(
+            $signatures,
+            $this->store->read($pdfContents),
+            // A document with no readable cross-reference chain still has
+            // signatures worth reporting, so a certification that cannot be
+            // located is absent rather than fatal.
+            $this->certification($pdfContents),
+        );
+    }
+
+    private function certification(string $pdfContents): ?CertificationLevel
+    {
+        try {
+            return $this->certifications->level($pdfContents);
+        } catch (InvalidPdfFileException) {
+            return null;
+        }
     }
 }

@@ -6,6 +6,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 
@@ -42,6 +43,7 @@ final class RevisionWriter
         ?SealPlacement   $placement = null,
         SignatureProfile $profile = SignatureProfile::PadesBB,
         ?SignatureField  $target = null,
+        ?CertificationLevel $certification = null,
     ): string {
         $visible = $seal !== null && $placement !== null;
 
@@ -71,7 +73,7 @@ final class RevisionWriter
         $offsets = [];
 
         $offsets[$signatureNumber] = $base + strlen($body);
-        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile);
+        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile, $certification);
 
         $offsets[$widgetNumber] = $base + strlen($body);
         $body .= $target === null
@@ -99,9 +101,19 @@ final class RevisionWriter
         // with two objects that decide nothing.
         $catalog = $this->reader->rawObject($pdf, $document, $catalogNumber);
 
-        if ($target === null || !str_contains($catalog, '/SigFlags')) {
+        // A certification always rewrites the catalog: /Perms names the
+        // signature that certified the document, and the entry and the
+        // transform are written together or not at all
+        // (docs/decisions/0012-certification-signatures.md).
+        if ($target === null || $certification !== null || ! str_contains($catalog, '/SigFlags')) {
+            $catalog = $this->withAcroForm($catalog, $widgetNumber, $target !== null);
+
+            if ($certification !== null) {
+                $catalog = $this->withDocMdpPermission($catalog, $signatureNumber);
+            }
+
             $offsets[$catalogNumber] = $base + strlen($body);
-            $body .= "{$catalogNumber} 0 obj\n" . $this->withAcroForm($catalog, $widgetNumber, $target !== null) . "\nendobj\n";
+            $body .= "{$catalogNumber} 0 obj\n{$catalog}\nendobj\n";
         }
 
         $page = $this->reader->rawObject($pdf, $document, $pageNumber);
@@ -247,6 +259,7 @@ final class RevisionWriter
         SignatureInfo    $info,
         int              $contentsHexLength,
         SignatureProfile $profile,
+        ?CertificationLevel $certification = null,
     ): string {
         $metadata = '';
 
@@ -261,8 +274,49 @@ final class RevisionWriter
             . ByteRangeCalculator::placeholder()
             . '/Contents <' . str_repeat('0', $contentsHexLength) . '> '
             . $metadata
+            . $this->docMdpReference($certification)
             . '/M (' . $this->timestamp() . ')'
             . ">>\nendobj\n";
+    }
+
+    /**
+     * The /DocMDP transform, ISO 32000-1 §12.8.2.2.
+     *
+     * /V is the version of the transform's own parameter dictionary, fixed at
+     * 1.2 for DocMDP. It is unrelated to the PDF version and to the profile.
+     */
+    private function docMdpReference(?CertificationLevel $certification): string
+    {
+        if ($certification === null) {
+            return '';
+        }
+
+        return '/Reference[<</Type/SigRef/TransformMethod/DocMDP'
+            . '/TransformParams<</Type/TransformParams/P ' . $certification->permission() . '/V/1.2>>'
+            . '>>]';
+    }
+
+    /**
+     * The catalog's /Perms, naming the signature that certified the document.
+     *
+     * An existing entry is replaced rather than joined. A second certification
+     * is refused before reaching here, but that does not make this redundant: a
+     * /Perms pointing at anything other than the transform actually present is
+     * a document readers disagree about, and leaving a stale one behind would
+     * produce exactly that.
+     */
+    private function withDocMdpPermission(string $catalog, int $signatureNumber): string
+    {
+        if (preg_match('/\/Perms\s*<<.*?>>/s', $catalog) === 1) {
+            return (string) preg_replace(
+                '/\/Perms\s*<<.*?>>/s',
+                "/Perms<</DocMDP {$signatureNumber} 0 R>>",
+                $catalog,
+                1,
+            );
+        }
+
+        return $this->injectBeforeClose($catalog, "/Perms<</DocMDP {$signatureNumber} 0 R>>");
     }
 
     /**

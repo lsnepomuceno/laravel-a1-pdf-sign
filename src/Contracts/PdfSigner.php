@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 
 /**
@@ -30,6 +31,14 @@ interface PdfSigner
      *                                  already signed is an error rather than a
      *                                  fallback to appending.
      *
+     * @param  CertificationLevel|null  $certification  Makes this a
+     *                                  certification signature rather than an
+     *                                  approval one. It has to be the first
+     *                                  signature, there can be only one, and at
+     *                                  no-changes the document cannot be signed
+     *                                  afterwards at all.
+     *
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException
      */
@@ -42,5 +51,6 @@ interface PdfSigner
         ?SealPlacement $placement = null,
         ?SignatureProfile $profile = null,
         ?string $intoField = null,
+        ?CertificationLevel $certification = null,
     ): SignedPdf;
 }

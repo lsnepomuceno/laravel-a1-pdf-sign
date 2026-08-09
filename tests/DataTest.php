@@ -42,9 +42,19 @@ it('reads the common name, falling back to the organisation', function () {
 it('exposes its properties through toArray', function () {
     $report = new SignatureReport([]);
 
-    expect($report->toArray())->toBe(['signatures' => [], 'securityStore' => null])
+    // The shape is the public return type, so this failing on a new property
+    // is the point: adding one changes what every consumer receives
+    // (docs/spec/public-api.md).
+    expect($report->toArray())->toBe([
+        'signatures' => [],
+        'securityStore' => null,
+        'certification' => null,
+    ])
         ->and($report->isValid())->toBeFalse()
-        ->and($report->isSigned())->toBeFalse();
+        ->and($report->isSigned())->toBeFalse()
+        ->and($report->isCertified())->toBeFalse()
+        // An uncertified document restricts nothing.
+        ->and($report->acceptsFurtherSignatures())->toBeTrue();
 });
 
 it('falls back to the unordered set when no chain could be built', function () {
