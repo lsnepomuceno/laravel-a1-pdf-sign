@@ -10,6 +10,15 @@
 # It compares the last SemVer tag against HEAD, so the baseline moves on its own
 # as releases are cut and there is no list to maintain.
 #
+# **It reports, it does not block.** Every release since 2.0 has added a method
+# or a parameter to a published contract, and each shipped as a minor with a
+# "Breaking for implementers" section, because calling the contracts is
+# unaffected and only implementing them is not. A gate that fails on every
+# release of that shape would be turned off within two of them, so it writes
+# what it found into the job summary instead, where it is read rather than
+# worked around. Whether a break is acceptable stays a judgement, and the
+# summary is what informs it.
+#
 # **The tool is installed in a directory of its own, not into require-dev.**
 # Two reasons, and both are specific to this repository: it needs ext-intl and a
 # dependency tree of its own that would have to coexist with a pinned
@@ -63,8 +72,34 @@ jobs:
             --working-dir="${RUNNER_TEMP}/bc" \
             roave/backward-compatibility-check:^8.21
 
-      # Reports the break and fails the build. A break that is deliberate is
-      # answered by saying so in UPGRADE.md and in the release notes, and by
-      # choosing the version accordingly, not by silencing the check.
+      # Deliberately not blocking, see the note at the top of this file. The
+      # answer to a break is UPGRADE.md, the release notes and the version
+      # number, and those are decisions a person makes with the report in hand.
       - name: Check for BC breaks
-        run: "${RUNNER_TEMP}/bc/vendor/bin/roave-backward-compatibility-check"
+        id: bc
+        continue-on-error: true
+        run: |
+          set +e
+          "${RUNNER_TEMP}/bc/vendor/bin/roave-backward-compatibility-check" \
+            | tee "${RUNNER_TEMP}/bc-report.txt"
+          echo "status=${PIPESTATUS[0]}" >> "${GITHUB_OUTPUT}"
+
+      # Passing quietly is what turns a report into noise nobody reads, so what
+      # it found goes where the pull request shows it.
+      - name: Publish what it found
+        if: always()
+        run: |
+          {
+            echo "## Backward compatibility"
+            echo
+            if [ "${{ steps.bc.outputs.status }}" = "0" ]; then
+              echo "No backwards-incompatible changes against the last release."
+            else
+              echo "**Breaks detected.** Answer them in \`UPGRADE.md\`, in the release"
+              echo "notes and in the version number. This job does not block the merge."
+              echo
+              echo '```'
+              grep -E '^\[BC\]|backwards-incompatible' "${RUNNER_TEMP}/bc-report.txt" || true
+              echo '```'
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
