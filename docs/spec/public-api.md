@@ -148,6 +148,32 @@ you accept stays with the application.
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
+## Where the seal goes
+
+`Data\SealPlacement` carries position, size and page. All three are read.
+
+```php
+use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+
+->seal(placement: new SealPlacement(x: 155, y: 250, width: 50, page: 2))
+->seal(placement: new SealPlacement(x: 155, y: 250, width: 50))                   // the last page
+->seal(placement: new SealPlacement(x: 155, y: 250, width: 50, onEveryPage: true))
+```
+
+| | |
+|---|---|
+| `page` | 1-based, in the order the page tree declares. `SealPlacement::LAST_PAGE`, the default, is the last page |
+| `onEveryPage` | the seal appears on every page, and wins over `page` |
+| A page the document does not have | `SealPlacementException`, rather than clamping to the nearest one |
+
+`onEveryPage` still produces **one** signature: the widget goes on the first page
+and every further page gets a stamp annotation drawing the same appearance, so
+the JPEG is embedded once whatever the page count
+([0017](../decisions/0017-the-seal-goes-where-it-was-asked-for.md)).
+
+Omitting `seal()` leaves the signature invisible, which is still a valid
+signature: the seal is an appearance, not part of the cryptography.
+
 ## Trust
 
 `isValid()` answers "does this signature match these bytes". Whether to accept

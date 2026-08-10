@@ -19,6 +19,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use SensitiveParameter;
@@ -300,6 +301,7 @@ final class PendingSignature
     /**
      * @throws CertificationException
      * @throws FileNotFoundException
+     * @throws SealPlacementException
      * @throws SignatureFieldException
      */
     public function sign(): SignedPdf

@@ -9,6 +9,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException;
 
 /**
  * Builds the revision appended to a document when it is signed.
@@ -31,7 +32,7 @@ final class RevisionWriter
     /**
      * Appends the signature revision, leaving the /Contents placeholder empty.
      *
-     * @throws InvalidPdfFileException
+     * @throws InvalidPdfFileException|SealPlacementException
      */
     public function append(
         string           $pdf,
@@ -47,6 +48,11 @@ final class RevisionWriter
     ): string {
         $visible = $seal !== null && $placement !== null;
 
+        // Where the seal was asked for, in page-tree order. Empty whenever the
+        // signature is invisible, since a zero rectangle appears on no page at
+        // all and the widget then only has to sit somewhere legal.
+        $sealed = $visible ? $this->sealedPages($pdf, $document, $placement) : [];
+
         $number = $document->nextObjectNumber();
         $signatureNumber = $number++;
         // Filling a field keeps the widget's own number: the revision replaces
@@ -54,19 +60,29 @@ final class RevisionWriter
         // whole point (docs/decisions/0013-signing-into-an-existing-field.md).
         $widgetNumber = $target === null ? $number++ : $target->objectNumber;
         $imageNumber = $number++;
-        $formNumber = $number;
+        $formNumber = $number++;
 
         // Null keeps the signature invisible, and it is what both widget
         // builders read to decide whether to write an /AP at all.
         $appearanceNumber = $visible ? $formNumber : null;
 
         $catalogNumber = $document->root;
-        // A field states its own page through /P. Falling back to the first page
-        // covers the field that declares none, which is legal and leaves the
-        // widget wherever the form puts it.
+        // A field states its own page through /P, and that wins: intoField()
+        // refuses a placement precisely so there is nothing to resolve here.
+        // Falling back to the first page covers the field that declares no page,
+        // which is legal and leaves the widget wherever the form puts it.
         $pageNumber = $target !== null && $target->pageNumber > 0
             ? $target->pageNumber
-            : $this->reader->findFirstPage($pdf, $document);
+            : ($sealed[0] ?? $this->reader->findFirstPage($pdf, $document));
+
+        // The signature is one widget on one page, so every further page the
+        // placement names gets a stamp annotation drawing the same appearance
+        // (docs/decisions/0017-the-seal-goes-where-it-was-asked-for.md).
+        $stampNumbers = [];
+
+        foreach (array_slice($sealed, 1) as $page) {
+            $stampNumbers[$page] = $number++;
+        }
 
         $base = strlen($pdf);
         $body = "\n";
@@ -93,6 +109,13 @@ final class RevisionWriter
 
             $offsets[$formNumber] = $base + strlen($body);
             $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);
+
+            $rectangle = $this->appearance->rectangle($placement, $seal);
+
+            foreach ($stampNumbers as $page => $stampNumber) {
+                $offsets[$stampNumber] = $base + strlen($body);
+                $body .= $this->stampObject($stampNumber, $formNumber, $page, $rectangle);
+            }
         }
 
         // A field the document already carries is already registered on the
@@ -121,6 +144,13 @@ final class RevisionWriter
         if ($target === null || preg_match('/\/Annots\s*\[[^\]]*\b' . $widgetNumber . '\s+\d+\s+R/', $page) !== 1) {
             $offsets[$pageNumber] = $base + strlen($body);
             $body .= "{$pageNumber} 0 obj\n" . $this->withAnnotation($page, $widgetNumber) . "\nendobj\n";
+        }
+
+        foreach ($stampNumbers as $stampPage => $stampNumber) {
+            $offsets[$stampPage] = $base + strlen($body);
+            $body .= "{$stampPage} 0 obj\n"
+                . $this->withAnnotation($this->reader->rawObject($pdf, $document, $stampPage), $stampNumber)
+                . "\nendobj\n";
         }
 
         $body .= $this->crossReference(
@@ -347,6 +377,68 @@ final class RevisionWriter
             . "/P {$pageNumber} 0 R"
             . '/F 132'
             . '/Ff 0'
+            . ">>\nendobj\n";
+    }
+
+    /**
+     * The pages the placement puts the seal on, in page-tree order.
+     *
+     * The placement answers page by page rather than being interrogated for a
+     * number, so SealPlacement::LAST_PAGE and $onEveryPage are decided in the
+     * one place that defines them.
+     *
+     * @return list<int> Object numbers. Never empty: a placement that matches no
+     *                   page is a caller mistake and raises rather than resolving
+     *                   to something plausible.
+     *
+     * @throws InvalidPdfFileException|SealPlacementException
+     */
+    private function sealedPages(string $pdf, DocumentInfo $document, SealPlacement $placement): array
+    {
+        // A tree that cannot be walked still has a page, and treating it as a
+        // document of one keeps the fallback honest: LAST_PAGE and page 1 both
+        // land on it, and page 3 says so instead of guessing.
+        $pages = $this->reader->pages($pdf, $document);
+
+        if ($pages === []) {
+            $pages = [$this->reader->findFirstPage($pdf, $document)];
+        }
+
+        $count = count($pages);
+        $sealed = [];
+
+        foreach ($pages as $index => $number) {
+            if ($placement->appliesTo($index + 1, $count)) {
+                $sealed[] = $number;
+            }
+        }
+
+        if ($sealed === []) {
+            throw SealPlacementException::pageOutOfRange($placement->page, $count);
+        }
+
+        return $sealed;
+    }
+
+    /**
+     * A stamp annotation drawing the seal's appearance on a further page.
+     *
+     * ISO 32000-1 §12.5.6.12. It is not a widget: a widget that is not a form
+     * field is invalid, and the signature has exactly one field. The stamp is
+     * written in the signature's own revision, so the bytes it adds fall inside
+     * /ByteRange and the signature covers it like everything else.
+     *
+     * @param  array{0: float, 1: float, 2: float, 3: float}  $rectangle
+     */
+    private function stampObject(int $number, int $formNumber, int $pageNumber, array $rectangle): string
+    {
+        return "{$number} 0 obj\n"
+            . '<</Type/Annot/Subtype/Stamp'
+            . sprintf('/Rect[%s %s %s %s]', ...$rectangle)
+            . "/AP<</N {$formNumber} 0 R>>"
+            . "/P {$pageNumber} 0 R"
+            // Print, and locked against a reader offering to move or delete it.
+            . '/F 132'
             . ">>\nendobj\n";
     }
 

@@ -40,6 +40,7 @@ interface PdfSigner
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException
      */
     public function sign(
