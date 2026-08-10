@@ -42,6 +42,7 @@
     "tecnickcom/tc-lib-pdf-sign": "^1.1"
   },
   "require-dev": {
+    "ext-tokenizer": "*",
     "ergebnis/composer-normalize": "^2.52",
     "larastan/larastan": "^3.10",
     "laravel/pint": "^1.30",

@@ -130,12 +130,31 @@ it('reads a bundle from a file and from a directory', function () {
     $directory = A1PdfSign::tempPath() . '-trust';
     @mkdir($directory, 0o755, true);
 
-    file_put_contents("{$directory}/root.pem", testCertificate()->original);
+    // One certificate per extension a CA bundle ships under, and one file that
+    // is not a certificate at all: authorities publish notes and hash files
+    // beside the bundle, and reading them would put junk into the roots.
+    //
+    // Each testCertificate() call generates a fresh certificate, so the count is
+    // three only if all three extensions were read: identical bytes would be
+    // deduplicated and the assertion would pass on one file alone.
+    $files = [
+        'root.pem' => testCertificate()->original,
+        'intermediate.crt' => testCertificate()->original,
+        'other.cer' => testCertificate()->original,
+        'README.txt' => 'not a certificate',
+    ];
+
+    foreach ($files as $name => $contents) {
+        file_put_contents("{$directory}/{$name}", $contents);
+    }
 
     expect(TrustStore::fromFile("{$directory}/root.pem")->count())->toBe(1)
-        ->and(TrustStore::fromDirectory($directory)->count())->toBe(1);
+        ->and(TrustStore::fromDirectory($directory)->count())->toBe(3);
 
-    unlink("{$directory}/root.pem");
+    foreach (array_keys($files) as $name) {
+        unlink("{$directory}/{$name}");
+    }
+
     rmdir($directory);
 });
 
