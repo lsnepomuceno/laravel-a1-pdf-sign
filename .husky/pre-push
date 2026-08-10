@@ -1,0 +1,25 @@
+#!/bin/sh
+# Refuses a push that lands on main.
+#
+# Every change reaches main through a pull request. GitHub says so too, but the
+# repository owner can bypass that ruleset, and on 2026-08-10 two documentation
+# commits went straight to main for exactly that reason: the remote printed
+# "Bypassed rule violations" and the push succeeded. A rule only the server
+# enforces is a rule nobody sees until after the fact, so it is checked here as
+# well, where it costs nothing and fires before the push leaves the machine.
+#
+# Tags are not affected: publishing a release pushes refs/tags/*, which is the
+# one thing that legitimately goes straight to the remote. See CONTRIBUTING.md.
+
+protected="refs/heads/main"
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+    if [ "$remote_ref" = "$protected" ]; then
+        echo "pre-push: refusing to push to main." >&2
+        echo "pre-push: open a pull request instead. Branch, push that branch, then 'gh pr create'." >&2
+        echo "pre-push: if you genuinely mean to bypass this, 'git push --no-verify' says so out loud." >&2
+        exit 1
+    fi
+done
+
+exit 0
