@@ -149,6 +149,13 @@ $signed = A1PdfSign::newSignature()
     )
     ->sign();
 
+// The same seal on every page
+$signed = A1PdfSign::newSignature()
+    ->certificate('path/to/certificate.pfx', 'password')
+    ->pdf('path/to/document.pdf')
+    ->seal(placement: new SealPlacement(x: 155, y: 250, width: 50, onEveryPage: true))
+    ->sign();
+
 // An image you already have, skipping the renderer
 $signed = A1PdfSign::newSignature()
     ->certificate('path/to/certificate.pfx', 'password')
@@ -156,6 +163,12 @@ $signed = A1PdfSign::newSignature()
     ->sealFrom('path/to/seal.png')
     ->sign();
 ```
+
+**The page is counted from one, in the order the page tree declares.** `SealPlacement::LAST_PAGE` is the default, so a placement that names no page puts the seal on the last one. A page the document does not have raises `SealPlacementException` rather than being clamped to the nearest one: a seal asked for on page 7 of a three-page contract is a mistake, and putting it on page 3 would look deliberate.
+
+> **Fixed in 2.3.1.** Before that release `page` and `onEveryPage` were both ignored and every seal landed on the first page. If you signed multi-page documents with 2.3.0 or earlier and want the seal to stay on page 1, pass `page: 1` explicitly.
+
+`onEveryPage` still produces **one** signature. A signature is one form field with one widget, so the widget goes on the first page and every further page gets a stamp annotation drawing the same appearance. The image is embedded once whatever the page count, and every stamp is written inside the signature's own revision, so the signature covers them.
 
 Omitting `seal()` produces an invisible signature, which is still a valid one: the seal is an appearance, not part of the cryptography.
 

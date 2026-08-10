@@ -1,3 +1,84 @@
+# 2.3.1
+
+## The seal goes where it was asked for
+
+`SealPlacement` has carried `$page` and `$onEveryPage` since 2.0. **Nothing read either of them.**
+
+Every seal went onto the first page, whatever was asked for, while the documentation showed this as a supported call:
+
+```PHP
+new SealPlacement(x: 155, y: 250, width: 50, page: SealPlacement::LAST_PAGE)
+```
+
+`appliesTo()` was written to answer exactly this question and had no caller anywhere in `src/`.
+
+That is the worst class of defect this package can carry. Not a refusal, not a crash, not a feature a reader can see is missing: a documented parameter that silently produces a plausible wrong result, and the wrong result is a signed contract with the signature on the wrong page.
+
+<hr>
+
+## ⚠️ This moves an existing seal
+
+| | Before | Now |
+|---|---|---|
+| `new SealPlacement(...)`, no page given | first page | **last page**, which `$page`'s default, `LAST_PAGE`, has always named |
+| `page: 2` | first page | page 2 |
+| `onEveryPage: true` | first page | every page |
+| A page the document does not have | first page | `SealPlacementException` |
+
+**Single-page documents are unaffected in every case.**
+
+If your seals were landing on page 1 of a multi-page document and you want them to stay there, pass `page: 1` explicitly. The value was previously ignored, so no call site can be relying on it having meant something else.
+
+<hr>
+
+## Page order comes from the page tree
+
+`DocumentReader::pages()` walks `/Pages` and `/Kids` from the catalog (ISO 32000-1 §7.7.3.2).
+
+The scan it replaces read the cross-reference table in object-number order and took the first `/Type/Page`. **Object numbers carry no page order.** A producer may write the last page first, and any generator that rewrites a page gives it a fresh number at the end of the file, so that answer could only ever be right by accident. It survives as the fallback for a document whose tree cannot be walked.
+
+The test fixture numbers its pages backwards on purpose: a fixture numbered in reading order cannot tell a tree walk apart from the scan it replaced.
+
+<hr>
+
+## `onEveryPage` is one signature, not one per page
+
+A signature is one form field with one widget, so the seal cannot be a widget on every page: a widget that is not a form field is invalid, and a second signature field would be a second signature.
+
+The widget goes on the first page the placement accepts, and every further page gets a `/Subtype/Stamp` annotation (§12.5.6.12) whose `/AP` points at **the same form XObject**. One image object serves the whole document, so a ten-page seal embeds the JPEG once rather than ten times.
+
+Every stamp is written inside the signature's own revision, so its bytes fall within `/ByteRange` and the signature covers them like everything else it wrote.
+
+<hr>
+
+## Out of range raises, rather than clamping
+
+`page: 7` on a three-page document throws `SealPlacementException`.
+
+Clamping to the last page is the quiet answer and quiet is the whole defect. A caller who asks for page 7 of a three-page contract has made a mistake, and a signed document with the seal on page 3 looks deliberate.
+
+<hr>
+
+## Fixed
+
+- **`TrustStore::fromDirectory()` was a fatal error on Alpine.** It globbed `"*.{pem,crt,cer}"` with `GLOB_BRACE`, a GNU extension PHP leaves undefined on musl, so on `php:8.4-alpine` the call raised `Undefined constant` before `glob()` was reached. It shipped in 2.3.0 and the suite stayed green for the whole release, because CI runs on Ubuntu where the constant exists.
+
+  The behavioural test can only ever check the platform it happens to run on, so the guard is structural: `tests/ArchTest.php` now fails on any platform-optional constant appearing in `src/`.
+
+## Added
+
+- **`Exceptions\SealPlacementException`**, raised by `sign()` for a page the document does not have.
+
+## Verified
+
+Independently, with poppler: `pdfsig` reports every probe *Signature is Valid* and *Total document signed*, and `pdftoppm` renders the seal on page 2 alone, on page 3 alone, and on all three, as asked.
+
+<hr>
+
+**No API signature changed and the PHP and Laravel requirements do not move.** [`UPGRADE.md`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/UPGRADE.md) covers the seal move; [`0017`](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/docs/decisions/0017-the-seal-goes-where-it-was-asked-for.md) records why each part is shaped as it is.
+
+<hr>
+
 # 2.3.0
 
 ## Trust, and the documents 2.2 still refused
