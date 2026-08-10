@@ -7,6 +7,7 @@ use Com\Tecnick\Pdf\Sign\Signer;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\HttpTransport;
+use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 use Throwable;
 
 /**
@@ -92,14 +93,7 @@ final readonly class DssWriter
      */
     private function chain(Certificate $certificate): array
     {
-        preg_match_all(
-            '/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s',
-            $certificate->original,
-            $matches,
-        );
-
-        /** @var list<string> */
-        return $matches[0];
+        return Pem::certificates($certificate->original);
     }
 
     /**

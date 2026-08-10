@@ -1,5 +1,46 @@
 # Upgrading
 
+## From 2.2 to 2.3
+
+Additive for applications. Nothing was removed, no behaviour changed for code
+that already worked, and the PHP and Laravel requirements do not move.
+
+### The contracts gained trailing optional parameters
+
+| | 2.2 | 2.3 |
+|---|---|---|
+| `Contracts\A1PdfSign::validate()` | `$pdfPath` | gains `?TrustStore $trust = null` |
+| `Contracts\SignatureValidator::validateFile()` | `$pdfPath` | gains `?TrustStore $trust = null` |
+| `Contracts\SignatureValidator::validate()` | `$pdfContents, $label` | gains `?TrustStore $trust = null` |
+| `Data\SignatureDetails::toArray()` | 10 keys | gains `isTrusted` |
+
+Calling them is unaffected. Implementing them is not, so a test double or a
+custom validator bound in the container has to be updated.
+
+### New: verifying against a trust store
+
+```php
+$store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
+
+$report = A1PdfSign::validate($path, $store);
+
+$report->isTrusted();          // ?bool
+$report->latest()?->isTrusted; // ?bool
+```
+
+**Null is not false.** A document validated without a store reports trust as
+null, because nobody was asked. An empty store, `TrustStore::empty()`, is the
+different answer: it trusts nothing, so every signature reports false.
+
+The package ships no trust store and will not.
+
+### New: documents whose objects are packed
+
+No API change. Word, "print to PDF" in Chrome and LaTeX with compression pack
+the catalog and pages into an object stream (ISO 32000-1 §7.5.7). 2.2 read the
+cross-reference stream that indexes them and still refused the documents,
+because signing rewrites the catalog. 2.3 signs them.
+
 ## From 2.1 to 2.2
 
 2.2 is additive for applications. Nothing was removed, no behaviour changed for

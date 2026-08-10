@@ -25,6 +25,7 @@ document drifts away from the code it describes.
 | [0013](0013-signing-into-an-existing-field.md) | Signing into a field the document already carries |
 | [0014](0014-refuse-encrypted-documents.md) | Encrypted documents are refused, not signed badly |
 | [0015](0015-object-streams.md) | Objects packed into object streams are read, and written back uncompressed |
+| [0016](0016-trust-is-the-applications-policy.md) | Trust is the application's policy, and its verification is ours |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

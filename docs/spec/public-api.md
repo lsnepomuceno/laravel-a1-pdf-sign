@@ -148,6 +148,38 @@ you accept stays with the application.
 `isValid()` answers "does this signature match these bytes". It does not check
 the issuer against a trust store: that decision stays with the application.
 
+## Trust
+
+`isValid()` answers "does this signature match these bytes". Whether to accept
+the signer is a separate question, and it is answered against roots the
+application names:
+
+```php
+$store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
+// or ::fromPem($bundle), ::fromDirectory($path), ::empty()
+
+$report = A1PdfSign::validate($path, $store);
+
+$report->isTrusted();          // ?bool, across every signature
+$report->latest()?->isTrusted; // ?bool, per signature
+```
+
+**The package ships no trust store and will not.** A bundled one goes stale
+between releases, and shipping it would make this package's release cadence the
+thing that decides whose signatures you accept
+([0016](../decisions/0016-trust-is-the-applications-policy.md)).
+
+Three answers, not two:
+
+| | |
+|---|---|
+| `null` | no store was given. Nobody was asked, so there is nothing to report |
+| `false` | a store was given and the chain does not reach it |
+| `true` | the chain validates against it, path and all: intermediate validity, `basicConstraints`, key usage and name constraints, since OpenSSL does the checking |
+
+An **untrusted** signature is not an **invalid** one. `isValid()` and
+`isTrusted()` are independent, and a document can be one without the other.
+
 ## Certification signatures
 
 A certification is the author's statement about what may happen to the document
@@ -235,7 +267,6 @@ Stated here because a public API is also its boundaries, and each has a record:
 | | |
 |---|---|
 | Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
-| Checking the chain against a trust store | the chain is built and verified; whether its root is one you accept is the application's policy. [0010](../decisions/0010-validation-consumes-what-signing-writes.md) |
 | Revocation checking at validation time | the store's OCSP responses and CRLs are counted, not evaluated |
 
 ## Signature profiles

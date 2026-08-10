@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Validation;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\Signer;
+use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 
 /**
  * Reads the certificates embedded in a detached CMS.
@@ -119,8 +120,6 @@ final class Pkcs7Reader
 
     private function toPem(string $der): string
     {
-        return "-----BEGIN CERTIFICATE-----\n"
-            . chunk_split(base64_encode($der), 64, "\n")
-            . "-----END CERTIFICATE-----\n";
+        return Pem::fromDer($der);
     }
 }

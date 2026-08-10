@@ -21,6 +21,7 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
+use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
 use SensitiveParameter;
 
 /**
@@ -129,9 +130,9 @@ final readonly class A1PdfSignManager implements A1PdfSign
         );
     }
 
-    public function validate(string $pdfPath): SignatureReport
+    public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport
     {
-        return $this->container->make(SignatureValidator::class)->validateFile($pdfPath);
+        return $this->container->make(SignatureValidator::class)->validateFile($pdfPath, $trust);
     }
 
     public function signatureFields(string $pdfPath): array

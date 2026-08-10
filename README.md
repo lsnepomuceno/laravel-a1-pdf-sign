@@ -199,8 +199,23 @@ $report->signers();     // structured signer identity
 $report->isCertified(); // whether the author certified the document
 ```
 
-`isValid()` answers whether each signature matches the document. It does not check the issuer against a trust store:
-that decision stays with your application.
+`isValid()` answers whether each signature matches the document. Whether to accept the signer is a separate question:
+
+```php
+$store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
+
+$report = A1PdfSign::validate($pdfPath, $store);
+
+$report->isTrusted();   // ?bool. null when no store was given: nobody was asked
+```
+
+**The package ships no trust store and will not.** A bundled one goes stale between releases, and shipping it would make
+this package's release cadence the thing that decides whose signatures you accept. For ICP-Brasil, fetch the current
+chain from the ITI and keep it with your configuration. Verifying against the roots you named is the part this does, and
+OpenSSL does the path validation, so intermediate validity, `basicConstraints`, key usage and name constraints are all
+checked rather than approximated.
+
+An untrusted signature is not an invalid one: the two questions are independent.
 
 Configuration is publishable:
 

@@ -38,6 +38,7 @@ final readonly class SignatureDetails extends BaseData
         public ?string $rawContents = null,
         public array $chain = [],
         public bool $chainReachesRoot = false,
+        public ?bool $isTrusted = null,
     ) {}
 
     /**

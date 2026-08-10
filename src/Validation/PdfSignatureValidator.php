@@ -26,6 +26,11 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         private SecurityStoreReader $store = new SecurityStoreReader(),
         private ChainBuilder $chains = new ChainBuilder(),
         private CertificationReader $certifications = new CertificationReader(new DocumentReader()),
+        // Optional so the constructor's arity does not move, and because a
+        // validator built by hand without it degrades to the same answer as
+        // one called without a store: trust unknown, rather than untrusted
+        // (docs/decisions/0016-trust-is-the-applications-policy.md).
+        private ?TrustVerifier $trust = null,
     ) {}
 
     /**
@@ -33,7 +38,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
      * @throws InvalidPdfFileException
      * @throws HasNoSignatureOrInvalidPkcs7Exception
      */
-    public function validateFile(string $pdfPath): SignatureReport
+    public function validateFile(string $pdfPath, ?TrustStore $trust = null): SignatureReport
     {
         if (! str_ends_with(strtolower($pdfPath), '.pdf')) {
             throw InvalidPdfFileException::extension($pdfPath);
@@ -43,13 +48,13 @@ final readonly class PdfSignatureValidator implements SignatureValidator
             throw new FileNotFoundException($pdfPath);
         }
 
-        return $this->validate(Files::read($pdfPath), $pdfPath);
+        return $this->validate(Files::read($pdfPath), $pdfPath, $trust);
     }
 
     /**
      * @throws HasNoSignatureOrInvalidPkcs7Exception
      */
-    public function validate(string $pdfContents, string $label = 'the document'): SignatureReport
+    public function validate(string $pdfContents, string $label = 'the document', ?TrustStore $trust = null): SignatureReport
     {
         $extracted = $this->extractor->extract($pdfContents);
 
@@ -90,6 +95,11 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                 rawContents: $signature['cms'],
                 chain: $chain,
                 chainReachesRoot: $chain !== [] && $this->chains->reachesRoot($ordered),
+                // Null, not false, when nobody was asked
+                // (docs/decisions/0016-trust-is-the-applications-policy.md).
+                isTrusted: $trust === null || $this->trust === null
+                    ? null
+                    : $this->trust->trusts($trust, $ordered),
             );
         }
 

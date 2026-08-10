@@ -10,6 +10,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 use Throwable;
 
 /**
@@ -70,13 +71,7 @@ final readonly class CadesBuilder
      */
     private function certificates(Certificate $certificate): array
     {
-        preg_match_all(
-            '/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s',
-            $certificate->original,
-            $matches,
-        );
-
-        $pems = $matches[0];
+        $pems = Pem::certificates($certificate->original);
 
         if ($pems === []) {
             throw new InvalidCertificateContentException('no certificate found in the bundle');
@@ -92,10 +87,9 @@ final readonly class CadesBuilder
      */
     private function toDer(string $pem): string
     {
-        $body = preg_replace('/-----(BEGIN|END) CERTIFICATE-----|\s/', '', $pem);
-        $der = base64_decode($body ?? '', true);
+        $der = Pem::toDer($pem);
 
-        if ($der === false || $der === '') {
+        if ($der === null) {
             throw new InvalidCertificateContentException('a certificate in the bundle is not valid base64');
         }
 

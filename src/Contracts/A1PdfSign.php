@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
 
 /**
  * The package's entry point.
@@ -95,7 +96,7 @@ interface A1PdfSign
      *
      * @throws \Throwable
      */
-    public function validate(string $pdfPath): SignatureReport;
+    public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport;
 
     /**
      * Lists the signature fields a document already carries, filled or empty.

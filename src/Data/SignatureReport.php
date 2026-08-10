@@ -73,6 +73,38 @@ final readonly class SignatureReport extends BaseData
         return true;
     }
 
+    /**
+     * Whether every signature chains to an authority the caller trusts.
+     *
+     * **Null when no trust store was given**, which is not the same as false.
+     * A signature whose issuer nobody was asked about is unknown, and reporting
+     * it as untrusted would answer a question that was never put
+     * (docs/decisions/0016-trust-is-the-applications-policy.md).
+     */
+    public function isTrusted(): ?bool
+    {
+        $checked = array_filter(
+            $this->signatures,
+            static fn(SignatureDetails $signature): bool => $signature->countsTowardValidity(),
+        );
+
+        if ($checked === []) {
+            return null;
+        }
+
+        foreach ($checked as $signature) {
+            if ($signature->isTrusted === null) {
+                return null;
+            }
+
+            if ($signature->isTrusted === false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static function empty(): self
     {
         return new self([]);
