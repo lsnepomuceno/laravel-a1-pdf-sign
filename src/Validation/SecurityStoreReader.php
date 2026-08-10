@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Validation;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\SecurityStore;
+use LSNepomuceno\LaravelA1PdfSign\Support\PdfDictionary;
 
 /**
  * Reads the Document Security Store a B-LT or B-LTA document carries.
@@ -16,6 +17,10 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SecurityStore;
  */
 final readonly class SecurityStoreReader
 {
+    public function __construct(
+        private PdfDictionary $dictionaries = new PdfDictionary(),
+    ) {}
+
     /**
      * Null when the document has no store at all, which is the ordinary case
      * for legacy, B-B and B-T. An empty store and an absent one are different
@@ -30,15 +35,16 @@ final readonly class SecurityStoreReader
             return null;
         }
 
+        // preg_match_all returned at least one match above, so the list is not
+        // empty and the offset is not the -1 that a non-participating group
+        // would report.
+        /** @var non-empty-list<array{0: string, 1: int<0, max>}> $offsets */
         $offsets = $found[0];
-        $last = end($offsets);
+        $start = end($offsets)[1];
 
-        if (! is_array($last)) {
-            return null;
-        }
-
-        $start = (int) $last[1];
-        $dictionary = $this->dictionaryAt($pdf, $start);
+        // A store the file cuts off is still worth reading: what is there is
+        // there, and reporting nothing would be less true than reporting less.
+        $dictionary = $this->dictionaries->at($pdf, $start) ?? substr($pdf, $start);
 
         return new SecurityStore(
             certificates: $this->countReferences($dictionary, 'Certs'),
@@ -46,41 +52,6 @@ final readonly class SecurityStoreReader
             crls: $this->countReferences($dictionary, 'CRLs'),
             signatureKeys: $this->vriKeys($dictionary),
         );
-    }
-
-    /**
-     * The dictionary starting at $start, read by counting its own delimiters.
-     *
-     * A fixed window would have to be wide enough for the largest store and
-     * would then swallow whatever follows the smallest, and /VRI nests, so the
-     * first `>>` is not the end.
-     */
-    private function dictionaryAt(string $pdf, int $start): string
-    {
-        $depth = 0;
-        $length = strlen($pdf);
-
-        for ($position = $start; $position < $length - 1; $position++) {
-            $pair = substr($pdf, $position, 2);
-
-            if ($pair === '<<') {
-                $depth++;
-                $position++;
-
-                continue;
-            }
-
-            if ($pair === '>>') {
-                $depth--;
-                $position++;
-
-                if ($depth === 0) {
-                    return substr($pdf, $start, $position - $start + 1);
-                }
-            }
-        }
-
-        return substr($pdf, $start);
     }
 
     /**
