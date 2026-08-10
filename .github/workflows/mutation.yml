@@ -114,8 +114,15 @@ jobs:
             min: 58
           - namespace: Signing        # measured 66.02% / 67.50%
             min: 62
-          - namespace: Validation     # measured 77.68% / 77.68%
+          - namespace: Validation     # measured 77.68% / 77.68% / 78.95%
             min: 75
+          # Added when two helpers moved here out of Signing and Validation,
+          # which quietly took them out of the gate they had been under. The
+          # floor is provisional: one measurement, not the two the rule above
+          # asks for, so it sits well below rather than close. Tighten it after
+          # the second nightly run, not before.
+          - namespace: Support        # measured 83.44%, one run only
+            min: 65
 
     steps:
       - name: Checkout

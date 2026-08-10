@@ -17,7 +17,10 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
  */
 final class DocumentReader
 {
-    public function __construct(private readonly XrefStreamReader $streams = new XrefStreamReader()) {}
+    public function __construct(
+        private readonly XrefStreamReader $streams = new XrefStreamReader(),
+        private readonly ObjectStreamReader $packed = new ObjectStreamReader(),
+    ) {}
 
     /**
      * Walks the /Prev chain and returns the effective view of the document.
@@ -44,6 +47,7 @@ final class DocumentReader
         }
 
         $xref = [];
+        $compressed = [];
         $size = 0;
         $root = 0;
         $infoRef = null;
@@ -52,6 +56,20 @@ final class DocumentReader
         // The chain runs newest to oldest, so walk it reversed and let the most
         // recent entries win.
         foreach (array_reverse($chain) as $section) {
+            // The two maps are disjoint, and a revision can move an object
+            // between them: signing a document whose catalog is packed writes
+            // it back at the top level, so the newer entry has to evict the
+            // older one rather than sit beside it
+            // (docs/decisions/0015-object-streams.md).
+            foreach (array_keys($section['xref']) as $number) {
+                unset($compressed[$number]);
+            }
+
+            foreach (array_keys($section['compressed']) as $number) {
+                unset($xref[$number]);
+            }
+
+            $compressed = array_replace($compressed, $section['compressed']);
             $xref = array_replace($xref, $section['xref']);
             $size = max($size, $section['size']);
             $usesStream = $usesStream || $section['stream'];
@@ -69,7 +87,7 @@ final class DocumentReader
             throw new InvalidPdfFileException('no /Root entry found in any trailer');
         }
 
-        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream);
+        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream, $compressed);
     }
 
     /**
@@ -79,6 +97,10 @@ final class DocumentReader
      */
     public function rawObject(string $pdf, DocumentInfo $document, int $number): string
     {
+        if ($document->isCompressed($number)) {
+            return $this->packedObject($pdf, $document, $number);
+        }
+
         $offset = $document->xref[$number] ?? null;
 
         if ($offset === null) {
@@ -97,10 +119,45 @@ final class DocumentReader
     }
 
     /**
+     * The body of an object packed into an object stream, ISO 32000-1 §7.5.7.
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function packedObject(string $pdf, DocumentInfo $document, int $number): string
+    {
+        $stream = $document->compressed[$number];
+        $offset = $document->xref[$stream] ?? null;
+
+        if ($offset === null) {
+            throw new InvalidPdfFileException(
+                "object {$number} is packed into object stream {$stream}, which the cross-reference table does not locate",
+            );
+        }
+
+        $body = $this->packed->object($pdf, $offset, $number);
+
+        if ($body === null) {
+            throw new InvalidPdfFileException(
+                "object {$number} could not be read out of object stream {$stream}",
+            );
+        }
+
+        return $body;
+    }
+
+    /**
      * @throws InvalidPdfFileException
      */
     public function findFirstPage(string $pdf, DocumentInfo $document): int
     {
+        // Packed objects are searched too, and by their unpacked body: a page
+        // dictionary is exactly the kind of object a producer packs.
+        foreach ($document->compressed as $number => $stream) {
+            if (preg_match('/\/Type\s*\/Page(?![s\w])/', $this->rawObject($pdf, $document, $number)) === 1) {
+                return $number;
+            }
+        }
+
         foreach ($document->xref as $number => $offset) {
             if ($offset <= 0) {
                 continue;
@@ -125,7 +182,7 @@ final class DocumentReader
     }
 
     /**
-     * @return array{xref: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
+     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
      *
      * @throws InvalidPdfFileException
      */
@@ -197,6 +254,9 @@ final class DocumentReader
 
         return [
             'xref' => $xref,
+            // A classic table has no way to say "packed": object streams
+            // arrived with the cross-reference stream that indexes them.
+            'compressed' => [],
             'size' => isset($size[1]) ? (int) $size[1] : 0,
             'root' => isset($root[1]) ? (int) $root[1] : 0,
             'infoRef' => $info[1] ?? null,
