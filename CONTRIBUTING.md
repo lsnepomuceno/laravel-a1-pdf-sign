@@ -7,6 +7,16 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 
 ## Pull Requests
 
+- **Nothing is pushed to `main`.** Every change arrives through a pull request, without
+  exception, and that includes documentation, a one-line typo and a release note. Branch,
+  push the branch, open the pull request. A `pre-push` hook refuses a push that lands on
+  `main` before it leaves your machine, because the server-side rule can be bypassed by
+  anyone with the permission to bypass it, and on 2026-08-10 it was: two documentation
+  commits went straight in and had to be reverted and reapplied through
+  [#238](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/pull/238) and
+  [#239](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/pull/239). Pushing a release
+  tag is the one thing that goes to the remote directly.
+
 - **Code style is [PER-CS](https://www.php-fig.org/per/coding-style/)**, enforced by [Pint](https://laravel.com/docs/pint). Run `composer lint` to apply it; CI runs `vendor/bin/pint --test` and fails on any difference.
 
 - **Static analysis must stay clean** - PHPStan runs at `level: max` with no baseline, so the gate is "no errors", not "no new errors". Run `composer analyse`.
@@ -44,18 +54,26 @@ live timestamp authority and fail without internet; skip them with
 Helpers shared between test files belong in `tests/Pest.php`. Defined anywhere else they are
 invisible to the other files once the suite runs with `--parallel`.
 
-### Formatting on commit
+### The Git hooks
 
-A [Husky](https://typicode.github.io/husky/) `pre-commit` hook runs Pint over the staged PHP
-files and stages the result, so style is never what a pull request gets blocked on:
+[Husky](https://typicode.github.io/husky/) installs two:
 
 ``` bash
-$ npm install     # once, to install the hook
+$ npm install     # once, to install them
 ```
 
-Node is only used for the hook: it is not a dependency of the package, and skipping this
-step costs you nothing but the convenience. If your machine runs a PHP older than Pint
-requires, the hook detects it and routes through the Docker service described below.
+| Hook | Does |
+|---|---|
+| `pre-commit` | runs Pint over the staged PHP files and stages the result, then PHPStan, so neither style nor static analysis is what a pull request gets blocked on |
+| `pre-push` | refuses a push that lands on `main`. Tags are unaffected, so publishing a release still works |
+
+Node is only used for the hooks: it is not a dependency of the package. Skipping `npm install`
+costs you the formatting convenience **and the `main` guard**, so install them. If your
+machine runs a PHP older than Pint requires, `pre-commit` detects it and routes through the
+Docker service described below.
+
+Both hooks can be bypassed with `--no-verify`. That is deliberate, for stashing work in
+progress; on `pre-push` it means you are choosing to push to `main` and saying so.
 
 ### Checking the output in a real reader
 

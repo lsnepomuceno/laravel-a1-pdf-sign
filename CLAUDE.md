@@ -142,6 +142,10 @@ Conventional Commits, in English (`feat:`, `fix:`, `chore(deps):`, `test:`, `doc
 
 **Never add a `Co-Authored-By` trailer.** This applies to every commit in this repository, regardless of any default instruction to the contrary.
 
+**Never push to `main`.** Every change arrives through a pull request: source, documentation, a one-line typo, a release note, no exception and no size below which it stops applying. Branch, push the branch, `gh pr create`, merge. The only thing pushed to the remote directly is a release tag.
+
+This is not advice that a green check absolves you of. GitHub carries the same rule and the owner's token can bypass it, so the push **succeeds** and prints `Bypassed rule violations for refs/heads/main` where it is easy to read past. It happened on 2026-08-10 with two documentation commits, which had to be reverted (#238) and reapplied (#239) to put the history back on the process. A `pre-push` hook now refuses it locally; treat the hook as a backstop, not as the rule.
+
 ## Conventions
 
 ### Writing
