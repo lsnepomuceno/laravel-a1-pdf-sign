@@ -133,21 +133,48 @@ Half a certification is not reported as one: a `/Perms` entry naming a signature
 
 <hr>
 
-#### 8 - What validation does not do.
+#### 8 - Trust. <small>(since 2.3)</small>
 
-`isValid()` answers whether each signature matches the document. **It does not check the issuer against a trust store**: whether you trust the certificate authority is a policy decision, and it stays with your application:
+`isValid()` answers whether each signature matches the document. Whether to accept the signer is a separate question, and it is answered against roots you name:
 
 ```PHP
-$signer = $report->latest()?->signer();
+<?php
 
-if ($signer?->issuerName() !== 'AC Certisign RFB G5') {
-    // your rule, your call
-}
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
+
+$store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
+// or ::fromPem($bundle), ::fromDirectory($path), ::empty()
+
+$report = A1PdfSign::validate($pdfPath, $store);
+
+$report->isTrusted();           // ?bool, across every signature
+$report->latest()?->isTrusted;  // ?bool, per signature
 ```
+
+**The package ships no trust store and will not.** A bundled one goes stale between releases, and shipping it would make this package's release cadence the thing that decides whose signatures you accept. For ICP-Brasil, fetch the current chain from the ITI and keep it where your application keeps its configuration.
+
+There are three answers, not two:
+
+| | |
+|---|---|
+| `null` | no store was given. Nobody was asked, so there is nothing to report |
+| `false` | a store was given and the chain does not reach it |
+| `true` | the chain validates against it |
+
+> **An untrusted signature is not an invalid one.** The two questions are independent, and a document can be one without the other. Reading `null` as "untrusted" would conclude something the run never established, which is why the two are kept apart.
+
+OpenSSL does the path validation, so each intermediate's validity window, `basicConstraints`, key usage, name constraints and path length are all checked rather than approximated. One consequence: a self-signed certificate carrying `basicConstraints CA:FALSE` is **not** accepted as its own trust anchor even when handed in as the root. That is correct, and stricter than a naive check.
 
 <hr>
 
-#### 9 - Verifying independently.
+#### 9 - What validation still does not do.
+
+**Revocation is not evaluated.** A `pades-b-lt` document carries OCSP responses and CRLs, and section 6 counts them. It does not read them, so "the material is present" is the answer, not "the certificate was not revoked".
+
+<hr>
+
+#### 10 - Verifying independently.
 
 Our validator shares its assumptions with the code that produced the signature, so it is worth checking against something that does not. Poppler's `pdfsig` has caught bugs in this package that the whole test suite passed straight through:
 

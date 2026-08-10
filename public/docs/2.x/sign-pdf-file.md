@@ -283,6 +283,15 @@ Three rules are enforced, not merely documented, each raising `CertificationExce
 
 No API change, and nothing to call. It is worth knowing about because 2.1 refused these documents outright.
 
-PDF 1.5 replaced the cross-reference table with a **cross-reference stream**, and that is the form Word, "print to PDF" in Chrome, LaTeX with compression and most modern generators emit. 2.2 reads it and appends the new revision in whichever form the document already uses.
+PDF 1.5 introduced **two** compression structures, and a document from those producers normally uses both:
 
-The two cannot be mixed: appending a classic table to a document whose latest section is a stream produces a file that readers do not see as signed at all. If you are signing documents from a source that previously failed, this is why.
+| | |
+|---|---|
+| Cross-reference stream (§7.5.8) | indexes the objects. Read and written since 2.2 |
+| Object stream (§7.5.7) | packs the objects themselves. Read since **2.3** |
+
+The two cross-reference forms cannot be mixed: appending a classic table to a document whose latest section is a stream produces a file that readers do not see as signed at all, so the revision follows whichever form is already there.
+
+Object streams took a further release because reading the index is not enough. The catalog is a dictionary, and a dictionary is exactly what gets packed; signing rewrites the catalog to register the field, so a catalog it cannot read is a document it cannot sign. **2.2 read the index and still refused most of these documents.** Nothing is unpacked in place: the revision writes the changed objects back at the top level, and the newer cross-reference entry supersedes the packed one.
+
+If you are signing documents from a source that previously failed, this is why.
