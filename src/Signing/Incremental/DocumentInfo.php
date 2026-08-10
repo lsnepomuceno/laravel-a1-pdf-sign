@@ -38,6 +38,14 @@ final readonly class DocumentInfo
     }
 
     /**
+     * Whether the document locates this object at all, in either map.
+     */
+    public function has(int $number): bool
+    {
+        return isset($this->xref[$number]) || isset($this->compressed[$number]);
+    }
+
+    /**
      * Every object the document declares, however it stores them.
      *
      * @return list<int>

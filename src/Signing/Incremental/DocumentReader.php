@@ -146,10 +146,83 @@ final class DocumentReader
     }
 
     /**
+     * The document's pages, in the order a reader displays them.
+     *
+     * Walks the page tree from the catalog's /Pages, ISO 32000-1 §7.7.3.2,
+     * because that order is the only thing that makes "page 3" mean anything.
+     * Object numbers do not carry it: a producer is free to write the last page
+     * first, and any generator that rewrites a page gives it a fresh number.
+     *
+     * Returns an empty list when the tree cannot be walked, which leaves the
+     * caller to fall back rather than deciding here what a missing tree means.
+     *
+     * @return list<int>
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function pages(string $pdf, DocumentInfo $document): array
+    {
+        $catalog = $this->rawObject($pdf, $document, $document->root);
+
+        if (preg_match('/\/Pages\s+(\d+)\s+\d+\s+R/', $catalog, $root) !== 1) {
+            return [];
+        }
+
+        $pages = [];
+        $seen = [];
+
+        $this->collectPages($pdf, $document, (int) $root[1], $pages, $seen);
+
+        return $pages;
+    }
+
+    /**
+     * @param  list<int>  $pages
+     * @param  array<int, true>  $seen  Shared across the whole walk: a tree that
+     *                                  names a node twice is malformed, and
+     *                                  following it would not terminate.
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function collectPages(string $pdf, DocumentInfo $document, int $number, array &$pages, array &$seen): void
+    {
+        if (isset($seen[$number]) || ! $document->has($number)) {
+            return;
+        }
+
+        $seen[$number] = true;
+
+        $node = $this->rawObject($pdf, $document, $number);
+
+        // /Kids decides, not /Type. An intermediate node is required to declare
+        // /Type/Pages and a leaf /Type/Page, but a node carrying kids is a node
+        // to descend into whatever it calls itself.
+        if (preg_match('/\/Kids\s*\[(.*?)\]/s', $node, $kids) === 1) {
+            preg_match_all('/(\d+)\s+\d+\s+R/', $kids[1], $references);
+
+            foreach ($references[1] as $reference) {
+                $this->collectPages($pdf, $document, (int) $reference, $pages, $seen);
+            }
+
+            return;
+        }
+
+        if (preg_match('/\/Type\s*\/Page(?![s\w])/', $node) === 1) {
+            $pages[] = $number;
+        }
+    }
+
+    /**
      * @throws InvalidPdfFileException
      */
     public function findFirstPage(string $pdf, DocumentInfo $document): int
     {
+        $pages = $this->pages($pdf, $document);
+
+        if ($pages !== []) {
+            return $pages[0];
+        }
+
         // Packed objects are searched too, and by their unpacked body: a page
         // dictionary is exactly the kind of object a producer packs.
         foreach ($document->compressed as $number => $stream) {

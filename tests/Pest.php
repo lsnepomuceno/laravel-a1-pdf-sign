@@ -92,6 +92,37 @@ function template(): string
 }
 
 /**
+ * A document of $count pages whose tree order is the reverse of its object
+ * numbering.
+ *
+ * Deliberately reversed. A fixture numbered in reading order cannot tell a page
+ * tree walk apart from a scan of the cross-reference table, and the scan is what
+ * used to answer here: object 3 is the *last* page, so anything reading page
+ * order out of object numbers reports it as the first
+ * (docs/decisions/0017-the-seal-goes-where-it-was-asked-for.md).
+ *
+ * @return array{0: string, 1: list<int>} The document, and its page object
+ *                                        numbers in reading order.
+ */
+function reversedPages(int $count = 3): array
+{
+    $numbers = range($count + 2, 3);
+
+    $objects = [
+        1 => '<</Type/Catalog/Pages 2 0 R>>',
+        2 => '<</Type/Pages/Kids['
+            . implode(' ', array_map(static fn(int $number): string => "{$number} 0 R", $numbers))
+            . "]/Count {$count}>>",
+    ];
+
+    foreach ($numbers as $number) {
+        $objects[$number] = '<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>';
+    }
+
+    return [pdfWith($objects), $numbers];
+}
+
+/**
  * A minimal PDF around the given objects, with a correct cross-reference table.
  *
  * Structural cases are built rather than patched into the committed fixture:
