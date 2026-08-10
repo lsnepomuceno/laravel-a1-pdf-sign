@@ -157,19 +157,6 @@ suite passed straight through. `samples/` holds one signed PDF per profile plus
 a six-signature document. Regenerate them with `poc/sign-samples.php` and
 re-check after any change to `src/Signing/`.
 
-**One trap in that cross-check.** `Testing\DebugCertificate` gives every
-certificate it generates the same subject, `CN=Test Certificate, O=Internet
-Widgits Pty Ltd`, and so does `samples/certificate.pfx`. `pdfsig` resolves the
-signer through NSS **by name**, so a document carrying signatures from two
-different keys under that one subject has its later signatures matched against
-the wrong certificate and reported as *Signature is Invalid*.
-
-It is a name collision in the checker, not a defect in the document: the
-package's own validator reads the certificate embedded in each CMS and reports
-the same file as valid, and re-signing a sample with the certificate that made
-it clears the report. Sign a sample with `samples/certificate.pfx` before
-concluding anything from a `pdfsig` failure on a multi-signature file.
-
 ## Development environment
 
 The local floor is PHP 8.4 and the matrix reaches 8.5, so version-specific work

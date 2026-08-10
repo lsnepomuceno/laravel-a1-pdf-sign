@@ -1,40 +1,5 @@
 # Upgrading
 
-## From 2.3.0 to 2.3.1
-
-Two fixes. One of them **moves where an existing seal is drawn**, so read this
-before upgrading a multi-page document pipeline.
-
-### The seal now goes on the page the placement names
-
-`Data\SealPlacement` has carried `$page` and `$onEveryPage` since 2.0 and
-nothing read either of them: every seal landed on the first page, whatever was
-asked for.
-
-| | Before | Now |
-|---|---|---|
-| `new SealPlacement(...)`, no page given | first page | **last page**, which `$page`'s default, `LAST_PAGE`, has always named |
-| `page: 2` | first page | page 2 |
-| `onEveryPage: true` | first page | every page |
-| A page the document does not have | first page | `SealPlacementException` |
-
-Single-page documents are unaffected in every case.
-
-**If your seals were landing on page 1 of a multi-page document and you want
-them to stay there, pass `page: 1` explicitly.** The value was previously
-ignored, so no existing call site can be relying on it having meant anything
-else.
-
-`onEveryPage` still produces one signature: the widget goes on the first page it
-applies to, and every further page gets a stamp annotation drawing the same
-appearance ([0017](docs/decisions/0017-the-seal-goes-where-it-was-asked-for.md)).
-
-### `TrustStore::fromDirectory()` works on Alpine
-
-It globbed with `GLOB_BRACE`, a constant PHP leaves undefined on musl, so the
-call was a fatal error on `php:8.4-alpine`. No API change; if you were not on
-musl, nothing about it changes for you.
-
 ## From 2.2 to 2.3
 
 Additive for applications. Nothing was removed, no behaviour changed for code
