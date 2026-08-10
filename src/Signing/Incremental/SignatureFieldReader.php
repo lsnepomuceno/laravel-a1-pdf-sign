@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Support\PdfDictionary;
 
 /**
  * Lists the signature fields a document already carries.
@@ -21,6 +22,7 @@ final readonly class SignatureFieldReader
 {
     public function __construct(
         private DocumentReader $reader,
+        private PdfDictionary $dictionaries = new PdfDictionary(),
     ) {}
 
     /**
@@ -96,38 +98,7 @@ final readonly class SignatureFieldReader
 
         $open = strpos($catalog, '<<', $position);
 
-        return $open === false ? null : $this->balanced($catalog, $open);
-    }
-
-    /**
-     * The dictionary starting at $open, closed at its own depth.
-     */
-    private function balanced(string $contents, int $open): ?string
-    {
-        $depth = 0;
-        $length = strlen($contents);
-
-        for ($i = $open; $i < $length; $i++) {
-            $pair = substr($contents, $i, 2);
-
-            if ($pair === '<<') {
-                $depth++;
-                $i++;
-
-                continue;
-            }
-
-            if ($pair === '>>') {
-                $depth--;
-                $i++;
-
-                if ($depth === 0) {
-                    return substr($contents, $open, $i + 1 - $open);
-                }
-            }
-        }
-
-        return null;
+        return $open === false ? null : $this->dictionaries->at($catalog, $open);
     }
 
     /**
