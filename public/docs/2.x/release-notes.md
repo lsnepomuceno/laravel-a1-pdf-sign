@@ -1,3 +1,97 @@
+# 2.3.0
+
+## Trust, and the documents 2.2 still refused
+
+Two things, and the first is a correction.
+
+**2.2 claimed to sign documents from Word and Chrome. It did not.** PDF 1.5 has two compression structures, not one: the cross-reference stream that indexes objects, which 2.2 read and wrote, and the **object stream** that packs them, which it could not read at all. The catalog is a dictionary, and a dictionary is exactly what gets packed. Signing rewrites the catalog to register the field, so most documents from those producers were still refused, with an accurate error rather than a corrupt file.
+
+2.3 reads them. Nothing is unpacked in place: the revision writes the changed objects back at the top level, uncompressed, and the newer cross-reference entry supersedes the packed one. The original bytes survive.
+
+**And `isValid()` finally has a companion.** It has always answered "does this signature match these bytes" and never "should I accept this signer". That split is right, but the package stopped one step too early: not even the mechanism was there.
+
+```PHP
+$store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
+
+$report = A1PdfSign::validate($path, $store);
+
+$report->isTrusted();           // ?bool, across every signature
+$report->latest()?->isTrusted;  // ?bool, per signature
+```
+
+<hr>
+
+## The package ships no trust store, and will not
+
+A bundled one goes stale between releases, and shipping it would make **this package's release cadence the thing that decides whose signatures you accept**. For ICP-Brasil, fetch the current chain from the ITI and keep it with your application's configuration.
+
+Choosing whom to trust is policy and stays with you. Verifying a chain against the roots you named is mechanism, and that is what ships.
+
+**Three answers, not two:**
+
+| | |
+|---|---|
+| `null` | no store was given. Nobody was asked, so there is nothing to report |
+| `false` | a store was given and the chain does not reach it |
+| `true` | the chain validates against it |
+
+An **untrusted** signature is not an **invalid** one. The two questions are independent, and a document can be one without the other.
+
+<hr>
+
+## OpenSSL does the path validation
+
+`openssl_x509_checkpurpose()` builds and validates the path, so each intermediate's validity window, `basicConstraints`, key usage, name constraints and path length are all checked.
+
+Walking the chain by hand would have verified only that each certificate was signed by the next, which `ChainBuilder` already did, and would have **accepted chains a reader rejects**. That is the worst direction for this particular answer to be wrong in.
+
+One consequence worth knowing: a self-signed certificate carrying `basicConstraints CA:FALSE` is **not** accepted as its own trust anchor, even when handed in as the root. That is correct, and stricter than a naive check would be.
+
+<hr>
+
+## Added
+
+- **`TrustStore`**, from a PEM bundle, a file, a directory or empty, and a trailing `?TrustStore` on `A1PdfSign::validate()`;
+- **`SignatureReport::isTrusted()` and `SignatureDetails::$isTrusted`**, both tri-state;
+- **Object stream support** (ISO 32000-1 §7.5.7), reading packed objects and writing them back uncompressed, with no API change;
+- **`DebugCertificate::makeChain()`**, a root authority and a certificate it issued, for testing trust against the shape a real certificate has;
+- **`samples/object-stream.pdf`**, two signatures on a document whose catalog is packed.
+
+## Fixed
+
+- **The end-of-line before `endstream` was being read as data.** It belongs to the syntax (§7.3.8.1), and keeping it corrupted an unfiltered stream payload by one byte. A compressed payload tolerates the extra byte, which is how it stayed hidden behind both callers.
+
+## Internal
+
+- **`Support\Pem`** replaces four copies of the same certificate-extraction pattern and a fifth that encoded DER back into armour;
+- **`src/Support` joined the nightly mutation matrix.** Extracting shared helpers there had quietly taken them out of the gate they had been under, since the matrix names namespaces rather than following code;
+- **The backward compatibility check now reports rather than blocks.** It fired correctly on this release's contract changes; a gate that fails on every release of that shape is one that gets switched off. What it finds goes into the job summary instead.
+
+<hr>
+
+## ⚠️ Breaking for implementers
+
+Calling the contracts is unaffected: the new parameters are optional and trailing. **Implementing them is not.**
+
+| | 2.2 | 2.3 |
+| --- | --- | --- |
+| `Contracts\A1PdfSign::validate()` | `$pdfPath` | gains `?TrustStore $trust = null` |
+| `Contracts\SignatureValidator::validateFile()` | `$pdfPath` | gains `?TrustStore $trust = null` |
+| `Contracts\SignatureValidator::validate()` | `$pdfContents, $label` | gains `?TrustStore $trust = null` |
+| `Data\SignatureDetails::toArray()` | 10 keys | gains `isTrusted` |
+
+The last one reaches anyone asserting on the whole array. The [upgrade guide](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/UPGRADE.md) maps each one.
+
+<hr>
+
+## Still not done, and named rather than implied
+
+- **Revocation is not evaluated.** The Document Security Store's OCSP responses and CRLs are counted, not read. Long-term validation reports what material is present, not what it says;
+- **Seals cannot be transparent.** They embed as JPEG, so a seal is always an opaque rectangle;
+- **A3 certificates, tokens and HSMs** are out of scope. The key never leaves the device, which is a different architecture from the one this package has.
+
+<hr>
+
 # 2.2.1
 
 ## A break 2.2.0 shipped, and the gate that found it
@@ -68,7 +162,9 @@ Nothing was removed and the PHP and Laravel requirements do not move, so an appl
 
 ## Documents 2.1 could not sign at all
 
-**PDF 1.5 replaced the cross-reference table with a stream**, and that is what Word, "print to PDF" in Chrome, LaTeX with compression and most modern generators emit. 2.1 refused them, which bounded who could use the package, and the bound was not small.
+> **Corrected after release.** This section originally said 2.2 signs documents produced by Word and by "print to PDF" in Chrome. That was wider than what shipped. PDF 1.5 has **two** compression structures: the cross-reference stream, which 2.2 reads and writes, and the **object stream**, which packs the catalog and pages and which 2.2 could not read. Signing rewrites the catalog, so most documents from those producers were still refused, with an accurate error rather than a corrupt file. 2.3.0 closes it.
+
+**PDF 1.5 replaced the cross-reference table with a stream**, and most modern generators emit that form. 2.1 refused every document using it, which bounded who could use the package, and the bound was not small.
 
 2.2 reads that form and appends a revision in whichever form the document already uses. The mixture is not a matter of taste: appending a classic table to a document whose latest section is a stream produced a file poppler reported as carrying **no signatures at all**. Reading shipped one release before writing, with signing refusing in between, so the gap was a loud refusal rather than silent corruption.
 
@@ -79,7 +175,7 @@ Nothing was removed and the PHP and Laravel requirements do not move, so an appl
 - **`intoField()`**, which fills a signature field the document already carries instead of appending one beside it. Until now the package left the template's own field empty while putting a valid signature somewhere else. The field's rectangle decides where the seal goes;
 - **`A1PdfSign::signatureFields()`**, returning each field's name, rectangle, page and whether it is already signed;
 - **`certify()`**, writing a `/DocMDP` certification at `no-changes`, `form-filling` or `annotations` (ISO 32000-1 §12.8.2.2), requested in [discussion #160](https://github.com/lsnepomuceno/laravel-a1-pdf-sign/discussions/160);
-- **Cross-reference stream support**, reading and writing, with no API change;
+- **Cross-reference stream support**, reading and writing, with no API change. Documents that also pack objects into object streams, which is most of them in practice, needed 2.3.0;
 - **`signedAt` and `signerWasValidWhenSigned()`** on each signature. The second returns `null` rather than `false` when the signing time is absent, because a validity window that cannot be checked is unknown, not invalid;
 - **`chain` and `chainReachesRoot`**, the embedded certificates ordered leaf first, with each link confirmed by the issuer's public key rather than by matching names;
 - **`securityStore` and `hasLongTermMaterial()`**, so a `pades-b-lt` document can be asked whether its validation material actually covers every signature in it;
