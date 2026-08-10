@@ -14,6 +14,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Seal\InterventionSealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
 use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureValidator;
+use LSNepomuceno\LaravelA1PdfSign\Validation\TrustVerifier;
 
 class LaravelA1PdfSignServiceProvider extends ServiceProvider
 {
@@ -32,6 +33,14 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
         $this->app->bind(PdfSigner::class, IncrementalSigner::class);
         $this->app->bind(SealRenderer::class, InterventionSealRenderer::class);
         $this->app->bind(SignatureValidator::class, PdfSignatureValidator::class);
+
+        // Bound to itself on purpose, and it must stay bound. PdfSignatureValidator
+        // takes it as an optional parameter so its arity does not move, and the
+        // container only resolves a defaulted class-typed parameter when the
+        // class is bound: without this line the validator silently gets null
+        // and every signature reports trust as unknown
+        // (docs/decisions/0016-trust-is-the-applications-policy.md).
+        $this->app->bind(TrustVerifier::class);
 
         $this->app->bind(
             CertificateReader::class,

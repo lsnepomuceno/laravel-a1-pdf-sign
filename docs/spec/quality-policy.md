@@ -219,3 +219,25 @@ The floor is provisional. One measurement, 83.44%, where the rule above asks for
 two consecutive ones, so it sits at 65 rather than close. Tighten it after the
 second nightly run, and not before: a floor set from one measurement of a score
 that moves with machine load is a floor that fails a night when nothing changed.
+
+## Why the backward compatibility check reports rather than blocks
+
+It compares the last SemVer tag against `HEAD` and writes what it found into the
+job summary, without failing the build.
+
+That is a deliberate weakening, decided after the check fired on its second real
+pull request. **Every release since 2.0 has added a method or a parameter to a
+published contract**: 2.1 added `signFromPem()`, 2.2 added `signatureFields()`
+and two parameters to `PdfSigner::sign()`, 2.3 added a parameter to
+`SignatureValidator` and `A1PdfSign`. Each shipped as a minor with a "Breaking
+for implementers" section, because calling the contracts is unaffected and only
+implementing them is not.
+
+A gate that fails on every release of that shape is a gate that gets switched
+off within two of them, and one nobody reads is worse than one that reports. The
+report is the point: it caught a break in 2.2 that was not deliberate, the
+signer's constructor arity, which is exactly what a person needs told and not
+what a person needs blocked.
+
+The judgement it informs stays a judgement. A break is answered in
+[UPGRADE.md](../../UPGRADE.md), in the release notes and in the version number.

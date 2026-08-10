@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 use SensitiveParameter;
 
 /**
@@ -23,8 +24,6 @@ use SensitiveParameter;
  */
 final readonly class PemCertificateReader implements CertificateReader
 {
-    private const string CERTIFICATE_MARKER = '-----BEGIN CERTIFICATE-----';
-
     /** Covers PRIVATE KEY, RSA PRIVATE KEY, EC PRIVATE KEY and ENCRYPTED PRIVATE KEY. */
     private const string PRIVATE_KEY_PATTERN = '/-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY-----/';
 
@@ -42,7 +41,7 @@ final readonly class PemCertificateReader implements CertificateReader
      */
     public static function looksLikePem(string $contents): bool
     {
-        return str_contains($contents, self::CERTIFICATE_MARKER);
+        return Pem::hasCertificate($contents);
     }
 
     /**

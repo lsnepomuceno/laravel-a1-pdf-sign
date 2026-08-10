@@ -115,7 +115,7 @@ it('lets the container swap the implementation', function () {
             return [];
         }
 
-        public function validate(string $pdfPath): SignatureReport
+        public function validate(string $pdfPath, ?\LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore $trust = null): SignatureReport
         {
             return new SignatureReport([]);
         }
