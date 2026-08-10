@@ -91,3 +91,36 @@ arch('only the shell helper opens processes')
 arch('console commands stay in Commands')
     ->expect('Illuminate\Console\Command')
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Commands');
+
+/**
+ * Constants PHP defines only where the host platform provides them.
+ *
+ * GLOB_BRACE is a GNU extension and is undefined on musl, so a call carrying it
+ * is a fatal error on php:8.4-alpine while passing everywhere CI runs. That is
+ * the shape of the failure worth guarding: the suite was green on Ubuntu for a
+ * whole release while `TrustStore::fromDirectory()` could not be called at all
+ * in one of the images this package most often ships in.
+ *
+ * A Pest arch rule cannot see constants, so this reads the sources.
+ */
+it('uses no constant the host platform may not define', function () {
+    $optional = ['GLOB_BRACE'];
+    $found = [];
+
+    /** @var SplFileInfo $file */
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . '/src')) as $file) {
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
+
+        // Tokenised rather than grepped, so the comment above the fix can name
+        // the constant it is warning about without tripping the gate.
+        foreach (token_get_all((string) file_get_contents($file->getPathname())) as $token) {
+            if (is_array($token) && $token[0] === T_STRING && in_array($token[1], $optional, true)) {
+                $found[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) . ": {$token[1]}";
+            }
+        }
+    }
+
+    expect($found)->toBe([]);
+});

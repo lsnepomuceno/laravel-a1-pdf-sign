@@ -24,6 +24,11 @@ use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 final readonly class TrustStore
 {
     /**
+     * The extensions a CA bundle ships under. All three hold PEM.
+     */
+    private const array EXTENSIONS = ['pem', 'crt', 'cer'];
+
+    /**
      * @param  list<string>  $certificates  Root certificates in PEM form.
      */
     private function __construct(
@@ -58,11 +63,26 @@ final readonly class TrustStore
      */
     public static function fromDirectory(string $path): self
     {
-        $files = glob(rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '*.{pem,crt,cer}', GLOB_BRACE);
+        $directory = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $files = [];
 
-        if ($files === false) {
-            throw new FileNotFoundException($path);
+        // One call per extension rather than the brace form. GLOB_BRACE is a GNU
+        // extension, so PHP leaves the constant undefined on musl: on
+        // php:8.4-alpine, one of the most common images this package runs in,
+        // "*.{pem,crt,cer}" fatals on the constant before glob() is reached.
+        foreach (self::EXTENSIONS as $extension) {
+            $found = glob($directory . '*.' . $extension);
+
+            if ($found === false) {
+                throw new FileNotFoundException($path);
+            }
+
+            $files = [...$files, ...$found];
         }
+
+        // Grouped by extension otherwise, which would make the bundle's order
+        // depend on which extension the authority happened to publish under.
+        sort($files);
 
         $contents = '';
 

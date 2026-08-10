@@ -92,6 +92,14 @@ them into one bundle rather than handing the path to OpenSSL.
 - Revocation is still not evaluated. The store's OCSP responses and CRLs are
   counted, not read. That is the next step of the same shape, and this record
   does not pretend to cover it.
+- `fromDirectory()` shipped in 2.3.0 calling `glob()` with the brace form and
+  `GLOB_BRACE`. That constant is a GNU extension and PHP leaves it **undefined
+  on musl**, so the method was a fatal error on `php:8.4-alpine` for the whole
+  release while the suite stayed green: CI runs on Ubuntu, where the constant
+  exists. It is now one `glob()` per extension, and `tests/ArchTest.php` fails
+  on any platform-optional constant appearing in `src/`, since the behavioural
+  test can only ever check the platform it happens to run on.
+
 - `Support\Pem` came out of this. Four places had their own copy of
   `preg_match_all` over the certificate armour, and a fifth encoded DER back
   into it. Four copies of a pattern is four places to drop the `s` modifier, and
