@@ -61,12 +61,33 @@ ICP-Brasil certificate.
 | `xref-stream.pdf` | Two signatures on a PDF 1.5 document whose cross-reference sections are streams, not tables |
 | `signed-into-fields.pdf` | A template's own two signature fields, filled by name rather than appended beside |
 | `certified.pdf` | A certification at `form-filling`, then an approval signature on top of it |
+| `object-stream.pdf` | Two signatures on a document whose catalog and pages are packed into an object stream |
 
 There is no `pem-signed.pdf`, on purpose. The encoding only changes how the key
 is loaded, so a document signed through `certificatePem()` is indistinguishable
 from `pades-b-b.pdf`, since a separate sample would imply a distinction that does not
 exist. `poc/sign-samples.php` signs one anyway and validates it, which is where
 the two entry points are shown to converge on real output.
+
+## What `object-stream.pdf` proves
+
+That a document whose **catalog is packed into an object stream** can be signed.
+PDF 1.5 has two compression structures, not one: the cross-reference stream that
+indexes objects and the object stream that packs them. Word and "print to PDF"
+in Chrome emit both, and dictionaries such as the catalog and the page are
+exactly what gets packed.
+
+2.2 read the index and still refused these documents, because signing rewrites
+the catalog to register the signature field and a catalog it cannot read is a
+document it cannot sign. That is why this sample exists separately from
+`xref-stream.pdf`: they look like the same capability and are not.
+
+Nothing is unpacked in place. The revision writes the changed objects back at
+the top level, uncompressed, and the newer cross-reference entry supersedes the
+packed one. The original bytes survive and the packed copy stays in the file as
+history.
+
+See [`../docs/decisions/0015-object-streams.md`](../docs/decisions/0015-object-streams.md).
 
 ## What `certified.pdf` proves
 

@@ -215,12 +215,18 @@ this exists to prevent ([0013](../decisions/0013-signing-into-an-existing-field.
 
 ## What the signer accepts
 
-Both cross-reference forms: the classic table of ISO 32000-1 §7.5.4 and the
-cross-reference stream of §7.5.8, which PDF 1.5 introduced in 2003 and which
-Word, "print to PDF" in Chrome and most modern generators emit. The revision is
-appended in whichever form the document already uses, because mixing them
-produces a file readers do not see as signed
-([0009](../decisions/0009-cross-reference-streams.md)).
+Both cross-reference forms, and both PDF 1.5 compression structures:
+
+| | |
+|---|---|
+| Classic cross-reference table, §7.5.4 | read and written |
+| Cross-reference stream, §7.5.8 | read and written. The revision follows the form the document already uses, because mixing them produces a file readers do not see as signed ([0009](../decisions/0009-cross-reference-streams.md)) |
+| Object stream, §7.5.7 | packed objects are read, and written back uncompressed by the revision that changes them ([0015](../decisions/0015-object-streams.md)) |
+
+The last two travel together in practice. Word, "print to PDF" in Chrome and
+LaTeX with compression emit both, and reading only the index is not enough:
+signing rewrites the catalog, so a catalog packed into an object stream has to
+be readable before the document can be signed at all.
 
 ## What the signer cannot do yet
 

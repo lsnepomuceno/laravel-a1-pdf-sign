@@ -255,3 +255,30 @@ printf(
     $certifiedReport->certification?->value ?? 'no',
     $certifiedReport->acceptsFurtherSignatures() ? 'true' : 'false',
 );
+
+// A document whose catalog, page tree and page are packed into an object
+// stream, ISO 32000-1 7.5.7, which is what Word and "print to PDF" in Chrome
+// do with dictionaries. 2.2 read the cross-reference stream that indexes them
+// and still could not sign this, because signing rewrites the catalog
+// (docs/decisions/0015-object-streams.md).
+$packed = "{$output}/object-stream.pdf";
+copy(__DIR__ . '/../tests/Resources/object-stream.pdf', $packed);
+
+foreach (['First signer', 'Second signer'] as $who) {
+    $onPacked = $manager->newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf($packed)
+        ->info(name: $who, reason: 'Packed catalog', location: 'Brazil')
+        ->profile(SignatureProfile::PadesBB)
+        ->sign();
+
+    $onPacked->save($packed);
+}
+
+$packedReport = $manager->validate($packed);
+
+printf(
+    "validate(object-stream.pdf):  %d signatures, valid=%s\n",
+    $packedReport->count(),
+    $packedReport->isValid() ? 'true' : 'false',
+);

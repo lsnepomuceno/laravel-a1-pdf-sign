@@ -206,3 +206,16 @@ of bug**.
 
 Deliberately excluded: the pipe operator `|>` and `clone with`, which would
 require an 8.5 floor and cut every host still on 8.4.
+
+## Why `src/Support` is scored
+
+It was not, until two helpers moved there. `PdfDictionary` came out of
+`Validation` and `Signing`, which each had their own copy of it, and `PdfStream`
+came out of `Signing` the same way. Extracting them removed real duplication and
+**silently took the code out of the gate it had been under**, since the nightly
+matrix names namespaces rather than following the code.
+
+The floor is provisional. One measurement, 83.44%, where the rule above asks for
+two consecutive ones, so it sits at 65 rather than close. Tighten it after the
+second nightly run, and not before: a floor set from one measurement of a score
+that moves with machine load is a floor that fails a night when nothing changed.

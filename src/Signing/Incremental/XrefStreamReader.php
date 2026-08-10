@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Support\PdfStream;
 
 /**
  * Reads a cross-reference stream, ISO 32000-1 §7.5.8.
@@ -19,6 +20,10 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
  */
 final readonly class XrefStreamReader
 {
+    public function __construct(
+        private PdfStream $streams = new PdfStream(),
+    ) {}
+
     /**
      * Whether the section at this offset is a stream rather than a table.
      */
@@ -28,7 +33,7 @@ final readonly class XrefStreamReader
     }
 
     /**
-     * @return array{xref: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
+     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
      *
      * @throws InvalidPdfFileException
      */
@@ -45,8 +50,15 @@ final readonly class XrefStreamReader
         $widths = $this->widths($dictionary, $offset);
         $size = $this->integer($dictionary, 'Size');
 
+        $entries = $this->entries(
+            $this->data($pdf, $offset, $dictionary),
+            $widths,
+            $this->index($dictionary, $size),
+        );
+
         return [
-            'xref' => $this->entries($this->data($pdf, $offset, $dictionary), $widths, $this->index($dictionary, $size)),
+            'xref' => $entries['xref'],
+            'compressed' => $entries['compressed'],
             'size' => $size,
             'root' => $this->reference($dictionary, 'Root'),
             'infoRef' => $this->rawReference($dictionary, 'Info'),
@@ -60,59 +72,29 @@ final readonly class XrefStreamReader
      */
     private function dictionary(string $pdf, int $offset): string
     {
-        $start = strpos($pdf, '<<', $offset);
-        $end = strpos($pdf, 'stream', $offset);
+        $dictionary = $this->streams->dictionaryAt($pdf, $offset);
 
-        if ($start === false || $end === false || $start > $end) {
+        if ($dictionary === null) {
             throw new InvalidPdfFileException("no stream dictionary at offset {$offset}");
         }
 
-        return substr($pdf, $start, $end - $start);
+        return $dictionary;
     }
 
     /**
-     * The stream's bytes, decoded through whichever filter it declares.
-     *
      * @throws InvalidPdfFileException
      */
     private function data(string $pdf, int $offset, string $dictionary): string
     {
-        $keyword = strpos($pdf, 'stream', $offset);
+        $data = $this->streams->contentsAt($pdf, $offset, $dictionary);
 
-        if ($keyword === false) {
-            throw new InvalidPdfFileException("no stream keyword at offset {$offset}");
-        }
-
-        // "stream" is followed by CRLF or LF, and by nothing else.
-        $start = $keyword + 6;
-        $start += str_starts_with(substr($pdf, $start, 2), "\r\n") ? 2 : 1;
-
-        $length = $this->integer($dictionary, 'Length');
-
-        if ($length < 1) {
-            $end = strpos($pdf, 'endstream', $start);
-            $length = ($end === false ? strlen($pdf) : $end) - $start;
-        }
-
-        $raw = substr($pdf, $start, $length);
-
-        if (! str_contains($dictionary, '/Filter')) {
-            return $raw;
-        }
-
-        if (preg_match('/\/Filter\s*\/(FlateDecode|ASCIIHexDecode)/', $dictionary, $filter) !== 1) {
+        if ($data === null) {
             throw new InvalidPdfFileException(
-                'the cross-reference stream uses a filter this package does not decode: ' . $dictionary,
+                "the cross-reference stream at offset {$offset} could not be read: " . $dictionary,
             );
         }
 
-        $decoded = $filter[1] === 'FlateDecode' ? @gzuncompress($raw) : @hex2bin(trim($raw, "> \n\r\t"));
-
-        if ($decoded === false) {
-            throw new InvalidPdfFileException("the cross-reference stream at offset {$offset} could not be decoded");
-        }
-
-        return $decoded;
+        return $data;
     }
 
     /**
@@ -158,35 +140,42 @@ final readonly class XrefStreamReader
     /**
      * @param  array{0: int, 1: int, 2: int}  $widths
      * @param  list<array{0: int, 1: int}>  $index
-     * @return array<int, int>
+     * @return array{xref: array<int, int>, compressed: array<int, int>}
      */
     private function entries(string $data, array $widths, array $index): array
     {
         $row = array_sum($widths);
         $xref = [];
+        $compressed = [];
         $position = 0;
 
         foreach ($index as [$first, $count]) {
             for ($i = 0; $i < $count; $i++) {
                 if ($position + $row > strlen($data)) {
-                    return $xref;
+                    return ['xref' => $xref, 'compressed' => $compressed];
                 }
 
                 $type = $widths[0] === 0 ? 1 : $this->field($data, $position, $widths[0]);
-                $offset = $this->field($data, $position + $widths[0], $widths[1]);
+                $second = $this->field($data, $position + $widths[0], $widths[1]);
                 $position += $row;
 
-                // Type 1 is an ordinary object at a byte offset. Type 0 is free
-                // and type 2 lives inside an object stream, neither of which
-                // this signer needs: it appends objects rather than rewriting
-                // the ones already there.
+                // Type 1 is an ordinary object and the field is its byte
+                // offset. Type 2 is packed into an object stream and the field
+                // is that stream's object number, which is how the catalog of a
+                // Word or Chrome document is reached
+                // (docs/decisions/0015-object-streams.md). Type 0 is free and
+                // has nothing to point at.
                 if ($type === 1) {
-                    $xref[$first + $i] = $offset;
+                    $xref[$first + $i] = $second;
+                }
+
+                if ($type === 2) {
+                    $compressed[$first + $i] = $second;
                 }
             }
         }
 
-        return $xref;
+        return ['xref' => $xref, 'compressed' => $compressed];
     }
 
     /**
