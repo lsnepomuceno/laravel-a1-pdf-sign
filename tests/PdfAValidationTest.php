@@ -1,6 +1,7 @@
 <?php
 
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
 
@@ -112,3 +113,54 @@ it('never conforms to PDF/A-1 with a transparent seal, whatever else changes', f
 
     unlink($path);
 })->group('pdfa');
+
+it('keeps a PDF/A document conformant at pades-b-lta', function (string $flavour) {
+    // The cell that matters most for an archive and the only one that was never
+    // measured: PDF/A plus long-term validation is the canonical "keep this for
+    // twenty years" artefact.
+    //
+    // In the network group because a B-LTA document cannot be produced without
+    // reaching a timestamp authority, so this is reported rather than blocking,
+    // on the same terms as every other test that needs one. Unmeasured was the
+    // alternative (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
+    [$pfxPath, $password] = debugCertificate();
+
+    $signed = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource("pdfa-{$flavour}.pdf"))
+        ->profile(SignatureProfile::PadesBLTA)
+        ->sign();
+
+    // The archive timestamp is a form field of its own, and ISO 19005-1 §6.9
+    // wants every one of them to have an appearance dictionary. It had none:
+    // samples/pades-b-lta.pdf still shows Timestamp2 with /Rect[0 0 0 0] and no
+    // /AP, beside a signature widget that has one.
+    expect($signed->contents)->toMatch('#/Rect\[0 0 0 0\]/AP<</N \d+ 0 R>>/T \(Timestamp#');
+
+    $path = $signed->save(A1PdfSign::tempPath(true, '.pdf'));
+
+    expect(veraPdfVerdict($path, $flavour))->toBe('PASS');
+
+    unlink($path);
+})->with(['1b', '2b'])->group('network');
+
+it('keeps a PDF/A document conformant at pades-b-t', function () {
+    // One level down, where the token rides inside the CMS rather than in a
+    // revision of its own, so nothing is added to the page at all.
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
+    [$pfxPath, $password] = debugCertificate();
+
+    $path = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('pdfa-2b.pdf'))
+        ->profile(SignatureProfile::PadesBT)
+        ->sign()
+        ->save(A1PdfSign::tempPath(true, '.pdf'));
+
+    expect(veraPdfVerdict($path, '2b'))->toBe('PASS');
+
+    unlink($path);
+})->group('network');

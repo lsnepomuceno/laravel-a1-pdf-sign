@@ -134,10 +134,33 @@ The signer could add that group, and it would not change the verdict while
 
   It is installed by the `pdfa` compose service alone, behind a build argument,
   so the day-to-day image does not carry a JRE for one group.
-- `DocTimeStampWriter` writes an invisible widget of its own and it has **not**
-  been given an appearance. A B-LTA document was not part of this measurement,
-  and claiming the fix covers it without measuring would be the thing this
-  record exists to avoid.
+- **The archive timestamp's widget had the same fault, and now it is fixed.**
+  This record originally said `DocTimeStampWriter` had not been given an
+  appearance, because a B-LTA document was not part of the measurement and
+  claiming the fix covered it would have been the thing this record exists to
+  avoid.
+
+  Not claiming it was right; leaving it was not. `samples/pades-b-lta.pdf`
+  shows the fault outright, in a file committed months ago:
+
+  ```
+  28 0 obj
+  <</Type/Annot/Subtype/Widget/FT/Sig/Rect[0 0 0 0]/T (Timestamp2)/V 27 0 R…
+  ```
+
+  No `/AP`, beside a signature widget in the same document that has one. So the
+  claim "an invisible signature keeps a PDF/A document conformant" would have
+  stopped holding at B-LTA, which is precisely the combination an archive
+  wants: PDF/A plus long-term validation is the canonical twenty-year artefact.
+
+  `DocTimeStampWriter` now writes the same empty appearance the signature
+  widget gets.
+
+- **That fix is verified only under the `network` group.** A B-LTA document
+  cannot be produced without reaching a timestamp authority, so the conformance
+  verdict for one is reported rather than blocking, on the same terms as every
+  other test that needs a TSA. The alternative was leaving it unmeasured, which
+  is how it got here.
 
 ## Alternatives rejected
 

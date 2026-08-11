@@ -170,7 +170,14 @@ offline once installed, so a failure there is this package's rather than
 somebody else's outage.
 
 **Nothing skips.** `composer test` carries `--fail-on-skipped`, because every
-check has to run somewhere and a skip is how one quietly stops. veraPDF was
+check has to run somewhere and a skip is how one quietly stops.
+
+One cell of the matrix is not blocking and cannot be: a `pades-b-lta` document
+cannot be produced without reaching a timestamp authority, so **PDF/A
+conformance at B-T and B-LTA is measured in the `network` group**. That is the
+combination an archive actually wants, and reported beats unmeasured, which is
+what it was until the archive timestamp's own widget turned out to have no
+appearance dictionary. veraPDF was
 behind a build argument and its group skipped by default, which meant the
 conformance claims were unverified on the machine where the work was being
 done. The JRE it costs is the price of the check actually happening.
