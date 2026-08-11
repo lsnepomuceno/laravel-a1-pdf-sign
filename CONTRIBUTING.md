@@ -84,6 +84,17 @@ Docker service described below.
 Both hooks can be bypassed with `--no-verify`. That is deliberate, for stashing work in
 progress; on `pre-push` it means you are choosing to push to `main` and saying so.
 
+### The verification tools never ship
+
+`veraPDF`, `qpdf`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are **development
+and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
+testing reaches the package a consumer installs: an architectural test enforces the first
+and `tests/DistributionTest.php` asks `git archive` what a release actually contains.
+
+`qpdf` is in the development image and its checks run with the rest of the suite. It is
+strict where poppler forgives, which is the point: a cross-reference table with slightly
+wrong offsets still opens in a reader that recovers by scanning.
+
 ### Checking PDF/A conformance
 
 `veraPDF` is the reference validator and the only thing that can establish a conformance

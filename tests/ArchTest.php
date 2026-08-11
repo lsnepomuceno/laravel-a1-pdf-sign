@@ -155,9 +155,9 @@ it('uses no constant the host platform may not define', function () {
 /**
  * veraPDF is a measuring instrument, not a dependency.
  *
- * It is Java, it is installed only by the `pdfa` compose service and by the CI
- * job of the same name, and it exists to establish PDF/A verdicts the suite
- * cannot establish for itself
+ * So are qpdf, poppler and Ghostscript. Every one of them is installed for
+ * development and CI, to establish verdicts the suite cannot establish for
+ * itself, and **none of them may reach production**
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
  *
  * **Nothing in src/ may reach for it.** A package that shells out to a JVM to
@@ -167,7 +167,7 @@ it('uses no constant the host platform may not define', function () {
  * since 2.0 and has never been called by it.
  */
 it('keeps the verification tools out of the package', function () {
-    $tools = ['verapdf', 'veraPDF', 'pdfsig', 'pdftoppm', 'ghostscript'];
+    $tools = ['verapdf', 'veraPDF', 'pdfsig', 'pdftoppm', 'qpdf', 'ghostscript'];
     $found = [];
 
     /** @var SplFileInfo $file */

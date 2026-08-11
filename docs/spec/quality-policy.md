@@ -175,11 +175,49 @@ PDF/A conformant, for reasons that are the colour space rather than the
 signature, and asserting the failure is what will tell someone the day that
 changes ([0025](../decisions/0025-what-signing-does-to-pdf-a.md)).
 
-**veraPDF, `pdfsig`, `pdftoppm` and Ghostscript are instruments, never
-dependencies.** Nothing in `src/` may invoke one: a package that shells out to a
-JVM to answer a runtime question would be a different package, and the consuming
-application would inherit an installation requirement nobody wrote down.
-*Enforced by* `tests/ArchTest.php`.
+**Structure is checked by qpdf**, which reads the same cross-reference tables
+and streams this package writes by hand, and is strict where poppler forgives:
+a table whose offsets are slightly wrong still opens in a reader that recovers
+by scanning, and the fault stays hidden. It is C++ and a couple of megabytes, so
+unlike veraPDF it lives in the everyday image and the group needs no service of
+its own.
+
+The gate is **comparative**: signing must not introduce a complaint that was not
+already there. Two fixtures are minimal documents whose pages carry no
+`/Resources`, a fault in the input rather than in anything written here, and a
+gate that failed on it would be measuring the fixture.
+
+**Corrupted input is guarded**, from a fixed seed, over every reader that parses
+bytes the application did not write: the document reader, the signature
+extractor, the ASN.1 walker, the stream filters, the PNG reader and the
+revocation checker. The contract is narrow and the same for all of them: read
+it, or throw the documented exception. Never a `TypeError`, never a fatal.
+
+**Dependencies are audited** in CI. `shivammathur/setup-php` sets
+`COMPOSER_NO_AUDIT`, so advisories were silently unchecked; for a signing
+package a known vulnerability in the tree is worth blocking on.
+
+---
+
+## The instruments are never dependencies
+
+**veraPDF, qpdf, `pdfsig`, `pdftoppm` and Ghostscript are development and
+validation tooling, and none of them may reach production.**
+
+Nothing in `src/` may invoke one. A package that shells out to a JVM, or to
+anything else, to answer a runtime question would be a different package, and
+the consuming application would inherit an installation requirement nobody wrote
+down.
+
+Nor do they ship. Everything built for testing is `export-ignore`d, so the
+archive a consumer installs carries `src/`, `config/` and four files and nothing
+else. That list had already drifted: `phpstan.neon`, `pint.json`,
+`composer-dependency-analyser.php` and `package-lock.json` were all being
+distributed, each added later than the rule.
+
+*Enforced by* `tests/ArchTest.php` for the first half and
+`tests/DistributionTest.php` for the second, which asks `git archive` what a
+release actually contains rather than trusting the list.
 
 **One trap in that cross-check.** `Testing\DebugCertificate` gives every
 certificate it generates the same subject, `CN=Test Certificate, O=Internet

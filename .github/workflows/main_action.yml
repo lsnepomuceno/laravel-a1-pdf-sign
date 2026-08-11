@@ -48,6 +48,16 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
+      # setup-php sets COMPOSER_NO_AUDIT, so advisories were silently not
+      # checked. For a signing package a known vulnerability in the tree is
+      # worth blocking on, and --abandoned=ignore keeps the gate about
+      # vulnerabilities rather than about maintenance status.
+      - name: Audit dependencies
+        run: composer audit --abandoned=ignore
+
+      - name: Install qpdf
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf
+
       - name: Run tests
         run: composer test -- --exclude-group=network
 
