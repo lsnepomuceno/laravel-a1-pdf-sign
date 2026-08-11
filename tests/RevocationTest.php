@@ -94,7 +94,7 @@ it('refuses material that has been altered', function () {
     // One byte flipped inside the signed part, which is what a signature is for.
     $checker = new RevocationChecker();
     $crl = revocationFixture('crl-revoked.der');
-    $tampered = substr_replace($crl, chr(ord($crl[40]) ^ 0xFF), 40, 1);
+    $tampered = substr_replace($crl, chr((ord($crl[40]) ^ 0xFF) & 0xFF), 40, 1);
 
     expect($checker->status(PROBE_SERIAL, [], [$tampered], revocationIssuer()))
         ->toBe(RevocationStatus::Unknown);
