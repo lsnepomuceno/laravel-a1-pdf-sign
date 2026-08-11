@@ -64,6 +64,8 @@ it('names the timestamp field from the form rather than from a byte scan', funct
 });
 
 it('extends the archive timestamp chain', function () {
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
     $original = Files::read(sample('pades-b-lta.pdf'));
 
     $extended = app(ArchiveExtender::class)->extend($original, 'archive.pdf');
@@ -91,6 +93,8 @@ it('extends the archive timestamp chain', function () {
 
 it('archives a B-T document, which makes it archived from here on', function () {
     // Not the usual case, and not refused: the chain has to start somewhere.
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
     $extended = app(ArchiveExtender::class)->extend(Files::read(sample('pades-b-t.pdf')));
 
     $report = app(SignatureValidator::class)->validate($extended->contents);
@@ -100,6 +104,8 @@ it('archives a B-T document, which makes it archived from here on', function () 
 })->group('network');
 
 it('extends through the facade', function () {
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://freetsa.org/tsr');
+
     $path = A1PdfSign::tempPath(true, '.pdf');
     file_put_contents($path, Files::read(sample('pades-b-lta.pdf')));
 
