@@ -11,9 +11,12 @@ FROM php:${PHP_VERSION}-cli-alpine
 # gd / imagick: seal rendering (Intervention Image)
 # bcmath: required by tc-lib-pdf through tc-lib-barcode
 # pcov: fast coverage driver, required by mutation testing
+# qpdf: structural validation of what the revision writer emits. Unlike
+#       veraPDF it is C++ and a couple of megabytes, so it belongs in the
+#       everyday image (docs/spec/quality-policy.md).
 RUN apk add --no-cache \
         git unzip libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev \
-        imagemagick imagemagick-dev $PHPIZE_DEPS \
+        imagemagick imagemagick-dev qpdf $PHPIZE_DEPS \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" gd zip bcmath \
     && pecl install pcov imagick \
