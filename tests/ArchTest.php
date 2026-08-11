@@ -67,9 +67,36 @@ arch('no deprecated namespace lingers')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Entities')
     ->not->toBeUsed();
 
+/**
+ * The reason is the one in the name, so it reaches only the enums a
+ * configuration file can name. An enum whose values are fixed by a standard and
+ * are natural integers, like an ASN.1 tag, is exempted here rather than by
+ * weakening the rule for every enum
+ * (docs/decisions/0018-prefer-the-platforms-own-constructs.md).
+ */
 arch('enums are string-backed, so configuration can express them as plain strings')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Enums')
-    ->toBeStringBackedEnums();
+    ->toBeStringBackedEnums()
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Enums\Asn1Tag');
+
+/**
+ * Str::substr() and Str::length() are multibyte-aware, so running them over a
+ * PDF or a DER blob reinterprets binary as UTF-8 and returns the wrong offsets.
+ * In this package a wrong offset is a corrupted signature, and the failure
+ * passes the whole suite: every fixture is ASCII, and it takes a multi-byte
+ * sequence in the payload to show.
+ *
+ * These two namespaces are where every byte-exact operation lives, so the rule
+ * is "not here at all" rather than a list of permitted methods: an allowlist is
+ * a rule you have to look up, and this one has to survive review from memory
+ * (docs/spec/conventions.md).
+ */
+arch('the byte-exact namespaces do not reach for multibyte string helpers')
+    ->expect('Illuminate\Support\Str')
+    ->not->toBeUsedIn([
+        'LSNepomuceno\LaravelA1PdfSign\Signing',
+        'LSNepomuceno\LaravelA1PdfSign\Validation',
+    ]);
 
 arch('contracts are interfaces')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Contracts')

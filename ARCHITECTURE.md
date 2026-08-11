@@ -14,6 +14,7 @@ built, and cited a §12 that never had a section.
 | [docs/spec/invariants.md](docs/spec/invariants.md) | Rules that break the product or the project when violated. **Read before touching `src/Signing`, `src/Validation` or the dependency list.** |
 | [docs/spec/public-api.md](docs/spec/public-api.md) | What the package exposes, and what changing it costs. |
 | [docs/spec/quality-policy.md](docs/spec/quality-policy.md) | The gates a change has to pass, and why each sits where it does. |
+| [docs/spec/conventions.md](docs/spec/conventions.md) | How the code is written: reach for the framework before writing a helper, and use an enum where a set of values exists. |
 
 ## Decisions: why the design is what it is
 
