@@ -353,7 +353,9 @@ final readonly class PdfFilters
                 }
 
                 if ($code < 256) {
-                    $entry = chr($code);
+                    // Masked, though the shift and mask above already bound it:
+                    // the analyser cannot see that and chr() takes 0 to 255.
+                    $entry = chr($code & 0xFF);
                 } elseif (isset($dictionary[$code])) {
                     $entry = $dictionary[$code];
                 } elseif ($previous !== null) {
