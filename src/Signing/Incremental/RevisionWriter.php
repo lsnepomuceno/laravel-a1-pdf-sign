@@ -68,9 +68,12 @@ final class RevisionWriter
         $maskNumber = $number++;
         $formNumber = $number++;
 
-        // Null keeps the signature invisible, and it is what both widget
-        // builders read to decide whether to write an /AP at all.
-        $appearanceNumber = $visible ? $formNumber : null;
+        // Both widget builders point /AP here. An invisible signature gets an
+        // empty form rather than no appearance at all: ISO 19005-1 §6.9 wants
+        // every form field to have an appearance dictionary, and veraPDF fails
+        // a signed PDF/A-1 document without one
+        // (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+        $appearanceNumber = $formNumber;
 
         $catalogNumber = $document->root;
         // A field states its own page through /P, and that wins: intoField()
@@ -128,6 +131,9 @@ final class RevisionWriter
                 $offsets[$stampNumber] = $base + strlen($body);
                 $body .= $this->stampObject($stampNumber, $formNumber, $page, $rectangle);
             }
+        } else {
+            $offsets[$formNumber] = $base + strlen($body);
+            $body .= $this->appearance->emptyForm($formNumber);
         }
 
         // A field the document already carries is already registered on the
@@ -249,6 +255,7 @@ final class RevisionWriter
             $document->root,
             $document->infoRef,
             $document->startxref,
+            $document->id,
         ) . $ending;
     }
 
@@ -624,7 +631,26 @@ final class RevisionWriter
     {
         $info = $document->infoRef !== null ? "/Info {$document->infoRef}" : '';
 
-        return "trailer\n<</Size {$size}/Root {$root} 0 R{$info}/Prev {$document->startxref}>>\n";
+        return "trailer\n<</Size {$size}/Root {$root} 0 R{$info}{$this->identifier($document)}"
+            . "/Prev {$document->startxref}>>\n";
+    }
+
+    /**
+     * The document's /ID, carried into the revision's trailer.
+     *
+     * ISO 32000-1 §14.4: it identifies the file, and every trailer carries it.
+     * Dropping it made a signed PDF/A document stop conforming on §6.1.3, which
+     * is how this was found, and it costs a document its identity for every
+     * reader besides
+     * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+     *
+     * The pair is carried through unchanged. The second string is meant to
+     * change when the file does, and inventing one here would be inventing a
+     * digest no reader checks, while the first has to stay put either way.
+     */
+    private function identifier(DocumentInfo $document): string
+    {
+        return $document->id === null ? '' : "/ID {$document->id}";
     }
 
     private function timestamp(): string

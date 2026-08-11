@@ -51,6 +51,7 @@ final class DocumentReader
         $size = 0;
         $root = 0;
         $infoRef = null;
+        $id = null;
         $usesStream = false;
 
         // The chain runs newest to oldest, so walk it reversed and let the most
@@ -81,13 +82,17 @@ final class DocumentReader
             if ($section['infoRef'] !== null) {
                 $infoRef = $section['infoRef'];
             }
+
+            if ($section['id'] !== null) {
+                $id = $section['id'];
+            }
         }
 
         if ($root === 0) {
             throw new InvalidPdfFileException('no /Root entry found in any trailer');
         }
 
-        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream, $compressed);
+        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream, $compressed, $id);
     }
 
     /**
@@ -255,7 +260,7 @@ final class DocumentReader
     }
 
     /**
-     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool}
+     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool, id: ?string}
      *
      * @throws InvalidPdfFileException
      */
@@ -324,6 +329,7 @@ final class DocumentReader
         preg_match('/\/Root\s+(\d+)\s+\d+\s+R/', $trailer, $root);
         preg_match('/\/Prev\s+(\d+)/', $trailer, $prev);
         preg_match('/\/Info\s+(\d+\s+\d+\s+R)/', $trailer, $info);
+        preg_match('/\/ID\s*(\[[^\]]*\])/', $trailer, $id);
 
         return [
             'xref' => $xref,
@@ -335,6 +341,7 @@ final class DocumentReader
             'infoRef' => $info[1] ?? null,
             'prev' => isset($prev[1]) ? (int) $prev[1] : 0,
             'stream' => false,
+            'id' => $id[1] ?? null,
         ];
     }
 }

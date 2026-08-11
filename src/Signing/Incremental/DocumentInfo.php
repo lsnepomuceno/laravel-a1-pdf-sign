@@ -27,6 +27,15 @@ final readonly class DocumentInfo
         public int $startxref,
         public bool $usesXrefStream = false,
         public array $compressed = [],
+        /**
+         * The trailer's /ID array as written, brackets included, or null.
+         *
+         * ISO 32000-1 §14.4 and §7.5.5: it identifies the file, and every
+         * revision's trailer carries it. Dropping it in an appended revision
+         * is what made a signed PDF/A document stop conforming
+         * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+         */
+        public ?string $id = null,
     ) {}
 
     /**

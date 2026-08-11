@@ -1,0 +1,122 @@
+# 0025: What signing does to PDF/A, measured
+
+**Status:** implemented, and the measurement is the point.
+
+## Context
+
+Long-term archives are the reason this package exists, and PDF/A is the format
+they are kept in. Whether signing a PDF/A document leaves it conformant had
+**never been checked, in either direction**. The package neither claimed it did
+nor warned that it might not.
+
+That is not a gap that reasoning closes. Either a validator says yes or nobody
+knows.
+
+## Measurement
+
+Baselines produced with Ghostscript 9.55 from `tests/Resources/test.pdf`, each
+confirmed conformant by **veraPDF 1.30.2** before anything was done to it, then
+signed three ways and validated again.
+
+| | PDF/A-1b | PDF/A-2b |
+|---|---|---|
+| **Baseline, unsigned** | PASS | PASS |
+| **Invisible signature** | **PASS** | **PASS** |
+| Opaque seal | FAIL, §6.2.3.3 | FAIL, §6.2.4.3 |
+| Transparent seal | FAIL, §6.2.3.3 and §6.4 | FAIL, §6.2.4.3 and §6.2.10 |
+
+Before the two fixes below, **every one of those six failed**, including the
+invisible signature.
+
+## What the measurement found, and what was fixed
+
+### The revision dropped the file identifier
+
+*ISO 19005-2 §6.1.3: the trailer dictionary shall contain the `/ID` keyword.*
+
+`RevisionWriter::trailer()` wrote `/Size`, `/Root`, `/Info` and `/Prev`, and no
+`/ID`. The cross-reference stream writer omitted it too.
+
+This is a defect well beyond PDF/A. ISO 32000-1 §14.4 makes `/ID` the file's
+identity, and a revision that drops it hands every reader a document that has
+stopped identifying itself. **It is fixed**, and the pair is carried through
+unchanged: the second string is meant to change when the file does, and
+inventing one here would be inventing a digest no reader checks, while the first
+has to stay put either way.
+
+A document with no `/ID` of its own gets none invented for it. A file identifier
+is the producer's, and a signer that made one up would be claiming an identity
+for a document it only appended to.
+
+### An invisible signature had no appearance
+
+*ISO 19005-1 §6.9: every form field shall have an appearance dictionary
+associated with the field's data.*
+
+A signature with no seal is still a form field. It now gets a form XObject with
+a `[0 0 0 0]` box, which draws nothing, which is what invisible means. **Fixed**,
+and it is what turns PDF/A-1b from FAIL to PASS.
+
+## What is not fixed, and why
+
+### A visible seal costs conformance, in both parts
+
+*§6.2.3.3 (PDF/A-1) and §6.2.4.3 (PDF/A-2): DeviceRGB may be used only if the
+file has an OutputIntent with an RGB destination profile.*
+
+The seal is embedded as `/DeviceRGB`. The fix is not the signer's to make: an
+OutputIntent declares the intended output device for the whole document and
+requires an embedded ICC profile, which is the author's decision about their own
+file, not something to add on the way past.
+
+**The seal could carry its own `/ICCBased` colour space instead**, which would
+make it conformant whatever the document declares. That means vendoring an sRGB
+ICC profile into an MIT package, whose licensing needs checking first, so it is
+named here as the next step rather than done quietly.
+
+### A transparent seal can never be PDF/A-1
+
+*§6.4: an XObject dictionary shall not contain the `SMask` key.*
+
+PDF/A-1 forbids transparency outright, and `/SMask` is how a transparent seal
+carries its alpha ([0023](0023-a-seal-that-can-be-transparent.md)). No
+arrangement of this package's output makes a transparent seal conformant to
+PDF/A-1.
+
+`seal.transparent => false` is the lever, and it is the whole reason that
+setting exists rather than the behaviour being unconditional.
+
+PDF/A-2 allows transparency, and fails instead on §6.2.10: a page carrying
+transparency needs a `/Group` with a `/CS` when the file has no OutputIntent.
+The signer could add that group, and it would not change the verdict while
+§6.2.4.3 still fails, so it waits on the same ICC decision.
+
+## Consequences
+
+- **An invisible signature keeps a PDF/A document conformant, in both parts
+  measured.** That is now a supported claim rather than a hope, and it is the
+  recommendation for a PDF/A workflow.
+- A visible seal does not, and the reason is the colour space rather than the
+  signature.
+- `tests/Resources/pdfa-1b.pdf` and `pdfa-2b.pdf` are committed as the
+  baselines.
+- `tests/PdfAConformanceTest.php` checks the **structure each verdict turned
+  on**: the identifier is carried, the invisible field has an appearance, the
+  seal is DeviceRGB, the `/SMask` appears only when transparency is asked for.
+  veraPDF is Java and is not in CI, so the verdicts live in this record and the
+  suite guards the things they depended on.
+- `DocTimeStampWriter` writes an invisible widget of its own and it has **not**
+  been given an appearance. A B-LTA document was not part of this measurement,
+  and claiming the fix covers it without measuring would be the thing this
+  record exists to avoid.
+
+## Alternatives rejected
+
+| | Why not |
+|---|---|
+| Add an OutputIntent to the document while signing | It declares the output device for the whole file. That is the author's statement, not the signer's |
+| Invent an `/ID` for a document that has none | Claiming an identity for a document this only appended to |
+| Change the second `/ID` string on each revision | It would be a digest no reader checks |
+| Reason about conformance instead of measuring | The invisible signature "obviously" preserved conformance, and it failed on `/ID` |
+| Vendor an sRGB ICC profile now | Licensing into an MIT package, decided quietly inside a measurement commit |
+| Claim the fixes cover B-LTA too | Not measured. The timestamp widget has no appearance either |

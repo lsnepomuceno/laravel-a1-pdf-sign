@@ -34,6 +34,7 @@ document drifts away from the code it describes.
 | [0022](0022-the-archive-timestamp-is-a-chain.md) | The archive timestamp is a chain, not a state |
 | [0023](0023-a-seal-that-can-be-transparent.md) | A seal that can be transparent, and say what the caller wants |
 | [0024](0024-revocation-is-evaluated-not-counted.md) | Revocation is evaluated, not counted |
+| [0025](0025-what-signing-does-to-pdf-a.md) | What signing does to PDF/A, measured |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

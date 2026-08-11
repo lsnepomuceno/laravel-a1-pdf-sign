@@ -85,6 +85,25 @@ final class SealAppearance
     }
 
     /**
+     * An appearance that draws nothing, for an invisible signature.
+     *
+     * ISO 19005-1 §6.9 requires every form field to have an appearance
+     * dictionary, and a signature with no seal is still a form field. A zero
+     * box draws nothing, which is what invisible means, while giving the field
+     * the appearance the standard asks for
+     * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+     */
+    public function emptyForm(int $number): string
+    {
+        return "{$number} 0 obj\n"
+            . '<</Type/XObject/Subtype/Form'
+            . '/BBox[0 0 0 0]'
+            . '/Resources<<>>'
+            . '/Length 0'
+            . ">>\nstream\n\nendstream\nendobj\n";
+    }
+
+    /**
      * The rectangle the widget occupies, in PDF user space.
      *
      * @return array{0: float, 1: float, 2: float, 3: float}

@@ -51,6 +51,7 @@ final readonly class XrefStreamWriter
         int $root,
         ?string $infoRef,
         int $prev,
+        ?string $id = null,
     ): string {
         ksort($offsets);
 
@@ -68,6 +69,10 @@ final readonly class XrefStreamWriter
         }
 
         $info = $infoRef !== null ? "/Info {$infoRef}" : '';
+        // §14.4: the file identifier belongs in every trailer, and a
+        // cross-reference stream's dictionary is the trailer
+        // (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+        $identifier = $id === null ? '' : "/ID {$id}";
         $widths = implode(' ', self::WIDTHS);
 
         // No /Filter. A revision indexes a handful of objects, so its table is
@@ -81,6 +86,7 @@ final readonly class XrefStreamWriter
             . "/W [{$widths}]"
             . "/Root {$root} 0 R"
             . $info
+            . $identifier
             . "/Prev {$prev}"
             . '/Length ' . strlen($data)
             . ">>\nstream\n"

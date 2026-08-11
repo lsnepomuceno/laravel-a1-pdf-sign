@@ -142,8 +142,15 @@ it('leaves the signature invisible when no seal is requested', function () {
         ->pdf(resource('test.pdf'))
         ->sign();
 
+    // A zero rectangle is what makes it invisible. It used to be asserted that
+    // there was no /AP either, and there is one now: ISO 19005-1 §6.9 wants
+    // every form field to have an appearance dictionary, and veraPDF failed a
+    // signed PDF/A-1 document without one. The appearance draws nothing, which
+    // is the same thing (docs/decisions/0025-what-signing-does-to-pdf-a.md).
     expect((string) $signed->contents)->toContain('/Rect[0 0 0 0]')
-        ->not->toContain('/AP<</N ');
+        ->toContain('/BBox[0 0 0 0]')
+        // Nothing to draw with: no image, no form beyond the empty one.
+        ->not->toContain('/Subtype/Image');
 });
 
 it('still validates a document signed with a visible seal', function () {
