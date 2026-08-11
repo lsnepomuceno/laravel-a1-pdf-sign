@@ -10,8 +10,10 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Seal\InterventionSealRenderer;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\HttpTransport;
 use LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner;
 use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Validation\TrustVerifier;
@@ -33,6 +35,11 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
         $this->app->bind(PdfSigner::class, IncrementalSigner::class);
         $this->app->bind(SealRenderer::class, InterventionSealRenderer::class);
         $this->app->bind(SignatureValidator::class, PdfSignatureValidator::class);
+        // The seam invariant 9 is built on: everything the profiles above
+        // pades-b-b add rides through here, and a test that can replace it
+        // turns them from reported into gated
+        // (docs/decisions/0027-the-transport-is-a-seam.md).
+        $this->app->bind(SignatureTransport::class, HttpTransport::class);
 
         // Bound to itself on purpose, and it must stay bound. PdfSignatureValidator
         // takes it as an optional parameter so its arity does not move, and the

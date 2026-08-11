@@ -3,7 +3,6 @@
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
 
 /**
  * PDF/A conformance, measured rather than reasoned about.
@@ -18,6 +17,9 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * trailer /ID nobody would have looked for
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
  *
+ * `veraPdfVerdict()` lives in tests/Pest.php, because a second file needs it
+ * now and a helper defined in one test file is invisible to the others.
+ *
  * veraPDF is installed in the development image and in CI, so this runs with
  * the rest of the suite and never skips:
  *
@@ -25,20 +27,6 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
  * ```
  */
-function veraPdfVerdict(string $path, string $flavour): string
-{
-    // "|| true" because veraPDF exits 1 for a non-conformant file, which is a
-    // verdict rather than a failure to run. The verdict itself is the first
-    // word of stdout either way.
-    $output = app(ProcessRunner::class)->run(sprintf(
-        'verapdf --format text -f %s %s 2>&1 || true',
-        escapeshellarg($flavour),
-        escapeshellarg($path),
-    ));
-
-    return str_starts_with(trim($output), 'PASS') ? 'PASS' : 'FAIL';
-}
-
 /**
  * Signs a baseline and hands back the path, so veraPDF can be pointed at it.
  */

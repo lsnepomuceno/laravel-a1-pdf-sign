@@ -101,7 +101,7 @@ Two traps this code has already fallen into, and they must not be reintroduced:
 
 `CONTENTS_HEX_LENGTH` is deliberately larger than tc-lib-pdf's reserve: overflowing the placeholder is a hard failure, and embedding the chain grows the CMS.
 
-Profiles live in `Enums\SignatureProfile` (Legacy, B-B, B-T, B-LT, B-LTA) and own their `/SubFilter` plus what each level requires. `Cades\HttpTransport` is the injected TSA/OCSP/CRL client: the host application owns that SSRF surface, so keep network access behind it.
+Profiles live in `Enums\SignatureProfile` (Legacy, B-B, B-T, B-LT, B-LTA) and own their `/SubFilter` plus what each level requires. `Contracts\SignatureTransport`, implemented by `Cades\HttpTransport`, is the injected TSA/OCSP/CRL client: the host application owns that SSRF surface, so keep network access behind it. It is an interface so `Testing\LocalTimestampAuthority` can substitute it and gate B-T, B-LT, B-LTA and the archive chain offline, with real `openssl ts -reply` tokens (`docs/decisions/0027-the-transport-is-a-seam.md`).
 
 ### Certificates
 

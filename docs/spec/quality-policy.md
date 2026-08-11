@@ -172,12 +172,16 @@ somebody else's outage.
 **Nothing skips.** `composer test` carries `--fail-on-skipped`, because every
 check has to run somewhere and a skip is how one quietly stops.
 
-One cell of the matrix is not blocking and cannot be: a `pades-b-lta` document
-cannot be produced without reaching a timestamp authority, so **PDF/A
-conformance at B-T and B-LTA is measured in the `network` group**. That is the
-combination an archive actually wants, and reported beats unmeasured, which is
-what it was until the archive timestamp's own widget turned out to have no
-appearance dictionary. veraPDF was
+**The timestamp profiles are gated, not merely reported.**
+`Testing\LocalTimestampAuthority` answers with real RFC 3161 tokens from
+`openssl ts -reply`, with no server and no connection, so B-T, B-LT, B-LTA, the
+archive chain and PDF/A conformance at B-LTA all run in the blocking suite
+([0027](../decisions/0027-the-transport-is-a-seam.md)).
+
+The live tests against freetsa.org stay in the `network` group beside them, and
+they answer a different question: a local authority establishes that the package
+builds, embeds and verifies a token correctly, and cannot establish that it
+interoperates with somebody else's. veraPDF was
 behind a build argument and its group skipped by default, which meant the
 conformance claims were unverified on the machine where the work was being
 done. The JRE it costs is the price of the check actually happening.

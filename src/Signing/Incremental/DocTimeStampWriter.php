@@ -6,9 +6,9 @@ use Com\Tecnick\Pdf\Sign\Output\DocTimeStamp;
 use Com\Tecnick\Pdf\Sign\Timestamp\Client as TimestampClient;
 use Com\Tecnick\Pdf\Sign\Timestamp\Config as TimestampConfig;
 use Illuminate\Contracts\Config\Repository as Config;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
-use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\HttpTransport;
 use Throwable;
 
 /**
@@ -38,7 +38,7 @@ final readonly class DocTimeStampWriter
         private DocumentReader $reader,
         private RevisionWriter $writer,
         private ByteRangeCalculator $byteRange,
-        private HttpTransport $transport,
+        private SignatureTransport $transport,
         private Config $config,
         private DocTimeStamp $docTimeStamp = new DocTimeStamp(),
         private SignatureFieldReader $fields = new SignatureFieldReader(new DocumentReader()),

@@ -137,6 +137,26 @@ function reversedPages(int $count = 3): array
 }
 
 /**
+ * veraPDF's verdict on a file, as PASS or FAIL.
+ *
+ * Here rather than in a test file because two of them need it, and a helper
+ * defined inside one is invisible to the others under --parallel.
+ */
+function veraPdfVerdict(string $path, string $flavour): string
+{
+    // "|| true" because veraPDF exits 1 for a non-conformant file, which is a
+    // verdict rather than a failure to run. The verdict itself is the first
+    // word of stdout either way.
+    $output = app(LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner::class)->run(sprintf(
+        'verapdf --format text -f %s %s 2>&1 || true',
+        escapeshellarg($flavour),
+        escapeshellarg($path),
+    ));
+
+    return str_starts_with(trim($output), 'PASS') ? 'PASS' : 'FAIL';
+}
+
+/**
  * A minimal PDF around the given objects, with a correct cross-reference table.
  *
  * Structural cases are built rather than patched into the committed fixture:
