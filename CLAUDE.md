@@ -19,6 +19,7 @@ Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a refer
 | `docs/spec/invariants.md` | the rules that break the product or the project. **Read before touching `src/Signing`, `src/Validation` or the dependency list** |
 | `docs/spec/public-api.md` | what the package exposes, and what changing it costs |
 | `docs/spec/quality-policy.md` | the gates, and why each sits where it does |
+| `docs/spec/conventions.md` | how the code is written. **Read before writing a helper or a class constant** |
 | `docs/decisions/` | why the design is what it is: one numbered file per decision |
 | `docs/history/v2-modernization.md` | why v1 was shaped as it was, and where the build diverged from the plan |
 | `docs/history/decision-log.md` | which questions were put, and when they were answered |
@@ -147,6 +148,13 @@ Conventional Commits, in English (`feat:`, `fix:`, `chore(deps):`, `test:`, `doc
 This is not advice that a green check absolves you of. GitHub carries the same rule and the owner's token can bypass it, so the push **succeeds** and prints `Bypassed rule violations for refs/heads/main` where it is easy to read past. It happened on 2026-08-10 with two documentation commits, which had to be reverted (#238) and reapplied (#239) to put the history back on the process. A `pre-push` hook now refuses it locally; treat the hook as a backstop, not as the rule.
 
 ## Conventions
+
+The two that decide whether a piece of code should exist at all are in `docs/spec/conventions.md`, and they are mandatory rather than preferences:
+
+- **Laravel first.** This package only runs inside Laravel, so before writing a helper, check whether the framework already has it and use that. Write the bespoke version only after establishing there is none, put it in `src/Support/`, and say in the docblock what was missing. **Except on bytes:** `Str::substr()` and `Str::length()` are multibyte-aware, so over PDF or DER they return the wrong offsets and corrupt a signature while passing the whole suite. `tests/ArchTest.php` fails on any use of `Illuminate\Support\Str` inside `src/Signing` or `src/Validation`.
+- **Enums, not class constants.** A closed set of values is an enum; a constant is for a lone fact, like one cipher or one reserved width. The test is "could a second value of this kind ever be right?". If yes, it is an enum now.
+
+Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.md`.
 
 ### Writing
 

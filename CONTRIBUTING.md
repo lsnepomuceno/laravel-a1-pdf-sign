@@ -21,6 +21,15 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 
 - **Static analysis must stay clean** - PHPStan runs at `level: max` with no baseline, so the gate is "no errors", not "no new errors". Run `composer analyse`.
 
+- **Reach for Laravel before writing a helper** - the package only runs inside the framework, so
+  `Str`, `Arr`, `File`, `Http` and the rest are already there. Write your own only after
+  establishing there is no framework equivalent, and say so in the docblock. The one exception is
+  byte work on PDF and DER, where the multibyte helpers return wrong offsets: see
+  [the conventions](docs/spec/conventions.md).
+
+- **A set of values is an enum, not a group of class constants** - constants are for a lone fact,
+  like one cipher or one reserved width.
+
 - **Add tests!** - Your patch won't be accepted if it doesn't have tests.
 
 - **Document any change in behaviour** - Make sure the `README.md` and any other relevant documentation are kept up-to-date.
