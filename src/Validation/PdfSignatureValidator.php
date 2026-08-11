@@ -7,6 +7,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
+use LSNepomuceno\LaravelA1PdfSign\Enums\RevocationStatus;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
@@ -35,6 +36,8 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         // Appended rather than slotted in beside the other readers, so a caller
         // passing $trust positionally keeps meaning what they meant.
         private TimestampTokenReader $timestamps = new TimestampTokenReader(),
+        private RevocationReader $revocations = new RevocationReader(new DocumentReader()),
+        private RevocationChecker $revocationChecker = new RevocationChecker(),
     ) {}
 
     /**
@@ -74,6 +77,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         // depends on what the file carries around it.
         $store = $this->store->read($pdfContents);
         $archived = array_filter($extracted, static fn(array $entry): bool => $entry['isTimestamp']) !== [];
+        $material = $this->material($pdfContents);
 
         foreach ($extracted as $signature) {
             [$open, $close, $trailing] = $signature['byteRange'];
@@ -125,6 +129,7 @@ final readonly class PdfSignatureValidator implements SignatureValidator
                     $store !== null && ! $store->isEmpty(),
                     $archived,
                 ),
+                revocation: $this->revocation($chain, $ordered, $material),
             );
         }
 
@@ -168,6 +173,53 @@ final readonly class PdfSignatureValidator implements SignatureValidator
         return $info === null
             ? ['verified' => false, 'at' => null]
             : ['verified' => true, 'at' => $this->timestamps->stampedAt($info)];
+    }
+
+    /**
+     * What the document's own revocation material says about this signer.
+     *
+     * The store has been written since 2.0 and counted since 2.2, and nothing
+     * read it, so a document could carry a responder's word that its signer was
+     * revoked and still report as valid
+     * (docs/decisions/0024-revocation-is-evaluated-not-counted.md).
+     *
+     * The issuers offered are the rest of the chain the signature embeds, so a
+     * response signed by the issuer, or by a responder the issuer delegated to,
+     * is reachable and nothing else is.
+     *
+     * @param  list<\LSNepomuceno\LaravelA1PdfSign\Data\Signer>  $chain
+     * @param  list<string>  $ordered  The same chain as PEM, leaf first.
+     * @param  array{ocsp: list<string>, crls: list<string>}  $material
+     */
+    private function revocation(array $chain, array $ordered, array $material): RevocationStatus
+    {
+        $serial = $chain[0]->serialNumber ?? null;
+
+        if ($serial === null || ($material['ocsp'] === [] && $material['crls'] === [])) {
+            return RevocationStatus::Unknown;
+        }
+
+        return $this->revocationChecker->status(
+            $serial,
+            $material['ocsp'],
+            $material['crls'],
+            array_slice($ordered, 1),
+        );
+    }
+
+    /**
+     * @return array{ocsp: list<string>, crls: list<string>}
+     */
+    private function material(string $pdfContents): array
+    {
+        try {
+            return $this->revocations->material($pdfContents);
+        } catch (InvalidPdfFileException) {
+            // A document whose cross-reference chain cannot be read still has
+            // signatures worth reporting, the same way a certification that
+            // cannot be located is absent rather than fatal.
+            return ['ocsp' => [], 'crls' => []];
+        }
     }
 
     private function certification(string $pdfContents): ?CertificationLevel

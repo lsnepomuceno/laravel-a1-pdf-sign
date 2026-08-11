@@ -22,6 +22,12 @@ enum Asn1Tag: int
 
     case ObjectIdentifier = 0x06;
 
+    case BitString = 0x03;
+
+    case Enumerated = 0x0A;
+
+    case UtcTime = 0x17;
+
     case GeneralizedTime = 0x18;
 
     case Sequence = 0x30;

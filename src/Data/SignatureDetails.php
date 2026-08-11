@@ -2,6 +2,7 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Data;
 
+use LSNepomuceno\LaravelA1PdfSign\Enums\RevocationStatus;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 
 /**
@@ -44,6 +45,13 @@ final readonly class SignatureDetails extends BaseData
      *                                      actually satisfies, from what the
      *                                      document carries rather than what it
      *                                      claims.
+     * @param  RevocationStatus  $revocation  What the document's own OCSP
+     *                                        responses and CRLs say about the
+     *                                        signer. Unknown when it carries
+     *                                        none, when none mentions this
+     *                                        certificate, or when what it
+     *                                        carries does not verify against
+     *                                        the issuer.
      */
     public function __construct(
         public bool $verified,
@@ -61,6 +69,7 @@ final readonly class SignatureDetails extends BaseData
         public ?int $stampedAt = null,
         public ?string $subFilter = null,
         public ?SignatureProfile $profile = null,
+        public RevocationStatus $revocation = RevocationStatus::Unknown,
     ) {}
 
     /**
@@ -116,6 +125,18 @@ final readonly class SignatureDetails extends BaseData
         }
 
         return $this->signedAt >= $signer->validFrom && $this->signedAt <= $signer->validTo;
+    }
+
+    /**
+     * Whether the document's own material says this signer was revoked.
+     *
+     * Separate from `verified`, and it has to be: a revoked certificate still
+     * produces a signature that matches the bytes perfectly. What it stops
+     * being is a signature anyone should accept.
+     */
+    public function isRevoked(): bool
+    {
+        return $this->revocation === RevocationStatus::Revoked;
     }
 
     /**
