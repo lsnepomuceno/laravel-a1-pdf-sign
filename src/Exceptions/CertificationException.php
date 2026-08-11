@@ -48,6 +48,17 @@ class CertificationException extends Exception implements Stringable
         );
     }
 
+    /**
+     * The same exclusion, reached by extending an archive rather than by
+     * signing. An archive timestamp is a revision like any other.
+     */
+    public static function forbidsArchiveTimestamp(): self
+    {
+        return new self(
+            'this document is certified as "no-changes", which forbids the further revision an archive timestamp would append',
+        );
+    }
+
     public function __toString(): string
     {
         return __CLASS__ . ": [{$this->getCode()}]: {$this->getMessage()}\n";

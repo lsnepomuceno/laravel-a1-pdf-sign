@@ -31,6 +31,7 @@ document drifts away from the code it describes.
 | [0019](0019-validation-reads-what-it-writes.md) | Validation reads what it writes, one level down |
 | [0020](0020-decode-the-filters-documents-use.md) | Decode the filters documents actually use |
 | [0021](0021-locking-fields-and-honouring-locks.md) | Locking fields, and honouring the locks already there |
+| [0022](0022-the-archive-timestamp-is-a-chain.md) | The archive timestamp is a chain, not a state |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

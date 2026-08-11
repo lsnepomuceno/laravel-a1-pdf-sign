@@ -41,6 +41,7 @@ final readonly class DocTimeStampWriter
         private HttpTransport $transport,
         private Config $config,
         private DocTimeStamp $docTimeStamp = new DocTimeStamp(),
+        private SignatureFieldReader $fields = new SignatureFieldReader(new DocumentReader()),
     ) {}
 
     /**
@@ -65,7 +66,7 @@ final readonly class DocTimeStampWriter
 
         $objects = [
             $stampNumber => $this->docTimeStamp->valueObject($stampNumber, self::CONTENTS_HEX_LENGTH),
-            $widgetNumber => $this->widget($widgetNumber, $stampNumber, $pageNumber, $pdf),
+            $widgetNumber => $this->widget($widgetNumber, $stampNumber, $pageNumber, $pdf, $document),
             $document->root => $this->writer->catalogWithField($pdf, $document, $widgetNumber),
             $pageNumber => $this->writer->pageWithAnnotation($pdf, $document, $pageNumber, $widgetNumber),
         ];
@@ -135,10 +136,18 @@ final readonly class DocTimeStampWriter
     /**
      * The widget the timestamp occupies. It is never visible, but it still
      * needs a field so readers list it alongside the signatures.
+     *
+     * The index comes from the form's own /Fields list rather than from
+     * counting "/FT /Sig" in the raw bytes. That scan undercounts a document
+     * whose fields are packed into an object stream, which 2.3 made signable,
+     * and two fields sharing a name is a form readers disagree about
+     * (docs/decisions/0022-the-archive-timestamp-is-a-chain.md).
+     *
+     * @throws InvalidPdfFileException
      */
-    private function widget(int $number, int $stampNumber, int $pageNumber, string $pdf): string
+    private function widget(int $number, int $stampNumber, int $pageNumber, string $pdf, DocumentInfo $document): string
     {
-        $index = $this->signatureCount($pdf) + 1;
+        $index = count($this->fields->read($pdf, $document)) + 1;
 
         return "{$number} 0 obj\n"
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
@@ -170,15 +179,5 @@ final readonly class DocTimeStampWriter
         $value = $this->config->get("a1-pdf-sign.{$key}", $default);
 
         return is_numeric($value) ? (int) $value : $default;
-    }
-
-    /**
-     * How many signature fields the document already carries.
-     */
-    private function signatureCount(string $pdf): int
-    {
-        $count = preg_match_all('/\/FT\s*\/Sig/', $pdf);
-
-        return $count === false ? 0 : $count;
     }
 }

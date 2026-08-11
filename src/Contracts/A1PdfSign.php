@@ -115,6 +115,24 @@ interface A1PdfSign
     public function signatureFields(string $pdfPath): array;
 
     /**
+     * Adds a fresh archive timestamp to a document that already carries a
+     * signature, extending the PAdES B-LTA chain (ETSI EN 319 142-1).
+     *
+     * No certificate is involved: a DocTimeStamp is signed by the authority,
+     * not by the signer, so this is something a scheduled job can do to an
+     * archive with no key material anywhere near it.
+     *
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException
+     *
+     * @see docs/decisions/0022-the-archive-timestamp-is-a-chain.md
+     */
+    public function extendArchive(string $pdfPath): SignedPdf;
+
+    /**
      * Starts a fluent signature. Nothing happens until sign() is called.
      */
     public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
