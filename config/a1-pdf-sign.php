@@ -89,6 +89,24 @@ return [
         ],
 
         'background' => null,
+
+        /*
+         * Honour the artwork's alpha channel instead of flattening it.
+         *
+         * A transparent seal is stored as raw samples with an /SMask, since PDF
+         * has no PNG filter, which costs more bytes than the JPEG it replaces.
+         * Set this to false for the smaller, opaque rectangle.
+         */
+        'transparent' => true,
+
+        /*
+         * Where the seal's text sits on the artwork, in pixels from the top
+         * left. One row per line; a line with no row is not drawn.
+         */
+        'text' => [
+            'x' => 160,
+            'rows' => [80, 150, 250],
+        ],
     ],
 
 ];

@@ -62,6 +62,10 @@ final class RevisionWriter
         // whole point (docs/decisions/0013-signing-into-an-existing-field.md).
         $widgetNumber = $target === null ? $number++ : $target->objectNumber;
         $imageNumber = $number++;
+        // Allocated whether or not the seal is transparent, so the numbers
+        // below do not depend on the artwork
+        // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+        $maskNumber = $number++;
         $formNumber = $number++;
 
         // Null keeps the signature invisible, and it is what both widget
@@ -108,7 +112,12 @@ final class RevisionWriter
 
         if ($visible) {
             $offsets[$imageNumber] = $base + strlen($body);
-            $body .= $this->appearance->imageObject($imageNumber, $seal);
+            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber);
+
+            if ($seal->isTransparent()) {
+                $offsets[$maskNumber] = $base + strlen($body);
+                $body .= $this->appearance->maskObject($maskNumber, $seal);
+            }
 
             $offsets[$formNumber] = $base + strlen($body);
             $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);

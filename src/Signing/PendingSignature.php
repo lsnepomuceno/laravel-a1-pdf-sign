@@ -10,6 +10,8 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealLayout;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
@@ -52,6 +54,8 @@ final class PendingSignature
     private ?SealPlacement $placement = null;
 
     private ?FieldLock $lock = null;
+
+    private ?SealLayout $sealLayout = null;
 
     private bool $withSeal = false;
 
@@ -193,17 +197,26 @@ final class PendingSignature
      * Makes the signature visible, rendering a seal from the certificate.
      *
      * Position and size default to the configured placement; pass a
-     * SealPlacement to override it.
+     * SealPlacement to override it. What the seal *says*, and where on the
+     * artwork it says it, is a SealLayout:
+     *
+     * ```php
+     * ->seal(layout: SealLayout::saying(['Approved', 'Protocol 4471']))
+     * ```
+     *
+     * @see docs/decisions/0023-a-seal-that-can-be-transparent.md
      */
     public function seal(
         ?SealPlacement $placement = null,
         FontSize|string|null $fontSize = null,
         bool $showExpiry = false,
+        ?SealLayout $layout = null,
     ): self {
         $this->withSeal = true;
         $this->placement = $placement;
         $this->sealFontSize = $fontSize;
         $this->sealShowsExpiry = $showExpiry;
+        $this->sealLayout = $layout;
 
         return $this;
     }
@@ -348,9 +361,7 @@ final class PendingSignature
             throw new FileNotFoundException('no document given; call pdf() first');
         }
 
-        $seal = $this->withSeal
-            ? $this->sealRenderer->render($this->certificate, $this->sealFontSize, $this->sealShowsExpiry)
-            : null;
+        $seal = $this->withSeal ? $this->renderSeal() : null;
 
         $signed = $this->signer->sign(
             $this->pdfContents,
@@ -373,6 +384,32 @@ final class PendingSignature
         $value = config('a1-pdf-sign.signature.profile');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The caller's own image when sealFrom() named one, and the certificate
+     * seal otherwise.
+     *
+     * SealPlacement::$imagePath was written by sealFrom() and read by nothing
+     * at all, so the caller's artwork was silently replaced by a render of the
+     * certificate (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+     *
+     * @throws FileNotFoundException
+     */
+    private function renderSeal(): SealImage
+    {
+        $imagePath = $this->placement === null ? '' : $this->placement->imagePath;
+
+        if ($imagePath !== '') {
+            return $this->sealRenderer->fromImage($imagePath, $this->sealLayout);
+        }
+
+        return $this->sealRenderer->render(
+            $this->certificate ?? throw new FileNotFoundException('no certificate'),
+            $this->sealFontSize,
+            $this->sealShowsExpiry,
+            layout: $this->sealLayout,
+        );
     }
 
     private function defaultPlacement(): SealPlacement

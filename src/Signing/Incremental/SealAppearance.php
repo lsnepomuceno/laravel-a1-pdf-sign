@@ -19,17 +19,47 @@ final class SealAppearance
 {
     /**
      * The image XObject holding the rendered seal.
+     *
+     * @param  ?int  $maskNumber  The /SMask object, when the seal is
+     *                            transparent. §8.9.5.4: the alpha channel is a
+     *                            separate greyscale image, not a fourth
+     *                            component of this one.
      */
-    public function imageObject(int $number, SealImage $seal): string
+    public function imageObject(int $number, SealImage $seal, ?int $maskNumber = null): string
     {
+        $mask = $maskNumber !== null && $seal->isTransparent() ? "/SMask {$maskNumber} 0 R" : '';
+
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Image'
             . "/Width {$seal->width}/Height {$seal->height}"
             . '/ColorSpace/DeviceRGB/BitsPerComponent 8'
             . '/Filter/' . $seal->pdfFilter()
+            . $mask
             . '/Length ' . strlen($seal->contents)
             . ">>\nstream\n"
             . $seal->contents
+            . "\nendstream\nendobj\n";
+    }
+
+    /**
+     * The soft mask carrying the seal's alpha channel.
+     *
+     * One component per pixel in DeviceGray, where 0 is fully transparent and
+     * 255 fully opaque, which is the same convention PNG's alpha uses, so the
+     * samples go in as they came out.
+     */
+    public function maskObject(int $number, SealImage $seal): string
+    {
+        $alpha = (string) $seal->alpha;
+
+        return "{$number} 0 obj\n"
+            . '<</Type/XObject/Subtype/Image'
+            . "/Width {$seal->width}/Height {$seal->height}"
+            . '/ColorSpace/DeviceGray/BitsPerComponent 8'
+            . '/Filter/FlateDecode'
+            . '/Length ' . strlen($alpha)
+            . ">>\nstream\n"
+            . $alpha
             . "\nendstream\nendobj\n";
     }
 

@@ -132,7 +132,11 @@ it('draws every stamp from the one form the seal already produced', function () 
         ? $matches[1]
         : '';
 
-    expect(preg_match_all('/\/Subtype\/Image/', $pdf))->toBe(1)
+    // Two image objects, because a transparent seal keeps its alpha channel in
+    // a separate /SMask, and one form that both the widget and the stamps draw
+    // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+    expect(preg_match_all('/\/Subtype\/Image/', $pdf))->toBe(2)
+        ->and(preg_match_all('/\/SMask \d+ 0 R/', $pdf))->toBe(1)
         ->and(preg_match_all('/\/Subtype\/Form/', $pdf))->toBe(1)
         ->and($form)->not->toBe('')
         // The widget and both stamps name that one form.
