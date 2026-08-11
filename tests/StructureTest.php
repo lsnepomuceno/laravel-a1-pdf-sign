@@ -78,8 +78,10 @@ function qpdfComplaintsAbout(string $path): array
 }
 
 beforeEach(function () {
+    // As with veraPDF: the image has it, and --fail-on-skipped means a skip
+    // here fails the run rather than passing quietly.
     if (trim((string) shell_exec('command -v qpdf')) === '') {
-        test()->markTestSkipped('qpdf is not installed');
+        test()->markTestSkipped('qpdf is not installed; run the suite through .docker');
     }
 });
 

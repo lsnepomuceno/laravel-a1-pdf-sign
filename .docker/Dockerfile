@@ -27,20 +27,20 @@ RUN apk add --no-cache \
 # Static analysis needs far more than the 128M CLI default.
 RUN printf 'memory_limit = 1G\n' > /usr/local/etc/php/conf.d/zz-dev.ini
 
-# veraPDF, the reference PDF/A validator, off by default.
+# veraPDF, the reference PDF/A validator.
 #
-# It is Java, so installing it costs a headless JRE on top of its own 33 MB, and
-# the day-to-day image should not carry that for a check that runs on the PDF/A
-# group alone. The `pdfa` compose service turns it on; everything else does not.
+# It is Java, so it costs a headless JRE on top of its own 33 MB. It was behind
+# a build argument for exactly that reason, and the reason was wrong: a suite
+# that skips its PDF/A checks by default is a suite whose conformance claims are
+# unverified on the machine where the work is being done. It is installed
+# everywhere and nothing skips.
 #
 # Pinned rather than tracking "latest": a validator that changes its verdicts
 # between builds cannot be the thing a gate is measured against.
 # See docs/decisions/0025-what-signing-does-to-pdf-a.md.
-ARG WITH_VERAPDF=false
 ARG VERAPDF_VERSION=1.30.2
 
-RUN if [ "$WITH_VERAPDF" = "true" ]; then \
-        set -eux; \
+RUN set -eux; \
         apk add --no-cache openjdk17-jre-headless curl; \
         curl -sSL -o /tmp/verapdf.zip \
             "https://software.verapdf.org/releases/${VERAPDF_VERSION%.*}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"; \
@@ -65,8 +65,7 @@ RUN if [ "$WITH_VERAPDF" = "true" ]; then \
         java -jar /tmp/verapdf-src/verapdf-greenfield-*/verapdf-izpack-installer-*.jar /tmp/verapdf-auto.xml; \
         ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf; \
         rm -rf /tmp/verapdf.zip /tmp/verapdf-src /tmp/verapdf-auto.xml; \
-        verapdf --version; \
-    fi
+        verapdf --version
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

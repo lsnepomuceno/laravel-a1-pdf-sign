@@ -58,33 +58,6 @@ jobs:
       - name: Install qpdf
         run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf
 
-      - name: Run tests
-        run: composer test -- --exclude-group=network
-
-      # These reach a live timestamp authority, so an outage on their side is
-      # not a defect in this package. Reported, never blocking.
-      - name: Run tests against a live timestamp authority
-        continue-on-error: true
-        run: vendor/bin/pest --group=network
-
-  pdfa:
-    name: PDF/A conformance
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
-          coverage: none
-
-      - name: Install dependencies
-        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
-
       # veraPDF is the reference PDF/A validator and the only thing that can
       # establish a conformance verdict. Pinned rather than tracking "latest":
       # a validator that changes its verdicts between builds cannot be the
@@ -120,15 +93,18 @@ jobs:
           sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
           verapdf --version
 
-      # Blocking, unlike the timestamp authority: veraPDF is deterministic and
-      # runs offline once installed, so a failure here is this package's, not
-      # somebody else's outage.
-      #
-      # --fail-on-skipped because the group skips itself when veraPDF is absent,
-      # which is right everywhere else and would be a silent hole here: a job
-      # whose whole purpose is this group would go green having run none of it.
-      - name: Validate PDF/A conformance
-        run: vendor/bin/pest --group=pdfa --fail-on-skipped
+      # composer test carries --fail-on-skipped: every check has to run
+      # somewhere, and a skip is how one quietly stops. The PDF/A group used to
+      # skip itself when veraPDF was absent, and a job could go green having
+      # validated nothing.
+      - name: Run tests
+        run: composer test -- --exclude-group=network
+
+      # These reach a live timestamp authority, so an outage on their side is
+      # not a defect in this package. Reported, never blocking.
+      - name: Run tests against a live timestamp authority
+        continue-on-error: true
+        run: vendor/bin/pest --group=network
 
   quality:
     name: Code style and static analysis

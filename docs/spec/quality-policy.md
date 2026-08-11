@@ -157,18 +157,23 @@ suite passed straight through. `samples/` holds one signed PDF per profile plus
 a six-signature document. Regenerate them with `poc/sign-samples.php` and
 re-check after any change to `src/Signing/`.
 
-**PDF/A conformance is measured with veraPDF**, the reference validator, in
-its own group and its own CI job:
+**PDF/A conformance is measured with veraPDF**, the reference validator. It is
+installed in the development image and in CI, so it runs everywhere the suite
+runs:
 
 ```bash
-docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
+docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
 ```
 
 It **blocks**, unlike the timestamp group: veraPDF is deterministic and runs
 offline once installed, so a failure there is this package's rather than
-somebody else's outage. The group skips when the validator is absent, which is
-every service but `pdfa`, because it needs a JRE and the day-to-day image should
-not carry ~150 MB for one group.
+somebody else's outage.
+
+**Nothing skips.** `composer test` carries `--fail-on-skipped`, because every
+check has to run somewhere and a skip is how one quietly stops. veraPDF was
+behind a build argument and its group skipped by default, which meant the
+conformance claims were unverified on the machine where the work was being
+done. The JRE it costs is the price of the check actually happening.
 
 The matrix it asserts includes the cases that **fail**: a sealed document is not
 PDF/A conformant, for reasons that are the colour space rather than the
@@ -218,6 +223,9 @@ distributed, each added later than the rule.
 *Enforced by* `tests/ArchTest.php` for the first half and
 `tests/DistributionTest.php` for the second, which asks `git archive` what a
 release actually contains rather than trusting the list.
+
+Rationale, and what each instrument has caught:
+[0026](../decisions/0026-verification-tools-are-instruments.md).
 
 **One trap in that cross-check.** `Testing\DebugCertificate` gives every
 certificate it generates the same subject, `CN=Test Certificate, O=Internet

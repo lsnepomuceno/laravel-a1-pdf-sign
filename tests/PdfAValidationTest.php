@@ -17,8 +17,11 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * trailer /ID nobody would have looked for
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
  *
+ * veraPDF is installed in the development image and in CI, so this runs with
+ * the rest of the suite and never skips:
+ *
  * ```bash
- * docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
+ * docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
  * ```
  */
 function veraPdfVerdict(string $path, string $flavour): string
@@ -56,10 +59,16 @@ function signedPdfA(string $flavour, bool $seal, bool $transparent = true): stri
 }
 
 beforeEach(function () {
-    // Every service but `pdfa` is a PHP image without a JRE, so the group skips
-    // rather than failing when the validator is not installed.
+    // The development image installs veraPDF, and so does CI, so this should
+    // never fire. It stays for the machine that runs the suite outside the
+    // container: a named skip reads better than a "verapdf: not found" from the
+    // process runner.
+    //
+    // It cannot hide either. `composer test` carries --fail-on-skipped, so a
+    // skipped conformance check fails the run rather than passing quietly
+    // (docs/spec/quality-policy.md).
     if (trim((string) shell_exec('command -v verapdf')) === '') {
-        test()->markTestSkipped('veraPDF is not installed; use the pdfa compose service');
+        test()->markTestSkipped('veraPDF is not installed; run the suite through .docker');
     }
 });
 

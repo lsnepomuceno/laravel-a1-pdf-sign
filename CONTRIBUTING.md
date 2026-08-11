@@ -98,16 +98,19 @@ wrong offsets still opens in a reader that recovers by scanning.
 ### Checking PDF/A conformance
 
 `veraPDF` is the reference validator and the only thing that can establish a conformance
-verdict. It is Java, so it lives in its own compose service rather than in the image used
-for everyday work:
+verdict. It is Java and it is installed in the development image, so it runs with the rest
+of the suite:
 
 ``` bash
-$ docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
+$ docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
 ```
 
-The group skips when the validator is absent, so a normal run is unaffected. It is a
-**development and CI instrument only**: nothing in `src/` may invoke veraPDF, `pdfsig`,
-`pdftoppm` or Ghostscript, and an architectural test fails if it does.
+**No test is allowed to skip.** `composer test` carries `--fail-on-skipped`: every check
+has to run somewhere, and a skip is how one quietly stops. If you run the suite outside
+the container and veraPDF is not installed, that group will fail rather than pass silently.
+
+It is a **development and CI instrument only**: nothing in `src/` may invoke veraPDF,
+`qpdf`, `pdfsig`, `pdftoppm` or Ghostscript, and an architectural test fails if it does.
 
 ### Checking the output in a real reader
 

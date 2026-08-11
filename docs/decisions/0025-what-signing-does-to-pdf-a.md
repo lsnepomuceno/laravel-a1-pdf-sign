@@ -101,10 +101,17 @@ The signer could add that group, and it would not change the verdict while
 - `tests/Resources/pdfa-1b.pdf` and `pdfa-2b.pdf` are committed as the
   baselines.
 - **The measurement is now a gate.** `tests/PdfAValidationTest.php` runs
-  veraPDF itself, in the `pdfa` group, with a compose service and a CI job of
-  the same name. It **blocks**: veraPDF is deterministic and runs offline once
-  installed, so a failure is this package's rather than somebody else's outage,
-  which is what separates it from the timestamp group.
+  veraPDF itself, in the `pdfa` group. It **blocks**: veraPDF is deterministic
+  and runs offline once installed, so a failure is this package's rather than
+  somebody else's outage, which is what separates it from the timestamp group.
+
+  It was briefly behind a build argument, installed only by a dedicated compose
+  service, so that the everyday image would not carry a JRE. That was the wrong
+  trade: the group then skipped by default, and a suite that skips its PDF/A
+  checks leaves the conformance claims unverified on the machine where the work
+  is happening. veraPDF is installed everywhere the suite runs, and
+  `composer test` carries `--fail-on-skipped` so a skip cannot come back
+  quietly.
 
   The group asserts the failures too. A sealed document is not conformant, and
   asserting that is what will tell someone the day it changes.

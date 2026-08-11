@@ -52,26 +52,6 @@ services:
       - ../:/app
       - vendor-85:/app/vendor
 
-  # The PDF/A group, which needs veraPDF and therefore a JRE. Kept out of the
-  # services above so day-to-day work does not carry ~150 MB for a check that
-  # runs on one group:
-  #
-  #   docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
-  #
-  # It shares vendor-84 with the `php` service, so `composer install` done in
-  # either is seen by both.
-  pdfa:
-    <<: *php
-    build:
-      context: ..
-      dockerfile: .docker/Dockerfile
-      args:
-        PHP_VERSION: "8.4"
-        WITH_VERAPDF: "true"
-    volumes:
-      - ../:/app
-      - vendor-84:/app/vendor
-
 volumes:
   vendor-83:
   vendor-84:
