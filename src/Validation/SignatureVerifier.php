@@ -75,14 +75,29 @@ final readonly class SignatureVerifier
      */
     public function verifyTimestamp(string $token, string $coveredBytes): bool
     {
+        return $this->verifiedTimestampInfo($token, $coveredBytes) !== null;
+    }
+
+    /**
+     * The TSTInfo of a token that verifies and really stamps these bytes, or
+     * null.
+     *
+     * Both halves of `verifyTimestamp()` and the structure itself, because the
+     * answer "yes, and here is what the authority asserted" is strictly more
+     * than "yes" and costs the same two processes. `genTime` lives in here, and
+     * it is the only time in a signed document attributable to anyone other
+     * than the signer.
+     */
+    public function verifiedTimestampInfo(string $token, string $stampedBytes): ?string
+    {
         try {
             $tstInfo = $this->tstInfo($this->paths->tempPath(), $token);
         } catch (Throwable) {
             // A token whose own CMS does not verify writes nothing out.
-            return false;
+            return null;
         }
 
-        return $tstInfo !== '' && $this->imprints($tstInfo, $coveredBytes);
+        return $tstInfo !== '' && $this->imprints($tstInfo, $stampedBytes) ? $tstInfo : null;
     }
 
     /**

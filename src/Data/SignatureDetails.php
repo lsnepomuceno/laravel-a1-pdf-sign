@@ -2,6 +2,8 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Data;
 
+use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
+
 /**
  * One signature found in a document.
  */
@@ -26,6 +28,22 @@ final readonly class SignatureDetails extends BaseData
      *                          it says what they asserted rather than when the
      *                          bytes existed. Only an RFC 3161 timestamp makes
      *                          the time attributable to a third party.
+     * @param  ?bool  $timestampVerified  Whether the RFC 3161 token in the CMS
+     *                                    verifies and really stamps this
+     *                                    signature. Null when the signature
+     *                                    carries no token, which is the ordinary
+     *                                    case at B-B: an absence is not a failure.
+     * @param  ?int  $stampedAt  The genTime a verified token asserts. Unlike
+     *                           $signedAt this comes from the authority rather
+     *                           than the signer, so it is the only time in the
+     *                           document attributable to a third party.
+     * @param  ?string  $subFilter  The /SubFilter as written, for a caller that
+     *                              wants the raw value rather than $profile's
+     *                              reading of it.
+     * @param  ?SignatureProfile  $profile  The highest level this signature
+     *                                      actually satisfies, from what the
+     *                                      document carries rather than what it
+     *                                      claims.
      */
     public function __construct(
         public bool $verified,
@@ -39,7 +57,32 @@ final readonly class SignatureDetails extends BaseData
         public array $chain = [],
         public bool $chainReachesRoot = false,
         public ?bool $isTrusted = null,
+        public ?bool $timestampVerified = null,
+        public ?int $stampedAt = null,
+        public ?string $subFilter = null,
+        public ?SignatureProfile $profile = null,
     ) {}
+
+    /**
+     * Whether this signature carries an RFC 3161 token at all.
+     */
+    public function hasTimestamp(): bool
+    {
+        return $this->timestampVerified !== null;
+    }
+
+    /**
+     * The time this signature can be shown to have existed by.
+     *
+     * A verified token's genTime when there is one, and null otherwise:
+     * $signedAt is the signer's own clock and answers a different question, so
+     * falling back to it would let a caller read an unattested time as an
+     * attested one.
+     */
+    public function attestedAt(): ?int
+    {
+        return $this->timestampVerified === true ? $this->stampedAt : null;
+    }
 
     /**
      * How the Document Security Store names this signature.

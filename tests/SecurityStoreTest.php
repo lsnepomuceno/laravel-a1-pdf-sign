@@ -4,11 +4,6 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
 use LSNepomuceno\LaravelA1PdfSign\Validation\SecurityStoreReader;
 
-function sample(string $name): string
-{
-    return __DIR__ . '/../samples/' . $name;
-}
-
 it('reads the store a B-LT document carries', function () {
     $report = A1PdfSign::validate(sample('pades-b-lt.pdf'));
 

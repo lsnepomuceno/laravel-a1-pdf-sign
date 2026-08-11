@@ -28,6 +28,7 @@ document drifts away from the code it describes.
 | [0016](0016-trust-is-the-applications-policy.md) | Trust is the application's policy, and its verification is ours |
 | [0017](0017-the-seal-goes-where-it-was-asked-for.md) | The seal goes where it was asked for |
 | [0018](0018-prefer-the-platforms-own-constructs.md) | Prefer the platform's own constructs: Laravel's helpers, and enums over class constants |
+| [0019](0019-validation-reads-what-it-writes.md) | Validation reads what it writes, one level down |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

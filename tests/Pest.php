@@ -82,6 +82,20 @@ function resource(string $name): string
 }
 
 /**
+ * Absolute path of a committed sample.
+ *
+ * The samples are the package's own output, kept for validation in real
+ * readers. Reading them back in the suite is the same principle one step
+ * further: a document produced at pades-b-t carries a token from a real
+ * authority, and no fixture that can be generated offline does
+ * (docs/decisions/0019-validation-reads-what-it-writes.md).
+ */
+function sample(string $name): string
+{
+    return __DIR__ . '/../samples/' . $name;
+}
+
+/**
  * The contract template: two empty signature fields, laid out by someone else.
  *
  * See docs/decisions/0013-signing-into-an-existing-field.md.
