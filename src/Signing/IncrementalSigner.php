@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing;
 
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
@@ -12,6 +13,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\CadesBuilder;
@@ -21,6 +23,7 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocTimeStampWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentInfo;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DssWriter;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\FieldLockReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 
@@ -61,6 +64,9 @@ final readonly class IncrementalSigner implements PdfSigner
         // (docs/spec/quality-policy.md).
         private SignatureFieldReader $fields = new SignatureFieldReader(new DocumentReader()),
         private CertificationReader $certifications = new CertificationReader(new DocumentReader()),
+        // Appended, so the arity a hand-built signer relies on does not move
+        // (docs/decisions/0021-locking-fields-and-honouring-locks.md).
+        private FieldLockReader $locks = new FieldLockReader(new DocumentReader()),
     ) {}
 
     public function sign(
@@ -73,6 +79,7 @@ final readonly class IncrementalSigner implements PdfSigner
         ?SignatureProfile $profile = null,
         ?string $intoField = null,
         ?CertificationLevel $certification = null,
+        ?FieldLock $lock = null,
     ): SignedPdf {
         $profile ??= SignatureProfile::PadesBB;
 
@@ -80,7 +87,15 @@ final readonly class IncrementalSigner implements PdfSigner
 
         $this->guardCertification($pdfContents, $document, $certification);
 
+        $this->guardLock($lock);
+
         $target = $intoField === null ? null : $this->target($pdfContents, $document, $intoField);
+
+        // An earlier signature may have locked the field being filled, and
+        // filling it anyway breaks that signature rather than this one.
+        if ($target !== null) {
+            $this->guardFieldLocks($pdfContents, $document, $target->name);
+        }
 
         // A pre-placed field already says where the seal goes: the template drew
         // the box, which is the reason the caller chose the field.
@@ -99,6 +114,7 @@ final readonly class IncrementalSigner implements PdfSigner
             $profile,
             $target,
             $certification,
+            $lock,
         );
 
         $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
@@ -151,6 +167,41 @@ final readonly class IncrementalSigner implements PdfSigner
             $open + 1,
             self::CONTENTS_HEX_LENGTH,
         );
+    }
+
+    /**
+     * A lock that would lock nothing, or everything by accident.
+     *
+     * /Include with no fields locks nothing and /Exclude with no fields locks
+     * every field there is. Neither is plausibly what was meant, and the second
+     * is the more expensive to find out about later
+     * (docs/decisions/0021-locking-fields-and-honouring-locks.md).
+     *
+     * @throws FieldLockException
+     */
+    private function guardLock(?FieldLock $lock): void
+    {
+        if ($lock !== null && $lock->action->needsFields() && $lock->fields === []) {
+            throw FieldLockException::needsFields($lock->action->value);
+        }
+    }
+
+    /**
+     * Refuses to fill a field an earlier signature locked.
+     *
+     * The alternative is producing a document whose earlier signature every
+     * reader reports as broken, which the caller then discovers from the reader.
+     *
+     * @throws FieldLockException
+     * @throws InvalidPdfFileException
+     */
+    private function guardFieldLocks(string $pdf, DocumentInfo $document, string $name): void
+    {
+        $by = $this->locks->lockOn($pdf, $name, $document);
+
+        if ($by !== null) {
+            throw FieldLockException::locked($name, $by);
+        }
     }
 
     /**

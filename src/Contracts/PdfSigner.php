@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
@@ -39,6 +40,7 @@ interface PdfSigner
      *                                  afterwards at all.
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
+     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException
@@ -53,5 +55,6 @@ interface PdfSigner
         ?SignatureProfile $profile = null,
         ?string $intoField = null,
         ?CertificationLevel $certification = null,
+        ?FieldLock $lock = null,
     ): SignedPdf;
 }

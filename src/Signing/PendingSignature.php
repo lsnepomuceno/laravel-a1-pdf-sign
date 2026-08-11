@@ -9,6 +9,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
@@ -16,6 +17,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
@@ -48,6 +50,8 @@ final class PendingSignature
     private ?CertificationLevel $certification = null;
 
     private ?SealPlacement $placement = null;
+
+    private ?FieldLock $lock = null;
 
     private bool $withSeal = false;
 
@@ -273,6 +277,31 @@ final class PendingSignature
     }
 
     /**
+     * Locks form fields once this signature is applied, ISO 32000-1 §12.7.4.5.
+     *
+     * A narrower claim than certifying: a certification governs the whole
+     * document, a lock governs named fields. Both can be made by one signature,
+     * and they are written as two transforms in one /Reference array.
+     *
+     * ```php
+     * ->lock()                                   // every field
+     * ->lock(FieldLock::only(['Amount']))        // that one
+     * ->lock(FieldLock::except(['Countersign'])) // everything else
+     * ```
+     *
+     * A later `sign()` into a field this lock covers is refused rather than
+     * allowed to break the signature that imposed it.
+     *
+     * @see docs/decisions/0021-locking-fields-and-honouring-locks.md
+     */
+    public function lock(?FieldLock $lock = null): self
+    {
+        $this->lock = $lock ?? FieldLock::all();
+
+        return $this;
+    }
+
+    /**
      * Signs into a field the document already carries, rather than creating one.
      *
      * The case this exists for is a template someone else laid out: a contract
@@ -300,6 +329,7 @@ final class PendingSignature
 
     /**
      * @throws CertificationException
+     * @throws FieldLockException
      * @throws FileNotFoundException
      * @throws SealPlacementException
      * @throws SignatureFieldException
@@ -332,6 +362,7 @@ final class PendingSignature
             SignatureProfile::resolve($this->profile ?? $this->configuredProfile()),
             $this->targetField,
             $this->certification,
+            $this->lock,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());
