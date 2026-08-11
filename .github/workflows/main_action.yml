@@ -123,8 +123,12 @@ jobs:
       # Blocking, unlike the timestamp authority: veraPDF is deterministic and
       # runs offline once installed, so a failure here is this package's, not
       # somebody else's outage.
+      #
+      # --fail-on-skipped because the group skips itself when veraPDF is absent,
+      # which is right everywhere else and would be a silent hole here: a job
+      # whose whole purpose is this group would go green having run none of it.
       - name: Validate PDF/A conformance
-        run: vendor/bin/pest --group=pdfa
+        run: vendor/bin/pest --group=pdfa --fail-on-skipped
 
   quality:
     name: Code style and static analysis
