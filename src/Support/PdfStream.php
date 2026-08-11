@@ -14,6 +14,7 @@ final readonly class PdfStream
 {
     public function __construct(
         private PdfDictionary $dictionaries = new PdfDictionary(),
+        private PdfFilters $filters = new PdfFilters(),
     ) {}
 
     /**
@@ -67,7 +68,7 @@ final readonly class PdfStream
             $length -= $this->trailingEol($contents, $start + $length);
         }
 
-        return $this->decode(substr($contents, $start, $length), $dictionary);
+        return $this->filters->decode(substr($contents, $start, $length), $dictionary);
     }
 
     /**
@@ -81,23 +82,6 @@ final readonly class PdfStream
         }
 
         return in_array(substr($contents, $position - 1, 1), ["\n", "\r"], true) ? 1 : 0;
-    }
-
-    private function decode(string $raw, string $dictionary): ?string
-    {
-        if (! str_contains($dictionary, '/Filter')) {
-            return $raw;
-        }
-
-        if (preg_match('/\/Filter\s*\/(FlateDecode|ASCIIHexDecode)/', $dictionary, $filter) !== 1) {
-            return null;
-        }
-
-        $decoded = $filter[1] === 'FlateDecode'
-            ? @gzuncompress($raw)
-            : @hex2bin(trim($raw, "> \n\r\t"));
-
-        return $decoded === false ? null : $decoded;
     }
 
     private function declaredLength(string $dictionary): int

@@ -76,7 +76,11 @@ it('reads the declared length even when it stops short of endstream', function (
 });
 
 it('answers null for a filter it does not decode', function () {
-    $dictionary = '<</Filter/LZWDecode/Length 4>>';
+    // This used to name /LZWDecode, which is now decoded
+    // (docs/decisions/0020-decode-the-filters-documents-use.md). /DCTDecode
+    // stays out on purpose: streams are read here to find objects, and an image
+    // is never one.
+    $dictionary = '<</Filter/DCTDecode/Length 4>>';
 
     expect(new PdfStream()->contentsAt(streamObject($dictionary, 'junk'), 0, $dictionary))->toBeNull();
 });
