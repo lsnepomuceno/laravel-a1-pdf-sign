@@ -26,6 +26,13 @@ Temp
 !/samples/*.pdf
 !/samples/*.pfx
 !/samples/*.pem
+
+# The revocation fixtures, which are certificates and nothing else: the CA that
+# signed the OCSP responses and CRLs beside them, and the leaf they answer
+# about. No private key is generated into this directory, so the rule above is
+# narrowed here rather than weakened.
+# See docs/decisions/0024-revocation-is-evaluated-not-counted.md.
+!/tests/Resources/revocation/*.pem
 node_modules
 dist
 .output
