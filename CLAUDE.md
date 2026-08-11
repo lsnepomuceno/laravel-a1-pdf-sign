@@ -181,4 +181,5 @@ Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.m
 
 - `*.pdf`, `*.pfx` and `dist/` are gitignored, so never commit generated certificates or signed output. `dist/` is a build of the separate docs site (https://laravel-a1-pdf-sign.netlify.app).
 - Do not define `K_PATH_FONTS` globally: tc-lib-pdf and TCPDF 6 read it with different formats, and defining it kills TCPDF silently.
+- **PDF/A conformance is measured with veraPDF**, in the `pdfa` group and the CI job of the same name: `docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa`. It blocks, unlike the network group, and skips when the validator is absent. veraPDF, `pdfsig`, `pdftoppm` and Ghostscript are **development and CI instruments only**: nothing in `src/` may invoke one, and `tests/ArchTest.php` fails if it does.
 - Independent verification is done with poppler's `pdfsig`; it has caught bugs the suite passed straight through. `samples/` holds one signed PDF per profile plus a six-signature document. Regenerate them with `poc/sign-samples.php` and re-check them after any change to `src/Signing/`.

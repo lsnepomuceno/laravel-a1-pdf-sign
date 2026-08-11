@@ -84,6 +84,20 @@ Docker service described below.
 Both hooks can be bypassed with `--no-verify`. That is deliberate, for stashing work in
 progress; on `pre-push` it means you are choosing to push to `main` and saying so.
 
+### Checking PDF/A conformance
+
+`veraPDF` is the reference validator and the only thing that can establish a conformance
+verdict. It is Java, so it lives in its own compose service rather than in the image used
+for everyday work:
+
+``` bash
+$ docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
+```
+
+The group skips when the validator is absent, so a normal run is unaffected. It is a
+**development and CI instrument only**: nothing in `src/` may invoke veraPDF, `pdfsig`,
+`pdftoppm` or Ghostscript, and an architectural test fails if it does.
+
 ### Checking the output in a real reader
 
 Our validator shares its assumptions with the code it validates, so a green

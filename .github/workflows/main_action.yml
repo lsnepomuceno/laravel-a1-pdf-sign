@@ -57,6 +57,65 @@ jobs:
         continue-on-error: true
         run: vendor/bin/pest --group=network
 
+  pdfa:
+    name: PDF/A conformance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
+
+      # veraPDF is the reference PDF/A validator and the only thing that can
+      # establish a conformance verdict. Pinned rather than tracking "latest":
+      # a validator that changes its verdicts between builds cannot be the
+      # thing a gate is measured against.
+      # See docs/decisions/0025-what-signing-does-to-pdf-a.md.
+      - name: Install veraPDF
+        env:
+          VERAPDF_VERSION: '1.30.2'
+        run: |
+          set -eux
+          curl -sSL -o /tmp/verapdf.zip \
+            "https://software.verapdf.org/releases/${VERAPDF_VERSION%.*}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-src
+          cat > /tmp/verapdf-auto.xml <<'XML'
+          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+          <AutomatedInstallation langpack="eng">
+          <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
+          <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
+          <installpath>/opt/verapdf</installpath>
+          </com.izforge.izpack.panels.target.TargetPanel>
+          <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
+          <pack index="0" name="veraPDF GUI" selected="true"/>
+          <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
+          <pack index="3" name="veraPDF Corpus and Tests" selected="false"/>
+          <pack index="4" name="veraPDF Documentation" selected="false"/>
+          <pack index="5" name="veraPDF Sample Plugins" selected="false"/>
+          </com.izforge.izpack.panels.packs.PacksPanel>
+          <com.izforge.izpack.panels.install.InstallPanel id="install"/>
+          <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
+          </AutomatedInstallation>
+          XML
+          java -jar /tmp/verapdf-src/verapdf-greenfield-*/verapdf-izpack-installer-*.jar /tmp/verapdf-auto.xml
+          sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
+          verapdf --version
+
+      # Blocking, unlike the timestamp authority: veraPDF is deterministic and
+      # runs offline once installed, so a failure here is this package's, not
+      # somebody else's outage.
+      - name: Validate PDF/A conformance
+        run: vendor/bin/pest --group=pdfa
+
   quality:
     name: Code style and static analysis
     runs-on: ubuntu-latest

@@ -157,6 +157,30 @@ suite passed straight through. `samples/` holds one signed PDF per profile plus
 a six-signature document. Regenerate them with `poc/sign-samples.php` and
 re-check after any change to `src/Signing/`.
 
+**PDF/A conformance is measured with veraPDF**, the reference validator, in
+its own group and its own CI job:
+
+```bash
+docker compose -f .docker/compose.yaml run --rm pdfa vendor/bin/pest --group=pdfa
+```
+
+It **blocks**, unlike the timestamp group: veraPDF is deterministic and runs
+offline once installed, so a failure there is this package's rather than
+somebody else's outage. The group skips when the validator is absent, which is
+every service but `pdfa`, because it needs a JRE and the day-to-day image should
+not carry ~150 MB for one group.
+
+The matrix it asserts includes the cases that **fail**: a sealed document is not
+PDF/A conformant, for reasons that are the colour space rather than the
+signature, and asserting the failure is what will tell someone the day that
+changes ([0025](../decisions/0025-what-signing-does-to-pdf-a.md)).
+
+**veraPDF, `pdfsig`, `pdftoppm` and Ghostscript are instruments, never
+dependencies.** Nothing in `src/` may invoke one: a package that shells out to a
+JVM to answer a runtime question would be a different package, and the consuming
+application would inherit an installation requirement nobody wrote down.
+*Enforced by* `tests/ArchTest.php`.
+
 **One trap in that cross-check.** `Testing\DebugCertificate` gives every
 certificate it generates the same subject, `CN=Test Certificate, O=Internet
 Widgits Pty Ltd`, and so does `samples/certificate.pfx`. `pdfsig` resolves the

@@ -100,11 +100,33 @@ The signer could add that group, and it would not change the verdict while
   signature.
 - `tests/Resources/pdfa-1b.pdf` and `pdfa-2b.pdf` are committed as the
   baselines.
-- `tests/PdfAConformanceTest.php` checks the **structure each verdict turned
-  on**: the identifier is carried, the invisible field has an appearance, the
-  seal is DeviceRGB, the `/SMask` appears only when transparency is asked for.
-  veraPDF is Java and is not in CI, so the verdicts live in this record and the
-  suite guards the things they depended on.
+- **The measurement is now a gate.** `tests/PdfAValidationTest.php` runs
+  veraPDF itself, in the `pdfa` group, with a compose service and a CI job of
+  the same name. It **blocks**: veraPDF is deterministic and runs offline once
+  installed, so a failure is this package's rather than somebody else's outage,
+  which is what separates it from the timestamp group.
+
+  The group asserts the failures too. A sealed document is not conformant, and
+  asserting that is what will tell someone the day it changes.
+
+  Pinned to 1.30.2 in both the Dockerfile and the workflow: a validator that
+  changes its verdicts between builds cannot be the thing a gate is measured
+  against.
+
+- `tests/PdfAConformanceTest.php` keeps checking the **structure each verdict
+  turned on**: the identifier is carried, the invisible field has an appearance,
+  the seal is DeviceRGB, the `/SMask` appears only when transparency is asked
+  for. Those run everywhere, including where no JRE exists.
+
+- **veraPDF is an instrument, not a dependency**, and neither are `pdfsig`,
+  `pdftoppm` and Ghostscript. Nothing in `src/` may invoke one: a package that
+  shells out to a JVM to answer a runtime question would be a different package,
+  and the consuming application would inherit an installation requirement nobody
+  wrote down. *Enforced by* `tests/ArchTest.php`, tokenised so the comments that
+  explain the rule do not trip it.
+
+  It is installed by the `pdfa` compose service alone, behind a build argument,
+  so the day-to-day image does not carry a JRE for one group.
 - `DocTimeStampWriter` writes an invisible widget of its own and it has **not**
   been given an appearance. A B-LTA document was not part of this measurement,
   and claiming the fix covers it without measuring would be the thing this
