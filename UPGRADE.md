@@ -1,5 +1,89 @@
 # Upgrading
 
+## From 2.3.1 to 2.4.0
+
+No public class was removed and no signature was narrowed, so an application
+that calls the facade upgrades without changes. **Two things do change what you
+get**: seals now keep their transparency, and the four contracts gained members.
+
+### The seal keeps its alpha channel now
+
+`a1-pdf-sign.seal.transparent` defaults to `true`, so a seal with transparency
+is embedded as raw samples with an `/SMask` instead of being flattened onto
+white.
+
+| | Before | Now |
+|---|---|---|
+| A PNG with an alpha channel | flattened to an opaque rectangle | drawn transparent |
+| Bytes added to the document | JPEG | deflated samples plus the mask, which is larger |
+| PDF/A-1 conformance | possible | **impossible**: §6.4 forbids `/SMask` |
+
+Set `'transparent' => false` to get the old rectangle back. That is the whole
+reason the setting exists rather than the behaviour being unconditional
+([0023](docs/decisions/0023-a-seal-that-can-be-transparent.md), and
+[0025](docs/decisions/0025-what-signing-does-to-pdf-a.md) for the PDF/A
+measurement).
+
+### `sealFrom()` now uses the image you gave it
+
+`SealPlacement::$imagePath` was written and read by nothing, so the artwork was
+silently replaced by a render of the certificate. **If you were calling
+`sealFrom()`, your documents were not carrying your image and now they will.**
+
+### The contracts gained members
+
+Only for someone who *implements* one of them. Injecting or calling them is
+unaffected.
+
+| Contract | Added |
+|---|---|
+| `Contracts\A1PdfSign` | `extendArchive()` |
+| `Contracts\SealRenderer` | `fromImage()`, and a `?SealLayout $layout` argument on `render()` |
+| `Contracts\PdfSigner` | a `?FieldLock $lock` argument on `sign()` |
+| `Contracts\SignatureTransport` | the whole interface, new |
+
+`Signing\Cades\HttpTransport` keeps its name and behaviour, but
+`CadesBuilder`, `Incremental\DssWriter` and `Incremental\DocTimeStampWriter` now
+take `Contracts\SignatureTransport` rather than the concrete class. That is a
+break only for code that constructs them by hand rather than resolving them
+([0027](docs/decisions/0027-the-transport-is-a-seam.md)).
+
+### `Data\SignatureDetails` carries five more properties
+
+`$timestampVerified`, `$stampedAt`, `$subFilter`, `$profile` and `$revocation`,
+all appended with defaults, so existing construction and property reads are
+unaffected. `attestedAt()` is the one to reach for: it returns the authority's
+time when a token verifies and null otherwise, rather than falling back to
+`$signedAt`, which is the signer's own clock and answers a different question.
+
+`isRevoked()` is deliberately separate from `verified`. A revoked certificate
+still produces a signature that matches the bytes perfectly; what it stops being
+is one anyone should accept.
+
+### What is new, and optional
+
+- `->lock()` on the builder writes `/Lock` and `/FieldMDP`, and a later `sign()`
+  into a locked field is now refused
+  ([0021](docs/decisions/0021-locking-fields-and-honouring-locks.md)).
+- `A1PdfSign::extendArchive()` adds a fresh archive timestamp with no key
+  material involved, since a DocTimeStamp is signed by the authority
+  ([0022](docs/decisions/0022-the-archive-timestamp-is-a-chain.md)).
+- `SealLayout` says what the seal reads and where, overriding both the
+  certificate-derived lines and the configured geometry.
+- Validation now decodes the filters documents actually use, evaluates the
+  revocation material instead of counting it, and reports the profile a
+  signature really satisfies rather than the one it claims.
+
+### Fixed
+
+- The appended revision carries the trailer `/ID`. Without it a reader can treat
+  the revision as a different document.
+- An invisible signature gets an appearance dictionary, which is what turns
+  PDF/A-1b from FAIL to PASS for a signed document.
+- An OCSP response signed by a delegated responder is now verified against the
+  issuer before being read, so a response can no longer vouch for itself
+  ([0024](docs/decisions/0024-revocation-is-evaluated-not-counted.md)).
+
 ## From 2.3.0 to 2.3.1
 
 Two fixes. One of them **moves where an existing seal is drawn**, so read this
