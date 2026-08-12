@@ -1,3 +1,104 @@
+# 2.4.0
+
+## Validation reads what signing writes
+
+2.3 could produce a PAdES B-LT document and then tell you almost nothing about one. The report said a signature verified; it could not say whether the timestamp on it was real, which level the signature actually reached, or what the document's own revocation material said about the signer.
+
+```PHP
+$report->signatures[0]->attestedAt();   // the authority's time, or null
+$report->signatures[0]->profile;        // the level it satisfies, not the one it claims
+$report->signatures[0]->isRevoked();    // what the embedded OCSP and CRLs say
+```
+
+`attestedAt()` returns null rather than falling back to `signedAt`. The signer's own clock answers a different question, and a caller reading an unattested time as an attested one is the exact mistake the method exists to prevent.
+
+`isRevoked()` is deliberately separate from `verified`. **A revoked certificate still produces a signature that matches the bytes perfectly.** What it stops being is one anyone should accept.
+
+<hr>
+
+## ⚠️ Two things change what you already get
+
+### The seal keeps its alpha channel
+
+`a1-pdf-sign.seal.transparent` defaults to `true`.
+
+| | Before | Now |
+|---|---|---|
+| A PNG with an alpha channel | flattened onto white | drawn transparent |
+| Bytes added | JPEG | deflated samples plus an `/SMask`, larger |
+| PDF/A-1 conformance | possible | **impossible**: §6.4 forbids `/SMask` |
+
+Set `'transparent' => false` for the old opaque rectangle. That is the whole reason the setting exists rather than the behaviour being unconditional.
+
+### `sealFrom()` uses the image you gave it
+
+`SealPlacement::$imagePath` was written by `sealFrom()` and read by nothing at all, so the caller's artwork was silently replaced by a render of the certificate. **If you called `sealFrom()`, your documents were not carrying your image, and now they will.**
+
+<hr>
+
+## Locks, and honouring the ones already there
+
+```PHP
+->lock()                                   // every field
+->lock(FieldLock::only(['Amount']))        // that one
+->lock(FieldLock::except(['Countersign'])) // everything else
+```
+
+Writes `/Lock` and `/FieldMDP` as two transforms in one `/Reference` array (ISO 32000-1 §12.7.4.5). A narrower claim than certifying: a certification governs the document, a lock governs named fields.
+
+**The other half is the half that matters.** A later `sign()` into a field an existing lock covers is now refused, instead of producing a document whose earlier signature silently broke.
+
+<hr>
+
+## The archive timestamp is a chain
+
+```PHP
+A1PdfSign::extendArchive($path);
+```
+
+No certificate, no key, no password. A DocTimeStamp is signed by the authority rather than by the signer, so refreshing a B-LTA archive is something a scheduled job can do with no key material anywhere near it.
+
+<hr>
+
+## Filters documents actually use
+
+`Support\PdfFilters` decodes Flate, LZW with `/EarlyChange`, ASCII85, ASCIIHex and run-length, with the PNG and TIFF predictors. 2.3 read compressed objects only when they happened to be plain Flate, which is a guess that holds until it does not.
+
+<hr>
+
+## What this release is really about
+
+Three of the five PAdES levels this package advertises could regress **without CI going red.** Everything above `pades-b-b` needs a timestamp authority, the tests for it were in the non-blocking `network` group, and that was demonstrably not theoretical: three of those tests were committed broken, went green, and were noticed only by reading a log.
+
+`Contracts\SignatureTransport` is the fix. The HTTP transport was already injected and already the only thing in `src/` that opens a connection, but it was `final` and its three collaborators took the concrete class. **Injection you cannot substitute is not injection.**
+
+`Testing\LocalTimestampAuthority` answers with real RFC 3161 tokens from `openssl ts -reply`, which needs no server and no network. They are signed, verifiable, and carry the imprint of the bytes they were handed, so the offline tests assert that the timestamp verified rather than asserting that something was embedded. A stub returning canned bytes would have proved nothing: the imprint has to match the signature value produced in that run.
+
+Six behaviours moved from reported to gated, including PDF/A conformance at B-LTA. The live tests against a real authority stay, because a local authority cannot establish that the package interoperates with somebody else's.
+
+<hr>
+
+## PDF/A, measured rather than assumed
+
+veraPDF now runs in the development image and in CI, and it blocks. The test command carries `--fail-on-skipped`, because every check has to run somewhere and a skip is how one quietly stops running.
+
+- **An invisible signature keeps a PDF/A-1b and PDF/A-2b document conformant.** That is now a supported claim. It was not true before this release: a signature field with no appearance dictionary fails §6.9, and all six combinations measured failed until it was fixed.
+- A visible seal costs conformance, and the reason is the colour space rather than the signature.
+
+<hr>
+
+## Also fixed
+
+- The appended revision carries the trailer `/ID`. Without it, a reader may treat the revision as belonging to a different document.
+- An OCSP response signed by a delegated responder is verified against the issuer before being read (RFC 6960 §4.2.2.2). It could previously vouch for itself.
+- The archive timestamp's widget gets an appearance dictionary, the same §6.9 rule the invisible signature hit.
+
+<hr>
+
+## Upgrading
+
+No public class was removed and no signature was narrowed, so an application that calls the facade upgrades without changes. Four contracts gained members, which matters only to someone implementing one, and the three collaborators of the HTTP transport now take `Contracts\SignatureTransport` rather than the concrete class.
+
 # 2.3.1
 
 ## The seal goes where it was asked for

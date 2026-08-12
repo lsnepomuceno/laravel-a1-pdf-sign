@@ -56,6 +56,18 @@ Without a configured URL, requesting a timestamped profile throws rather than si
 
 <hr>
 
+## Extending the archive <small>(since 2.4)</small>
+
+```PHP
+A1PdfSign::extendArchive('path/to/archived.pdf');
+```
+
+An archive timestamp is a **chain, not a state**. Each new one covers the whole file including the timestamp before it, which is what lets the evidence outlive the algorithms it was built on.
+
+No certificate is involved: a DocTimeStamp is signed by the authority, not by the signer, so this is something a scheduled job can do to an archive with no key material anywhere near it.
+
+<hr>
+
 ## What happens when the material is unavailable
 
 A self-signed certificate has neither an OCSP responder nor a CRL distribution point, and a responder can simply be unreachable. In both cases the document stays at the level below rather than failing the signature, since signing must not depend on a third party being up.
@@ -64,4 +76,13 @@ A self-signed certificate has neither an OCSP responder nor a CRL distribution p
 
 ## A note on network access
 
-Timestamp, OCSP and CRL requests go through an injected HTTP transport. **The host application owns that SSRF surface**: the URLs come from your configuration, and the package never derives an endpoint from the document being signed.
+Timestamp, OCSP and CRL requests go through an injected transport. **The host application owns that SSRF surface**: the URLs come from your configuration, and the package never derives an endpoint from the document being signed.
+
+Since 2.4 that transport is an interface, `Contracts\SignatureTransport`, bound in the container. Rebinding it replaces every outbound request this package makes, which is how an application routes them through its own client, its own proxy or its own allowlist:
+
+```PHP
+// A service provider
+$this->app->bind(SignatureTransport::class, YourOwnTransport::class);
+```
+
+It is also what makes the profiles above `pades-b-b` testable without reaching an authority, which is why they are checked on every run rather than reported.
