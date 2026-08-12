@@ -1,10 +1,9 @@
 # Upgrading
 
-## Unreleased
+## From 2.4.0 to 2.5.0
 
-Accumulating on `main`, with no tag yet. Releases were coming out faster than
-the features in them justified, so this waits for something larger to travel
-with.
+Held back deliberately: releases were coming out faster than the features in
+them justified, so this one waited until it carried something worth the version.
 
 **A visible seal stops costing PDF/A conformance**, which means the bytes of
 every sealed document change. No API moves.
