@@ -10,11 +10,15 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
  * either a validator says yes or nobody knows
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
  *
- * The answer here is **no**, in all three cases, and every one of these tests
- * asserts a failure. That is deliberate. A test that only asserts the good
- * cases is silent about the bad ones, and the bad ones are what somebody has
- * to be told about the day they change
- * (docs/decisions/0032-what-signing-does-to-pdf-ua.md).
+ * The answer is that an **invisible signature keeps conformance** and a sealed
+ * one does not, on two clauses.
+ *
+ * The failures are asserted clause by clause, and that has already paid for
+ * itself once: 0032 measured three failures for a seal and one for an
+ * invisible signature, writing each list out rather than asserting "it fails".
+ * Writing /Tabs then made the invisible case conformant, which **broke this
+ * file** and forced the update instead of letting a stale expectation keep
+ * passing (docs/decisions/0032-what-signing-does-to-pdf-ua.md).
  *
  * `tests/Resources/pdfua-1.pdf` is produced from the `.fodt` beside it by
  * LibreOffice Writer 7.4, and confirmed conformant by veraPDF before anything
@@ -92,34 +96,37 @@ it('agrees the baseline is conformant before anything is done to it', function (
         ->and(pdfUaFailures(resource('pdfua-1.pdf')))->toBe([]);
 })->group('pdfua');
 
-it('costs an invisible signature its PDF/UA conformance, on one clause only', function () {
+it('keeps a PDF/UA document conformant when the signature is invisible', function () {
     $path = signedPdfUa(seal: false);
 
-    // ISO 14289-1 7.18.3: every page carrying an annotation shall have /Tabs
-    // with the value S in its page dictionary. The revision writer already
-    // rewrites the page object to add the widget to /Annots, and does not add
-    // /Tabs while it is there.
+    // This asserted a failure on ISO 14289-1 7.18.3 when 0032 measured it, and
+    // the assertion was written clause by clause so that fixing it would break
+    // this test rather than let it keep passing on a document that had become
+    // conformant. It did break, and this is the update.
     //
-    // Asserted exactly rather than "fails": this is the difference between a
-    // document one key away from conformant and one that needs a structure
-    // tree, and the day it becomes the first is the day this assertion should
-    // fail and be updated.
-    expect(veraPdfVerdict($path, 'ua1'))->toBe('FAIL')
-        ->and(pdfUaFailures($path))->toBe(['7.18.3']);
+    // The clause: every page carrying an annotation needs /Tabs with the value
+    // S. The revision writer was already rewriting that page object to add the
+    // widget to /Annots (issue #265).
+    expect(veraPdfVerdict($path, 'ua1'))->toBe('PASS')
+        ->and(pdfUaFailures($path))->toBe([]);
 })->group('pdfua');
 
-it('costs a sealed signature three clauses, whether or not the seal is transparent', function (bool $transparent) {
+it('costs a sealed signature two clauses, whether or not the seal is transparent', function (bool $transparent) {
     $path = signedPdfUa(seal: true, transparent: $transparent);
 
-    // 7.18.1: a widget annotation shall be nested within a Form tag.
-    // 7.18.3: the page carrying it needs /Tabs /S.
+    // 7.18.1: a widget annotation shall be nested within a Form tag, which
+    //         means writing into the structure tree. Nothing in src/ touches
+    //         /StructTreeRoot today.
     // 7.18.4: the field needs /TU, or every widget needs an /Alt.
     //
-    // Unlike PDF/A, transparency changes nothing here: PDF/UA has no rule
-    // against an /SMask, so the opaque and transparent seals fail identically
+    // 7.18.3 used to be here too and is gone, which is what makes the
+    // invisible case pass above.
+    //
+    // Unlike PDF/A, transparency changes nothing: PDF/UA has no rule against
+    // an /SMask, so the opaque and transparent seals fail identically
     // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
     expect(veraPdfVerdict($path, 'ua1'))->toBe('FAIL')
-        ->and(pdfUaFailures($path))->toBe(['7.18.1', '7.18.3', '7.18.4']);
+        ->and(pdfUaFailures($path))->toBe(['7.18.1', '7.18.4']);
 })->with([true, false])->group('pdfua');
 
 it('leaves a document that was never accessible exactly as it found it', function () {

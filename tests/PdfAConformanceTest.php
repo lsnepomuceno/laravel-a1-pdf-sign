@@ -175,3 +175,54 @@ it('puts an /SMask in the file only when the seal is transparent', function () {
     expect($transparent->contents)->toContain('/SMask')
         ->and($opaque->contents)->not->toContain('/SMask');
 });
+
+it('gives a page that receives a widget the tab order accessibility requires', function () {
+    // ISO 14289-1 7.18.3: every page on which there is an annotation shall
+    // contain /Tabs in its page dictionary, with the value S. A signature
+    // widget is an annotation, so appending one puts the page under the rule
+    // (docs/decisions/0032-what-signing-does-to-pdf-ua.md).
+    //
+    // Here as well as in the veraPDF group because this one runs where no JRE
+    // exists, which is the division tests/PdfAValidationTest.php describes.
+    [$pfxPath, $password] = debugCertificate();
+
+    $signed = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('test.pdf'))
+        ->sign();
+
+    $appended = substr($signed->contents, strlen(Files::read(resource('test.pdf'))));
+
+    expect($appended)->toContain('/Tabs/S');
+});
+
+it('leaves a tab order the document already declared alone', function () {
+    // /S is what accessibility asks for, and /R and /C are legitimate choices a
+    // producer makes about their own document. Overwriting one would be the
+    // signer deciding how somebody else's page is navigated, and a document
+    // arriving as PDF/UA already carries /S.
+    [$pfxPath, $password] = debugCertificate();
+
+    // Built rather than patched into the committed fixture: changing a
+    // dictionary's length shifts every offset after it, and the cross-reference
+    // table would then point into the middle of objects.
+    $original = pdfWith([
+        1 => '<</Type/Catalog/Pages 2 0 R>>',
+        2 => '<</Type/Pages/Kids[3 0 R]/Count 1>>',
+        3 => '<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Tabs/R>>',
+    ]);
+
+    $source = A1PdfSign::tempPath(true, '.pdf');
+
+    file_put_contents($source, $original);
+
+    $signed = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf($source)
+        ->sign();
+
+    $appended = substr($signed->contents, strlen($original));
+
+    expect($appended)->toContain('/Tabs/R')
+        ->and($appended)->not->toContain('/Tabs/S');
+});

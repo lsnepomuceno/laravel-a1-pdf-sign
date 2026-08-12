@@ -185,10 +185,10 @@ offline once installed, so a failure there is this package's rather than
 somebody else's outage.
 
 **PDF/UA is measured by the same binary**, which carries a `ua1` profile
-alongside the PDF/A ones, in the `pdfua` group. The answer there is that
-**signing costs a document its PDF/UA conformance**: an invisible signature on
-one clause, ISO 14289-1 7.18.3, and a sealed one on three
-([0032](../decisions/0032-what-signing-does-to-pdf-ua.md)).
+alongside the PDF/A ones, in the `pdfua` group. **An invisible signature keeps a
+document conformant**, and a sealed one costs it two clauses, ISO 14289-1 7.18.1
+and 7.18.4 ([0032](../decisions/0032-what-signing-does-to-pdf-ua.md)). It cost
+three until `/Tabs` was written, and the invisible case failed on the third.
 
 Those tests assert the failures, clause by clause. A group that only asserts
 the good cases is silent about the bad ones, and the bad ones are what somebody

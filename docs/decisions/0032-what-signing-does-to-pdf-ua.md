@@ -1,7 +1,7 @@
 # 0032: What signing does to PDF/UA, measured
 
-**Status:** implemented, and the measurement is the point. The fix is not part
-of it.
+**Status:** implemented. The measurement came first and the fix followed it,
+separately, which is the part worth copying.
 
 ## Context
 
@@ -31,6 +31,15 @@ document has to carry, and a converter does not synthesise one.
 | | veraPDF `ua1` | Failing clauses |
 |---|---|---|
 | **Baseline, unsigned** | PASS | none |
+| **Invisible signature** | **PASS** | none |
+| Opaque seal | FAIL | 7.18.1, 7.18.4 |
+| Transparent seal | FAIL | 7.18.1, 7.18.4 |
+
+Before `/Tabs` was written, which is the state this record was first published
+in, the invisible signature failed on 7.18.3 and each seal failed on all three:
+
+| | veraPDF `ua1` | Failing clauses |
+|---|---|---|
 | **Invisible signature** | FAIL | 7.18.3 |
 | Opaque seal | FAIL | 7.18.1, 7.18.3, 7.18.4 |
 | Transparent seal | FAIL | 7.18.1, 7.18.3, 7.18.4 |
@@ -46,10 +55,17 @@ The clauses, from ISO 14289-1:
 
 ## What the measurement found
 
-**An invisible signature fails on one clause, and it is the cheap one.**
-`RevisionWriter` already rewrites the page object to add the widget to
-`/Annots`, and does not add `/Tabs` while it is there. That is one key in a
-dictionary this package is already writing.
+**An invisible signature failed on one clause, and it was the cheap one.**
+`RevisionWriter` already rewrote the page object to add the widget to
+`/Annots`, and did not add `/Tabs` while it was there. That is one key in a
+dictionary this package was already writing, and it is now written (issue #265):
+**an invisible signature keeps a PDF/UA document conformant.**
+
+A page that already declares `/Tabs` is left alone, whatever it declares. `/S`
+is what accessibility asks for, and `/R` and `/C` are legitimate choices a
+producer makes about their own document; overwriting one would be the signer
+deciding how somebody else's page is navigated. A document arriving as PDF/UA
+already carries `/S`.
 
 **A seal fails on three, and the other two are not cheap.** Nesting a widget
 inside a `Form` tag means writing into the structure tree: finding
@@ -68,13 +84,19 @@ carries no structure tree, so it fails `ua1` before and after signing. The claim
 this record makes is bounded: signing costs PDF/UA conformance to documents that
 had it.
 
-### Why the invisible case is not fixed here
+### The fix was deliberately not part of the measurement
 
 0025 was written the other way round, fixing `/ID` and the missing appearance
-inside the measurement, and this record deliberately does not repeat that.
+inside the measurement, and this record deliberately did not repeat that.
 Measuring and fixing in one change makes it impossible to tell afterwards which
 verdict came from which state, and the fix touches `src/Signing`, so it changes
-the bytes of every signed document. It is raised separately.
+the bytes of every signed document.
+
+**The separation paid for itself immediately.** Because the tests named the
+clauses rather than asserting "it fails", writing `/Tabs` broke
+`tests/PdfUaValidationTest.php` and forced it to be updated to a PASS. Had the
+expectation been "this fails", the improvement would have gone unnoticed and
+the file would have kept asserting something that had stopped being true.
 
 The tests assert the failures **exactly**, clause by clause, rather than
 asserting "it fails". A document one key away from conformant and a document

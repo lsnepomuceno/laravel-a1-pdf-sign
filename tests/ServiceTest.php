@@ -1,11 +1,19 @@
 <?php
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
+use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilIdentity;
+use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
+use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
+use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
 
 it('binds the contract to the default manager as a singleton', function () {
     expect(app(A1PdfSignContract::class))->toBeInstanceOf(A1PdfSignManager::class)
@@ -82,59 +90,59 @@ it('honours the configured temp path', function () {
 
 it('lets the container swap the implementation', function () {
     $fake = new class implements A1PdfSignContract {
-        public function signFromFile(string $p, string $pw, string $pdf, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        public function signFromFile(string $p, string $pw, string $pdf, ?bool $env = null): SignedPdf
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+            return new SignedPdf('faked');
         }
 
-        public function signFromPem(string $pem, string $pw, string $pdf, ?string $key = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        public function signFromPem(string $pem, string $pw, string $pdf, ?string $key = null): SignedPdf
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+            return new SignedPdf('faked');
         }
 
-        public function signFromUpload(\Illuminate\Http\UploadedFile $upload, string $pw, string $pdf, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        public function signFromUpload(UploadedFile $upload, string $pw, string $pdf, ?bool $env = null): SignedPdf
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+            return new SignedPdf('faked');
         }
 
-        public function encryptCertificate(\Illuminate\Http\UploadedFile|string $path, string $pw, ?bool $env = null): EncryptedCertificate
+        public function encryptCertificate(UploadedFile|string $path, string $pw, ?bool $env = null): EncryptedCertificate
         {
             return new EncryptedCertificate('c', 'p', 'h');
         }
 
-        public function decryptCertificate(string $h, string $c, string $pw, bool $b64 = false, ?bool $env = null): \LSNepomuceno\LaravelA1PdfSign\Data\Certificate
+        public function decryptCertificate(string $h, string $c, string $pw, bool $b64 = false, ?bool $env = null): Certificate
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\Certificate('pem', false, [], '');
+            return new Certificate('pem', false, [], '');
         }
 
         /**
-         * @return list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField>
+         * @return list<SignatureField>
          */
         public function signatureFields(string $pdfPath): array
         {
             return [];
         }
 
-        public function validate(string $pdfPath, ?\LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore $trust = null): SignatureReport
+        public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport
         {
             return new SignatureReport([]);
         }
 
-        public function extendArchive(string $pdfPath): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        public function extendArchive(string $pdfPath): SignedPdf
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+            return new SignedPdf('faked');
         }
 
-        public function icpBrasil(string $pfxPath, string $password = ''): \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport
+        public function icpBrasil(string $pfxPath, #[SensitiveParameter] string $password = ''): IcpBrasilReport
         {
-            return new \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport(
-                \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilIdentity::none(),
+            return new IcpBrasilReport(
+                IcpBrasilIdentity::none(),
             );
         }
 
-        public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature
+        public function newSignature(): PendingSignature
         {
-            return app(\LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature::class);
+            return app(PendingSignature::class);
         }
 
         public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string
