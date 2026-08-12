@@ -10,12 +10,18 @@ return (new Configuration())
 
     /*
      * Extensions are used through the libraries that wrap them: gd by
-     * Intervention, fileinfo by UploadedFile, mbstring by Laravel's string
-     * handling, so no direct symbol reference exists to detect. They stay
-     * declared because a host missing them fails at runtime.
+     * Intervention, fileinfo by UploadedFile, so no direct symbol reference
+     * exists to detect. They stay declared because a host missing them fails at
+     * runtime.
+     *
+     * ext-mbstring is no longer among them. It used to be here for the same
+     * reason, Laravel's string handling, and Signing\Encryption\ObjectCipher
+     * now calls mb_convert_encoding() directly to write a text string as
+     * UTF-16BE, so the reference is real and the ignore was reported as never
+     * applied. Which is the analyser doing its job in the other direction.
      */
     ->ignoreErrorsOnExtensions(
-        ['ext-fileinfo', 'ext-gd', 'ext-mbstring'],
+        ['ext-fileinfo', 'ext-gd'],
         [ErrorType::UNUSED_DEPENDENCY],
     )
 
