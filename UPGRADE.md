@@ -35,6 +35,26 @@ Nothing here is configurable, and that is deliberate: the previous behaviour was
 a conformant document going in and a non-conformant one coming out.
 `seal.transparent => false` is still the lever for PDF/A-1.
 
+### Extending an archive refreshes the evidence it archives
+
+`A1PdfSign::extendArchive()` used to append the timestamp and nothing else, so a
+document could gain a fifth archive timestamp over revocation material gathered
+on the day it was signed. That is the one thing long-term validation exists to
+prevent.
+
+It now gathers fresh material for every chain the document carries and writes
+the store **before** the timestamp, which is the order ETSI EN 319 142-1 fixes:
+the evidence goes inside the file while it is still verifiable, and the
+timestamp then covers it.
+
+The timestamp authorities' own chains are included, deliberately. Their
+certificates are what the *next* archive timestamp has to be able to check, and
+they expire like any other.
+
+Extending now appends two revisions where it appended one, so the file grows
+more. Nothing about the earlier bytes changes
+([0022](docs/decisions/0022-the-archive-timestamp-is-a-chain.md)).
+
 ### Who signed, in the number Brazil knows them by
 
 A validated document now answers the first question anyone asks of one:
