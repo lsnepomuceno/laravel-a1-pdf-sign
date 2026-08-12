@@ -177,6 +177,8 @@ $signed = A1PdfSign::newSignature()
 
 **A seal with an alpha channel stays transparent since 2.4**, where before it was flattened onto white. It costs more bytes, because PDF has no PNG filter and the alpha travels as a separate `/SMask` image, and **it makes PDF/A-1 impossible**: §6.4 forbids `/SMask` outright. `'transparent' => false` in the config is the lever, and that is the whole reason the setting exists.
 
+**Since 2.5 a seal no longer costs PDF/A conformance otherwise.** It was embedded as `/DeviceRGB`, which PDF/A allows only where the file declares an OutputIntent, and it now carries its own `/ICCBased` sRGB profile instead, so it asks the document for nothing. A sealed document grows by about 2.4 KB; an invisible signature embeds nothing. PDF/A-1 with a *transparent* seal remains impossible, for the `/SMask` reason above.
+
 **The page is counted from one, in the order the page tree declares.** `SealPlacement::LAST_PAGE` is the default, so a placement that names no page puts the seal on the last one. A page the document does not have raises `SealPlacementException` rather than being clamped to the nearest one: a seal asked for on page 7 of a three-page contract is a mistake, and putting it on page 3 would look deliberate.
 
 > **Fixed in 2.3.1.** Before that release `page` and `onEveryPage` were both ignored and every seal landed on the first page. If you signed multi-page documents with 2.3.0 or earlier and want the seal to stay on page 1, pass `page: 1` explicitly.
@@ -361,3 +363,35 @@ $extended = A1PdfSign::extendArchive('path/to/archived.pdf');
 **No certificate, no key, no password.** A DocTimeStamp is signed by the timestamp authority rather than by the signer, so extending a `pades-b-lta` archive is something a scheduled job can do with no key material anywhere near it.
 
 An archive timestamp is a chain, not a state. Each new one covers the whole file including the previous timestamp, so the evidence can be renewed before the algorithms behind the older links weaken. It needs the same authority configured as `pades-b-t` and above.
+
+<hr>
+
+#### 12 - Signing a document protected by a password. <small>(since 2.5)</small>
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+A1PdfSign::newSignature()
+    ->certificate($pfxPath, $certificatePassword)
+    ->pdf('path/to/protected.pdf', 'the document password')
+    ->sign();
+```
+
+**The document's password and the certificate's are different things**, which is why they are passed separately: one opens the file, the other unlocks the key that signs it. Both are marked sensitive, so neither appears in a stack trace.
+
+The signed revision is encrypted under the document's own key, so the file stays consistent: everything written is encrypted except the signature's `/Contents`, which ISO 32000-1 §7.6.2 excludes because it is the signature over the bytes rather than content of the document.
+
+Encrypted documents were refused until 2.5, and the refusal was correct rather than good: the cross-reference table is not encrypted, so reading gets far enough to look successful while everything around it is unreadable, and a plaintext revision written beside it produces a file whose new objects no reader can decrypt.
+
+> **A wrong password is refused rather than used.** Deriving a key from it would produce noise, and noise appended beside a document is exactly the silent corruption the old refusal existed to prevent.
+
+**AES-128 and AES-256 only.** Four things are still refused, each saying why:
+
+| | |
+|---|---|
+| RC4 | Signing means writing RC4 back into the document, and this package will not weaken a file to sign it |
+| A non-standard security handler | Its key comes from somewhere this package cannot reach |
+| An encrypted document packed into object streams | Reachable, not implemented |
+| `pades-b-lt` and above, while encrypted | They append streams this does not encrypt |

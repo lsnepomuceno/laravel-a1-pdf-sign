@@ -66,6 +66,8 @@ An archive timestamp is a **chain, not a state**. Each new one covers the whole 
 
 No certificate is involved: a DocTimeStamp is signed by the authority, not by the signer, so this is something a scheduled job can do to an archive with no key material anywhere near it.
 
+**Since 2.5 it refreshes the evidence as well as the chain.** Extending used to append the timestamp alone, so a document could gain a fifth archive timestamp over revocation material gathered on the day it was signed, which is the one thing long-term validation exists to prevent. Fresh material is now gathered for every chain the document carries and written **before** the timestamp, which is the order ETSI EN 319 142-1 fixes: the evidence goes inside the file while it is still verifiable, and the timestamp then covers it. The timestamp authorities' own certificates are included, since they are what the *next* archive timestamp has to be able to check.
+
 <hr>
 
 ## What happens when the material is unavailable
