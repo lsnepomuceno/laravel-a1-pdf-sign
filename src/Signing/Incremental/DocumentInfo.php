@@ -2,6 +2,8 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
+use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\StandardSecurityHandler;
+
 /**
  * The parts of a PDF an incremental revision needs to chain onto.
  *
@@ -36,7 +38,47 @@ final readonly class DocumentInfo
          * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
          */
         public ?string $id = null,
+        /**
+         * The key material for an encrypted document, once a password has
+         * opened it. Null for the ordinary case, which is most documents
+         * (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+         */
+        public ?StandardSecurityHandler $security = null,
+        /**
+         * The object number of `/Encrypt`, which every trailer in the file has
+         * to repeat: a revision whose trailer omits it reads as the point where
+         * the document stopped being encrypted, and everything before it then
+         * decodes as noise.
+         */
+        public int $encryptRef = 0,
     ) {}
+
+    /**
+     * The same document, carrying the key that opens it.
+     */
+    public function encrypted(StandardSecurityHandler $security, int $reference): self
+    {
+        return new self(
+            $this->xref,
+            $this->size,
+            $this->root,
+            $this->infoRef,
+            $this->startxref,
+            $this->usesXrefStream,
+            $this->compressed,
+            $this->id,
+            $security,
+            $reference,
+        );
+    }
+
+    /**
+     * Whether anything written into this document has to be encrypted first.
+     */
+    public function isEncrypted(): bool
+    {
+        return $this->security !== null;
+    }
 
     /**
      * Whether this object has to be unpacked before it can be read.

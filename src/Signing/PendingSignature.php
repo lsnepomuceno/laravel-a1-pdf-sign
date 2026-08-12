@@ -53,6 +53,15 @@ final class PendingSignature
 
     private ?SealPlacement $placement = null;
 
+    /**
+     * The password that opens the document, when it is encrypted.
+     *
+     * The document's, not the certificate's, and they are unrelated: one opens
+     * the file and the other unlocks the key that signs it
+     * (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+     */
+    private string $documentPassword = '';
+
     private ?FieldLock $lock = null;
 
     private ?SealLayout $sealLayout = null;
@@ -162,7 +171,7 @@ final class PendingSignature
     /**
      * @throws FileNotFoundException
      */
-    public function pdf(string $pdfPath): self
+    public function pdf(string $pdfPath, #[\SensitiveParameter] string $password = ''): self
     {
         if (! File::exists($pdfPath)) {
             throw new FileNotFoundException($pdfPath);
@@ -170,6 +179,7 @@ final class PendingSignature
 
         $this->pdfContents = Files::read($pdfPath);
         $this->fileName = pathinfo($pdfPath, PATHINFO_BASENAME);
+        $this->documentPassword = $password;
 
         return $this;
     }
@@ -374,6 +384,7 @@ final class PendingSignature
             $this->targetField,
             $this->certification,
             $this->lock,
+            $this->documentPassword,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());

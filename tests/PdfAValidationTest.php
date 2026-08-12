@@ -27,6 +27,7 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
  * docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
  * ```
  */
+
 /**
  * Signs a baseline and hands back the path, so veraPDF can be pointed at it.
  */

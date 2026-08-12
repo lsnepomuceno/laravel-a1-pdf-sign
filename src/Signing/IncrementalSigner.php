@@ -80,10 +80,23 @@ final readonly class IncrementalSigner implements PdfSigner
         ?string $intoField = null,
         ?CertificationLevel $certification = null,
         ?FieldLock $lock = null,
+        #[\SensitiveParameter]
+        string $documentPassword = '',
     ): SignedPdf {
         $profile ??= SignatureProfile::PadesBB;
 
-        $document = $this->reader->read($pdfContents);
+        $document = $this->reader->read($pdfContents, $documentPassword);
+
+        // Everything above B-T appends further revisions of its own, carrying
+        // streams this does not encrypt: the security store and the archive
+        // timestamp's objects. Refusing beats writing a document whose later
+        // revisions no reader can decode
+        // (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+        if ($document->isEncrypted() && $profile->needsValidationMaterial()) {
+            throw new InvalidPdfFileException(
+                "an encrypted document can be signed up to pades-b-t; {$profile->value} appends a security store this package does not encrypt",
+            );
+        }
 
         $this->guardCertification($pdfContents, $document, $certification);
 

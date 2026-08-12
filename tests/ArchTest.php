@@ -12,19 +12,32 @@ arch('no debug leftovers ship')
     ->not->toBeUsed();
 
 /**
- * SignatureDetails is exempt, and only for sha1. The Document Security Store
- * keys /VRI entries by the SHA-1 of a signature's /Contents, which the PDF
- * specification fixes: the value is an identifier defined by a format this
- * package reads, not a digest this package chose for security. Computing it
+ * Two classes are exempt, each for one reason, and both exemptions are by class
+ * rather than by loosening the rule: a third use anywhere else still fails.
+ *
+ * **`Data\SignatureDetails`, for sha1 only.** The Document Security Store keys
+ * /VRI entries by the SHA-1 of a signature's /Contents, which the PDF
+ * specification fixes. The value is an identifier defined by a format this
+ * package reads, not a digest this package chose for security, and computing it
  * with anything else would simply fail to match.
  *
- * The exemption is by class rather than by loosening the rule, so a second use
- * of sha1 anywhere else still fails.
+ * **`Signing\Encryption\StandardSecurityHandler`, for md5.** ISO 32000-1
+ * §7.6.4.3 specifies MD5 as the key derivation for encryption revisions 2 to 4,
+ * so a document written under one of those opens with MD5 or does not open. The
+ * same class implements RC4 for the same kind of reason, to recompute a check
+ * value the document already carries, and refuses RC4-encrypted *content*
+ * outright (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+ *
+ * Using either to protect something new would be a defect. Using them to read
+ * what a standard already wrote is the only way to read it at all.
  */
 arch('no weak hashing or insecure randomness')
     ->expect(['md5', 'sha1', 'rand', 'srand', 'mt_rand'])
     ->not->toBeUsed()
-    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails');
+    ->ignoring([
+        'LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails',
+        'LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\StandardSecurityHandler',
+    ]);
 
 arch('no eval or dynamic code execution')
     ->expect(['eval', 'create_function'])
@@ -187,6 +200,87 @@ it('keeps the verification tools out of the package', function () {
             foreach ($tools as $tool) {
                 if (stripos($token[1], $tool) !== false) {
                     $found[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) . ": {$tool}";
+                }
+            }
+        }
+    }
+
+    expect($found)->toBe([]);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Docblocks
+|--------------------------------------------------------------------------
+|
+| Checked mechanically, because prose rots quietly. Both rules below describe
+| defects that actually shipped rather than defects worth worrying about, and
+| neither is a style preference: a docblock that documents nothing is a comment
+| nobody reads, and a docblock that documents the wrong thing is worse than
+| none, because it is believed (docs/spec/conventions.md).
+|
+| The first of them caught this very file, five minutes after it was written.
+|
+*/
+
+/**
+ * Every PHP file under a directory, as relative path to contents.
+ *
+ * @return Generator<string, string>
+ */
+function phpFilesUnder(string $directory): Generator
+{
+    /** @var SplFileInfo $file */
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory)) as $file) {
+        if ($file->getExtension() === 'php') {
+            yield str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) => (string) file_get_contents($file->getPathname());
+        }
+    }
+}
+
+it('never leaves a docblock documenting another docblock', function (string $directory) {
+    // What this catches: inserting a method between a docblock and the method
+    // it described, which leaves the first one attached to the newcomer and the
+    // original method undocumented. Both blocks look fine in isolation, the
+    // diff looks like an addition, and every tool that reads docblocks now
+    // reports the wrong thing about two methods.
+    //
+    // Found four times across src/ and tests/ on the day this was written, one
+    // of them describing `latest()` while sitting above `timestamps()`.
+    $found = [];
+
+    foreach (phpFilesUnder(dirname(__DIR__) . '/' . $directory) as $path => $contents) {
+        $lines = explode("\n", $contents);
+
+        foreach ($lines as $number => $line) {
+            if (trim($line) === '*/' && str_starts_with(trim($lines[$number + 1] ?? ''), '/**')) {
+                $found[] = "{$path}:" . ($number + 2);
+            }
+        }
+    }
+
+    expect($found)->toBe([]);
+})->with(['src', 'tests']);
+
+it('documents parameters that exist', function () {
+    // A @param surviving a rename or a removal is the other half of the same
+    // problem: the signature moved and the prose did not.
+    $found = [];
+
+    foreach (phpFilesUnder(dirname(__DIR__) . '/src') as $path => $contents) {
+        preg_match_all(
+            '#/\*\*(.*?)\*/\s*(?:\#\[[^\]]*\]\s*)*(?:(?:public|private|protected|final|static|abstract)\s+)*function\s+(\w+)\s*\((.*?)\)\s*[:{]#s',
+            $contents,
+            $matches,
+            PREG_SET_ORDER,
+        );
+
+        foreach ($matches as [, $doc, $method, $parameters]) {
+            preg_match_all('/@param\s+\S+\s+\$(\w+)/', $doc, $documented);
+
+            foreach ($documented[1] as $name) {
+                if (preg_match('/\$' . $name . '\b/', $parameters) !== 1) {
+                    $found[] = "{$path}: {$method}() documents \${$name}";
                 }
             }
         }

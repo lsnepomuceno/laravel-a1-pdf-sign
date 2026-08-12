@@ -16,6 +16,7 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  *
  * See docs/spec/quality-policy.md.
  */
+
 /**
  * @return list<string>
  */

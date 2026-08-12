@@ -4,14 +4,21 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\ObjectCipher;
 
 /**
  * Builds the objects that make a signature visible.
  *
  * A visible signature is a widget whose /AP points at a form XObject, which in
- * turn draws an image XObject (ISO 32000-1 §12.5.5 and §12.7.4.5). The JPEG is
- * embedded through /DCTDecode, so the bytes Intervention produced are stored
- * as they are: no decode and re-encode.
+ * turn draws an image XObject (ISO 32000-1 §12.5.5 and §12.7.4.5). An opaque
+ * seal is embedded through /DCTDecode, so the JPEG bytes Intervention produced
+ * are stored as they are, with no decode and re-encode; a transparent one is
+ * deflated samples plus an /SMask, because PDF has no PNG filter
+ * (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+ *
+ * Every stream here goes through an `ObjectCipher`, which does nothing at all
+ * for an ordinary document and encrypts for a document that is itself
+ * encrypted (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
  *
  * @internal
  */
@@ -24,9 +31,23 @@ final class SealAppearance
      *                            transparent. §8.9.5.4: the alpha channel is a
      *                            separate greyscale image, not a fourth
      *                            component of this one.
+     * @param  ?int  $profileNumber  The /ICCBased profile the colour space
+     *                               points at, so the seal carries its own
+     *                               colour rather than asking the document for
+     *                               an OutputIntent
+     *                               (docs/decisions/0028-the-seal-carries-its-own-colour-space.md).
+     * @param  ?ObjectCipher  $cipher  Null for an ordinary document, which is
+     *                                 the same as an inactive one.
      */
-    public function imageObject(int $number, SealImage $seal, ?int $maskNumber = null, ?int $profileNumber = null): string
-    {
+    public function imageObject(
+        int $number,
+        SealImage $seal,
+        ?int $maskNumber = null,
+        ?int $profileNumber = null,
+        ?ObjectCipher $cipher = null,
+    ): string {
+        [$contents, $length] = ($cipher ?? new ObjectCipher())->stream($seal->contents, $number);
+
         $mask = $maskNumber !== null && $seal->isTransparent() ? "/SMask {$maskNumber} 0 R" : '';
 
         // /DeviceRGB is what the samples are, but PDF/A allows it only where the
@@ -42,9 +63,9 @@ final class SealAppearance
             . "/ColorSpace{$colourSpace}/BitsPerComponent 8"
             . '/Filter/' . $seal->pdfFilter()
             . $mask
-            . '/Length ' . strlen($seal->contents)
+            . '/Length ' . $length
             . ">>\nstream\n"
-            . $seal->contents
+            . $contents
             . "\nendstream\nendobj\n";
     }
 
@@ -55,16 +76,16 @@ final class SealAppearance
      * 255 fully opaque, which is the same convention PNG's alpha uses, so the
      * samples go in as they came out.
      */
-    public function maskObject(int $number, SealImage $seal): string
+    public function maskObject(int $number, SealImage $seal, ?ObjectCipher $cipher = null): string
     {
-        $alpha = (string) $seal->alpha;
+        [$alpha, $length] = ($cipher ?? new ObjectCipher())->stream((string) $seal->alpha, $number);
 
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Image'
             . "/Width {$seal->width}/Height {$seal->height}"
             . '/ColorSpace/DeviceGray/BitsPerComponent 8'
             . '/Filter/FlateDecode'
-            . '/Length ' . strlen($alpha)
+            . '/Length ' . $length
             . ">>\nstream\n"
             . $alpha
             . "\nendstream\nendobj\n";
@@ -76,14 +97,14 @@ final class SealAppearance
      * Deflated, because it is 2.6 KB of tables that compress to well under half
      * that, and every signed document carries one.
      */
-    public function profileObject(int $number, string $profile): string
+    public function profileObject(int $number, string $profile, ?ObjectCipher $cipher = null): string
     {
-        $deflated = (string) gzcompress($profile, 9);
+        [$deflated, $length] = ($cipher ?? new ObjectCipher())->stream((string) gzcompress($profile, 9), $number);
 
         return "{$number} 0 obj\n"
             . '<</N 3'
             . '/Filter/FlateDecode'
-            . '/Length ' . strlen($deflated)
+            . '/Length ' . $length
             . ">>\nstream\n"
             . $deflated
             . "\nendstream\nendobj\n";
@@ -92,19 +113,24 @@ final class SealAppearance
     /**
      * The form XObject the widget renders, drawing the image to fill it.
      */
-    public function formObject(int $number, int $imageNumber, SealPlacement $placement, SealImage $seal): string
-    {
+    public function formObject(
+        int $number,
+        int $imageNumber,
+        SealPlacement $placement,
+        SealImage $seal,
+        ?ObjectCipher $cipher = null,
+    ): string {
         [$width, $height] = $this->size($placement, $seal);
 
         // q/Q brackets the graphics state; cm scales the unit square the image
         // is drawn into up to the box.
-        $stream = "q {$width} 0 0 {$height} 0 0 cm /Im0 Do Q";
+        [$stream, $length] = ($cipher ?? new ObjectCipher())->stream("q {$width} 0 0 {$height} 0 0 cm /Im0 Do Q", $number);
 
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Form'
             . "/BBox[0 0 {$width} {$height}]"
             . "/Resources<</XObject<</Im0 {$imageNumber} 0 R>>>>"
-            . '/Length ' . strlen($stream)
+            . '/Length ' . $length
             . ">>\nstream\n"
             . $stream
             . "\nendstream\nendobj\n";
@@ -119,14 +145,16 @@ final class SealAppearance
      * the appearance the standard asks for
      * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
      */
-    public function emptyForm(int $number): string
+    public function emptyForm(int $number, ?ObjectCipher $cipher = null): string
     {
+        [$stream, $length] = ($cipher ?? new ObjectCipher())->stream('', $number);
+
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Form'
             . '/BBox[0 0 0 0]'
             . '/Resources<<>>'
-            . '/Length 0'
-            . ">>\nstream\n\nendstream\nendobj\n";
+            . '/Length ' . $length
+            . ">>\nstream\n" . $stream . "\nendstream\nendobj\n";
     }
 
     /**

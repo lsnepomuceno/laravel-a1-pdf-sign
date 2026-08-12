@@ -3,6 +3,8 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\EncryptionDictionary;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\StandardSecurityHandler;
 
 /**
  * Reads the cross-reference chain of an existing PDF.
@@ -12,6 +14,11 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
  * Both cross-reference forms are read: the classic table of §7.5.4 and the
  * cross-reference stream of §7.5.8, which PDF 1.5 introduced and most modern
  * generators emit.
+ *
+ * An encrypted document is opened rather than refused, when the caller supplies
+ * the password that opens it. What comes back then carries the key, because
+ * the revision written next has to be encrypted with the same one
+ * (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
  *
  * @internal
  */
@@ -25,9 +32,14 @@ final class DocumentReader
     /**
      * Walks the /Prev chain and returns the effective view of the document.
      *
+     * @param  string  $password  Opens the document when it is encrypted. The
+     *                            document's own, unrelated to any certificate:
+     *                            one opens the file, the other unlocks a
+     *                            signing key.
+     *
      * @throws InvalidPdfFileException
      */
-    public function read(string $pdf): DocumentInfo
+    public function read(string $pdf, #[\SensitiveParameter] string $password = ''): DocumentInfo
     {
         if (preg_match_all('/startxref\s+(\d+)\s*%%EOF/', $pdf, $matches) === 0) {
             throw new InvalidPdfFileException('no startxref pointer found; the file is not a PDF or is truncated');
@@ -53,6 +65,7 @@ final class DocumentReader
         $infoRef = null;
         $id = null;
         $usesStream = false;
+        $encrypt = 0;
 
         // The chain runs newest to oldest, so walk it reversed and let the most
         // recent entries win.
@@ -86,13 +99,62 @@ final class DocumentReader
             if ($section['id'] !== null) {
                 $id = $section['id'];
             }
+
+            if ($section['encrypt'] > 0) {
+                $encrypt = $section['encrypt'];
+            }
         }
 
         if ($root === 0) {
             throw new InvalidPdfFileException('no /Root entry found in any trailer');
         }
 
-        return new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream, $compressed, $id);
+        $document = new DocumentInfo($xref, $size, $root, $infoRef, $latest, $usesStream, $compressed, $id);
+
+        return $encrypt === 0
+            ? $document
+            : $document->encrypted($this->securityHandler($pdf, $document, $encrypt, $id, $password), $encrypt);
+    }
+
+    /**
+     * The handler that holds the file encryption key.
+     *
+     * The encryption dictionary is the one object in the file that is never
+     * itself encrypted, which is what makes this possible at all.
+     *
+     * A document packed into object streams is refused while encrypted: the
+     * streams holding the objects are encrypted too, so reading the catalog
+     * would mean decrypting on the way in as well as encrypting on the way out.
+     * Refusing beats reading half of it
+     * (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function securityHandler(
+        string $pdf,
+        DocumentInfo $document,
+        int $number,
+        ?string $id,
+        #[\SensitiveParameter]
+        string $password,
+    ): StandardSecurityHandler {
+        if ($document->compressed !== []) {
+            throw new InvalidPdfFileException(
+                'the document is encrypted and packs its objects into object streams, which this package reads but does not decrypt',
+            );
+        }
+
+        $dictionary = EncryptionDictionary::parse($this->rawObject($pdf, $document, $number));
+
+        // §7.6.4.3: the first element of /ID goes into the key for revisions up
+        // to 4, so a document with no identifier cannot be opened at all there.
+        preg_match('/<([0-9a-fA-F\s]*)>/', (string) $id, $first);
+
+        return StandardSecurityHandler::open(
+            $dictionary,
+            $password,
+            (string) hex2bin((string) preg_replace('/\s+/', '', $first[1] ?? '')),
+        );
     }
 
     /**
@@ -260,7 +322,7 @@ final class DocumentReader
     }
 
     /**
-     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool, id: ?string}
+     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool, id: ?string, encrypt: int}
      *
      * @throws InvalidPdfFileException
      */
@@ -314,17 +376,12 @@ final class DocumentReader
 
         $trailer = substr($pdf, $trailerPosition, 2048);
 
-        // Encryption is refused rather than mis-handled. The cross-reference
-        // table is not encrypted, so reading gets far enough to look successful
-        // while the strings and streams around it are unreadable, and the
-        // revision appended beside them would not match the rest of the file.
-        // See docs/decisions/0014-refuse-encrypted-documents.md.
-        if (preg_match('/\/Encrypt\s/', $trailer) === 1) {
-            throw new InvalidPdfFileException(
-                'the document is encrypted; signing it would append a revision the rest of the file cannot decrypt',
-            );
-        }
-
+        // The reference to the encryption dictionary, when the document has
+        // one. It used to be refused outright here, and now it is answered:
+        // the key is derived from the caller's password and the appended
+        // revision is encrypted with it
+        // (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+        preg_match('/\/Encrypt\s+(\d+)\s+\d+\s+R/', $trailer, $encrypt);
         preg_match('/\/Size\s+(\d+)/', $trailer, $size);
         preg_match('/\/Root\s+(\d+)\s+\d+\s+R/', $trailer, $root);
         preg_match('/\/Prev\s+(\d+)/', $trailer, $prev);
@@ -342,6 +399,7 @@ final class DocumentReader
             'prev' => isset($prev[1]) ? (int) $prev[1] : 0,
             'stream' => false,
             'id' => $id[1] ?? null,
+            'encrypt' => isset($encrypt[1]) ? (int) $encrypt[1] : 0,
         ];
     }
 }

@@ -165,9 +165,6 @@ final readonly class SignatureReport extends BaseData
     }
 
     /**
-     * The signature applied last, which is the only one covering the whole file.
-     */
-    /**
      * The archive timestamps, which are reported separately from signatures.
      *
      * @return list<SignatureDetails>
@@ -180,6 +177,9 @@ final readonly class SignatureReport extends BaseData
         ));
     }
 
+    /**
+     * The signature applied last, which is the only one covering the whole file.
+     */
     public function latest(): ?SignatureDetails
     {
         return $this->signatures === [] ? null : $this->signatures[array_key_last($this->signatures)];

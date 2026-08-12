@@ -33,7 +33,7 @@ final readonly class XrefStreamReader
     }
 
     /**
-     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool, id: ?string}
+     * @return array{xref: array<int, int>, compressed: array<int, int>, size: int, root: int, infoRef: ?string, prev: int, stream: bool, id: ?string, encrypt: int}
      *
      * @throws InvalidPdfFileException
      */
@@ -65,6 +65,7 @@ final readonly class XrefStreamReader
             'prev' => $this->integer($dictionary, 'Prev'),
             'stream' => true,
             'id' => preg_match('/\/ID\s*(\[[^\]]*\])/', $dictionary, $id) === 1 ? $id[1] : null,
+            'encrypt' => $this->reference($dictionary, 'Encrypt'),
         ];
     }
 
