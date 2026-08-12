@@ -89,9 +89,18 @@ them into one bundle rather than handing the path to OpenSSL.
 - `PdfSignatureValidator` takes `TrustVerifier` as an **optional** constructor
   parameter, so its arity does not move. A validator built by hand without one
   degrades to the same answer as a call with no store: trust unknown.
-- Revocation is still not evaluated. The store's OCSP responses and CRLs are
-  counted, not read. That is the next step of the same shape, and this record
-  does not pretend to cover it.
+- ~~Revocation is still not evaluated.~~ **It is, since 2.4.** This section said
+  the store's OCSP responses and CRLs were counted rather than read, and called
+  that the next step of the same shape.
+  [0024](0024-revocation-is-evaluated-not-counted.md) took it: the material is
+  parsed, verified against the issuer and then read, and a response signed by a
+  delegated responder is believed only once that responder is shown to have been
+  issued by a certificate in the chain.
+
+  The shape of the answer is the one this record argued for, and it is why the
+  two stayed separate: `isRevoked()` is not `verified` and neither is
+  `isTrusted()`. A revoked certificate still produces a signature that matches
+  the bytes perfectly.
 - `fromDirectory()` shipped in 2.3.0 calling `glob()` with the brace form and
   `GLOB_BRACE`. That constant is a GNU extension and PHP leaves it **undefined
   on musl**, so the method was a fatal error on `php:8.4-alpine` for the whole

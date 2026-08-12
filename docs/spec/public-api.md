@@ -16,25 +16,33 @@ be a gratuitous break. Structure below it:
 
 ```
 src/
-├── LaravelA1PdfSignServiceProvider.php   # binds five contracts, registers two commands
+├── LaravelA1PdfSignServiceProvider.php   # binds six contracts, registers two commands
 ├── A1PdfSignManager.php                  # the A1PdfSign implementation
 ├── Facades/A1PdfSign.php
 ├── Contracts/                            # A1PdfSign, CertificateReader, PdfSigner,
-│                                         # SealRenderer, SignatureValidator
+│                                         # SealRenderer, SignatureValidator,
+│                                         # SignatureTransport
 ├── Data/                                 # final readonly value objects
-├── Enums/                                # FontSize, ImageDriver, SignatureProfile
-├── Certificates/                         # readers, parser, vault, factory
+├── Enums/                                # FontSize, ImageDriver, SignatureProfile,
+│                                         # CertificationLevel, RevocationStatus,
+│                                         # EncryptionAlgorithm, the ICP-Brasil three
+├── Certificates/                         # readers, parser, vault, factory,
+│                                         # ICP-Brasil and subjectAltName readers
 ├── Signing/
 │   ├── PendingSignature.php              # the fluent builder
 │   ├── IncrementalSigner.php             # bound to PdfSigner
+│   ├── ArchiveExtender.php               # a further archive timestamp, no key needed
 │   ├── Incremental/                      # revision writer, byte range, DSS, timestamps
+│   ├── Encryption/                       # the standard security handler
 │   └── Cades/                            # detached CMS, HTTP transport
 ├── Validation/                           # extractor, ASN.1 readers, verifier
 ├── Seal/InterventionSealRenderer.php
-├── Support/                              # Files, ProcessRunner, TemporaryFile
+├── Support/                              # Files, ProcessRunner, TemporaryFile,
+│                                         # PdfFilters, PngReader, SrgbProfile
 ├── Commands/                             # pdf:sign, pdf:validate-signature
 ├── Exceptions/                           # one class per failure mode
-└── Testing/DebugCertificate.php          # test-only certificate generation
+└── Testing/                              # test-only: certificates, a local timestamp
+                                          # authority and a revocation one
 config/a1-pdf-sign.php
 ```
 
@@ -63,6 +71,11 @@ Certificate input, one of:
 | `certificateFromPem($contents, $key, $password)` | PEM bytes already in hand |
 | `usingCertificate($certificate)` | an already-parsed `Data\Certificate` |
 
+`pdf($path, $password)` takes the **document's** password as its second
+argument, when the document is encrypted. It is unrelated to the certificate's:
+one opens the file, the other unlocks the key that signs it
+([0030](../decisions/0030-signing-a-document-that-is-encrypted.md)).
+
 Document input: `pdf($path)` or `pdfContents($bytes, $fileName)`.
 
 Everything else is optional: `info()`, `seal()`, `sealFrom()`, `profile()`,
@@ -82,6 +95,10 @@ A1PdfSign::encryptCertificate($certificate, $password);
 A1PdfSign::decryptCertificate($hashKey, $encrypted, $password, $isBase64);
 
 A1PdfSign::validate($pdfPath);      // Data\SignatureReport
+A1PdfSign::signatureFields($pdfPath);
+A1PdfSign::extendArchive($pdfPath); // a further archive timestamp, no certificate
+A1PdfSign::icpBrasil($pfxPath, $password);   // Data\IcpBrasilReport
+
 A1PdfSign::newSignature();          // Signing\PendingSignature
 A1PdfSign::tempPath($tempFile, $fileExt);
 ```
@@ -286,14 +303,27 @@ LaTeX with compression emit both, and reading only the index is not enough:
 signing rewrites the catalog, so a catalog packed into an object stream has to
 be readable before the document can be signed at all.
 
-## What the signer cannot do yet
+## What the signer cannot do
 
-Stated here because a public API is also its boundaries, and each has a record:
+Stated here because a public API is also its boundaries, and each has a record.
+
+Two entries stood here until 2.5 and are gone, which is worth saying rather than
+quietly deleting: encrypted documents were refused outright, and revocation
+material was counted rather than read. Both were named here as limits, and both
+were fixed by the records that named them
+([0030](../decisions/0030-signing-a-document-that-is-encrypted.md) and
+[0024](../decisions/0024-revocation-is-evaluated-not-counted.md)).
+
+What is left:
 
 | | |
 |---|---|
-| Encrypted documents | refused rather than corrupted. [0014](../decisions/0014-refuse-encrypted-documents.md) |
-| Revocation checking at validation time | the store's OCSP responses and CRLs are counted, not evaluated |
+| RC4-encrypted documents | refused, deliberately: signing one means writing RC4 back into it ([0030](../decisions/0030-signing-a-document-that-is-encrypted.md)) |
+| An encrypted document packed into object streams | the streams holding the objects are encrypted too, so reading the catalog needs decryption on the way in. Reachable, not done |
+| `pades-b-lt` and above, on an encrypted document | they append a security store and an archive timestamp whose streams this does not encrypt |
+| A security handler other than the standard one | its key comes from somewhere this package cannot reach, by definition |
+| Fetching revocation at validation time | evaluated from what the document carries, never from the network. That is a decision rather than a gap ([0024](../decisions/0024-revocation-is-evaluated-not-counted.md)) |
+| Signing with an A3 token, a smart card or an HSM | out of scope: this package signs with A1 material it can hold |
 
 ## Signature profiles
 
