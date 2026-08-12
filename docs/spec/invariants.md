@@ -67,12 +67,27 @@ catch it once.
 
 ---
 
-## 4. Never assume whitespace in PDF syntax
+## 4. Never assume whitespace in PDF syntax, or key order
 
 tc-lib-pdf-sign emits `/Contents<`. TCPDF emitted `/Contents <`. Both are valid.
 
 Match with `\s*`. A literal `'/Contents <'` is the exact form of the defect in
 rule 3.
+
+**This applies to reading at least as hard as to writing**, and that half was
+learned later. `Validation\PdfSignatureExtractor` matched `/ByteRange\[0 `
+literally, which is what this package emits and one of several shapes a
+document can carry: pyHanko writes `/ByteRange [0 9875 15069 565]`, so the
+extractor found no signatures and a valid document raised as unsigned.
+
+The same assumption reached key order. This package writes `/Type`,
+`/SubFilter` and `/ByteRange` ahead of the `/Contents` placeholder, so a
+window looking *backwards* from the `/ByteRange` found them. pyHanko writes
+`/Contents` first, which puts `/SubFilter` after it. Order inside a dictionary
+carries no meaning, so both are correct and only one was being read.
+
+*Enforced by* `tests/ForeignSignatureTest.php`, which validates a document
+signed by pyHanko rather than by this package.
 
 ---
 
