@@ -32,7 +32,11 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 
 - **Add tests!** - Your patch won't be accepted if it doesn't have tests.
 
-- **Document any change in behaviour** - Make sure the `README.md` and any other relevant documentation are kept up-to-date.
+- **Document any change in behaviour, in every place that describes it.** "And any other relevant
+  documentation" is the phrasing this used to carry, and it is how three surfaces went stale at
+  once: `samples/` sat a whole release behind, the documentation site stopped at 2.3.1 while 2.4
+  shipped, and the README never mentioned two facade methods that had been public for a release.
+  The list is enumerated below precisely so it cannot be read as "the obvious ones".
 
 - **Consider our release cycle** - We try to follow [SemVer v2.0.0](http://semver.org/). Randomly breaking public APIs is not an option.
 
@@ -42,6 +46,41 @@ We accept contributions via Pull Requests on [Github](https://github.com/lsnepom
 
 - **Send coherent history** - Make sure each individual commit in your pull request is meaningful. If you had to make multiple intermediate commits while developing, please [squash them](http://www.git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages) before submitting.
 
+
+## Every place that documents behaviour
+
+A change to what the package does is not finished until each surface below says the same thing.
+Some are gated, some are not, and the ones that are not are where drift has actually happened.
+
+| Surface | When it changes | Gate |
+|---|---|---|
+| **`README.md`** | any public API, and anything a new user should know | `tests/ArchTest.php` fails when a facade method is missing from it |
+| **`UPGRADE.md`** | anything a consumer will notice, under `## Unreleased` | none: review |
+| **`docs/decisions/`** | a decision changes, or a record's outcome turns out differently | `tests/SpecTest.php` checks references resolve |
+| **`docs/spec/invariants.md`** | a rule that breaks the product when violated | as above |
+| **`docs/spec/conventions.md`** | how code here is written | as above |
+| **`docs/spec/public-api.md`** | the exposed surface | as above |
+| **`docs/spec/quality-policy.md`** | a gate moves, or a floor does | as above |
+| **`ARCHITECTURE.md`** | the shape of the package, since it is the index | none: review |
+| **`CLAUDE.md`** | anything an agent working here has to know before touching `src/` | none: review |
+| **Class docblocks** | the class stops doing what its docblock says | two mechanical rules in `tests/ArchTest.php` |
+| **`samples/`** | anything under `src/Signing/`, regenerated with `poc/sign-samples.php` | `tests/SamplesTest.php` |
+| **The `docs` branch** | any public behaviour, once it is released | **none, and it is a separate pull request** |
+| **The release notes** | every tag, on GitHub and in the site's `release-notes.md` | none: review |
+
+### The `docs` branch is the one that gets forgotten
+
+The documentation site at [laravel-a1-pdf-sign.netlify.app](https://laravel-a1-pdf-sign.netlify.app)
+lives on the `docs` branch, not on `main`, so nothing in a `main` pull request can check it and no
+test on `main` will ever fail because of it. It has gone stale twice.
+
+Treat it as part of shipping rather than as follow-up: when a release goes out, the same day it goes
+out, open a pull request against `docs` adding the release notes entry and updating the reference
+pages the change touches.
+
+**Do not document unreleased behaviour there.** The site describes what is installable, so a feature
+merged to `main` and not yet tagged does not belong on it. That is the one reason the branch is
+allowed to lag, and it lags until the tag rather than after it.
 
 ## Running the checks
 
