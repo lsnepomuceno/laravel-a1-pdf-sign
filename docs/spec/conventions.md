@@ -181,8 +181,40 @@ The other half of the same problem: the signature moved and the prose did not.
 A docblock that documents nothing is a comment nobody reads. A docblock that
 documents the wrong thing is worse than no docblock, because it is believed.
 
+## Never cite a file that does not exist, and write it first
+
+A comment, docblock or document may only name a path that resolves **at the
+moment it is written**. Not "will exist when the record is written up", not
+"exists on the branch that has not landed": now.
+
+**The record comes first.** When a change wants a decision record or a
+specification section, that file is created before the code referring to it, in
+the same change and earlier in it. The reverse order produces a reference to
+something nobody wrote, and the code then documents an argument that was never
+made.
+
+This is not hypothetical and it is not other people's mistake. A comment in
+`Signing\IncrementalSigner` was written citing a decision record numbered 0034,
+about holding the document once, while the fix it described was still being
+measured. The record was never written, the reference stayed, and the only
+reason it did not ship is that `tests/SpecTest.php` refused the commit.
+
+**The first draft of this very section quoted that path in full, to illustrate
+the rule, and the gate refused that too.** Which is the right outcome: a scanner
+cannot tell an example of a bad reference from a bad reference, and a rule whose
+own text has to be exempted is a rule with a hole in it. Describe the missing
+file; do not spell it.
+
+*Enforced by* `tests/SpecTest.php`, which walks every `.php`, `.md`, `.yml` and
+`.yaml` file in the package and resolves every documentation path any of them
+cites. It is a gate rather than a review point, and it is the reason this rule
+can be stated so flatly.
+
+**What it does not catch**: a comment naming a class, method or constant that no
+longer exists. Paths are checked; symbols are not.
+
 ## What is deliberately not checked
 
-Whether the prose is *true*. No tool can, which is why the rule is narrow: it
-catches the two failures that are mechanical, and leaves the rest where it
+Whether the prose is *true*. No tool can, which is why the rules above are
+narrow: they catch the failures that are mechanical, and leave the rest where it
 belongs, with whoever changed the code.
