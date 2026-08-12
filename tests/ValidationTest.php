@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;

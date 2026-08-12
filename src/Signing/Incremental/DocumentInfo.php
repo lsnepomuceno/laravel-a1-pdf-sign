@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\StandardSecurityHandler;

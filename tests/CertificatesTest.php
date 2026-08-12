@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;

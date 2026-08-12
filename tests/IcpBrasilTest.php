@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LSNepomuceno\LaravelA1PdfSign\Certificates\IcpBrasilReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\NativeCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\SubjectAlternativeNameReader;

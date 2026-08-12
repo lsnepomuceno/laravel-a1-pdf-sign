@@ -4,7 +4,7 @@
         "poc"
     ],
     "rules": {
-        "declare_strict_types": false,
+        "declare_strict_types": true,
         "concat_space": {
             "spacing": "one"
         },

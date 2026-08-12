@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Process\Factory;
 use Illuminate\Support\Facades\Process;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\MissingBinaryException;
