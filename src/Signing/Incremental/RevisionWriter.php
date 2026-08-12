@@ -615,14 +615,42 @@ final class RevisionWriter
     private function withAnnotation(string $page, int $widgetNumber): string
     {
         if (preg_match('/\/Annots\s*\[(.*?)\]/s', $page, $matches) === 1) {
-            return str_replace(
+            $page = str_replace(
                 $matches[0],
                 '/Annots [' . trim(trim($matches[1]) . " {$widgetNumber} 0 R") . ']',
                 $page,
             );
+
+            return $this->withTabOrder($page);
         }
 
-        return $this->injectBeforeClose($page, "/Annots [{$widgetNumber} 0 R]");
+        return $this->withTabOrder($this->injectBeforeClose($page, "/Annots [{$widgetNumber} 0 R]"));
+    }
+
+    /**
+     * The page's tab order, which becomes required the moment it carries an
+     * annotation.
+     *
+     * *ISO 14289-1 7.18.3: every page on which there is an annotation shall
+     * contain in its page dictionary the key /Tabs, and its value shall be S.*
+     *
+     * Measured before it was written: an invisible signature cost a PDF/UA
+     * document its conformance, on this clause and no other
+     * (docs/decisions/0032-what-signing-does-to-pdf-ua.md). The page object is
+     * already being rewritten to carry the widget in /Annots, so this is a key
+     * in a write that was happening anyway.
+     *
+     * A page that already declares /Tabs is left alone, whatever it declares.
+     * /S is what accessibility asks for, and /R and /C are legitimate choices a
+     * producer makes about their own document: overwriting one would be the
+     * signer deciding how somebody else's page is navigated. A document that
+     * arrives claiming PDF/UA already has /S here.
+     */
+    private function withTabOrder(string $page): string
+    {
+        return preg_match('#/Tabs\s*/[A-Za-z]#', $page) === 1
+            ? $page
+            : $this->injectBeforeClose($page, '/Tabs/S');
     }
 
     /**
