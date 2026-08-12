@@ -20,7 +20,7 @@ use Exception;
  * and nothing in a log. A caller cannot tell that apart from a tampered
  * document, and the natural response is to reject something legitimate.
  */
-final class ProcessUnavailableException extends Exception
+final class ProcessUnavailableException extends Exception implements A1PdfSignException
 {
     public function __construct(string $function = 'proc_open')
     {

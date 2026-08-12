@@ -7,6 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Certificates;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificatePasswordException;
 use SensitiveParameter;
 
 /**
@@ -40,6 +41,13 @@ final readonly class NativeCertificateReader implements CertificateReader
 
         if (! openssl_pkcs12_read($contents, $parsed, $password)) {
             $error = openssl_error_string();
+
+            // A MAC computed with a key derived from the password did not
+            // verify, which is OpenSSL saying the file is intact and the
+            // password is wrong. Any other error is about the bundle itself.
+            if ($error !== false && str_contains($error, 'mac verify failure')) {
+                throw new InvalidCertificatePasswordException();
+            }
 
             throw new InvalidCertificateContentException(
                 'Unable to read the PKCS#12 bundle: '

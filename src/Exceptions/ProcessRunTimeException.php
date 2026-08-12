@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 use Exception;
 use Stringable;
 
-class ProcessRunTimeException extends Exception implements Stringable
+class ProcessRunTimeException extends Exception implements A1PdfSignException, Stringable
 {
     public function __construct(string $reason, int $code = 0, ?Exception $previous = null)
     {

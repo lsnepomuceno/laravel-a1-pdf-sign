@@ -40,11 +40,34 @@ src/
 ├── Support/                              # Files, ProcessRunner, TemporaryFile,
 │                                         # PdfFilters, PngReader, SrgbProfile
 ├── Commands/                             # pdf:sign, pdf:validate-signature
-├── Exceptions/                           # one class per failure mode
+├── Exceptions/                           # one class per failure mode, all sharing
+│                                         # the A1PdfSignException interface
 └── Testing/                              # test-only: certificates, a local timestamp
                                           # authority and a revocation one
 config/a1-pdf-sign.php
 ```
+
+## Exceptions
+
+One class per failure mode (0008), and **every one of them implements
+`Exceptions\A1PdfSignException`**, which extends `Throwable`. That is what lets
+a consuming application catch the package's failures as a group instead of
+naming sixteen classes or catching `\Exception` and swallowing everything the
+framework throws with them:
+
+```php
+$exceptions->report(function (A1PdfSignException $e) { … });
+```
+
+**The interface is surface**, and adding a class that does not implement it is a
+hole in a promise rather than an oversight. `tests/ExceptionsTest.php` builds its
+dataset from the directory, so a new exception is covered the moment the file
+exists.
+
+`InvalidCertificatePasswordException` is the one distinction worth making by
+type rather than by message: it is the most common failure in production, and it
+**extends `InvalidCertificateContentException`**, the class it used to arrive
+as, so catching the general failure still works.
 
 ## The builder
 

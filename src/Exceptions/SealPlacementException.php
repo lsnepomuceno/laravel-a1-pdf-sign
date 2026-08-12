@@ -17,7 +17,7 @@ use Stringable;
  *
  * See docs/decisions/0017-the-seal-goes-where-it-was-asked-for.md.
  */
-class SealPlacementException extends Exception implements Stringable
+class SealPlacementException extends Exception implements A1PdfSignException, Stringable
 {
     public static function pageOutOfRange(int $page, int $pageCount): self
     {

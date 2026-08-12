@@ -17,7 +17,7 @@ use Exception;
  * Raised rather than absorbed for the reason in ProcessUnavailableException:
  * absorbing it made a valid signature report as invalid.
  */
-final class MissingBinaryException extends Exception
+final class MissingBinaryException extends Exception implements A1PdfSignException
 {
     public function __construct(public readonly string $binary)
     {

@@ -16,7 +16,7 @@ use Stringable;
  *
  * See docs/decisions/0021-locking-fields-and-honouring-locks.md.
  */
-class FieldLockException extends Exception implements Stringable
+class FieldLockException extends Exception implements A1PdfSignException, Stringable
 {
     public static function locked(string $field, string $by): self
     {
