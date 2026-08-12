@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Cades;
 
 use Illuminate\Contracts\Config\Repository as Config;

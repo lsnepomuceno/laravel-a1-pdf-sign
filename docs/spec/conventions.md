@@ -181,6 +181,31 @@ The other half of the same problem: the signature moved and the prose did not.
 A docblock that documents nothing is a comment nobody reads. A docblock that
 documents the wrong thing is worse than no docblock, because it is believed.
 
+## Every file declares strict types
+
+`declare(strict_types=1);` at the top of every PHP file in `src/`, `tests/` and
+`config/`. Not optional, and not a preference.
+
+A package that signs documents does arithmetic on byte offsets constantly, and
+without it `substr($pdf, "12")` and `str_repeat('0', 8.9)` are coerced in
+silence. Both produce a file that is subtly wrong rather than one that fails,
+which is the worst outcome available to a signature.
+
+**The blast radius is smaller than it sounds, and worth knowing.** Strict types
+are decided by the *calling* file, so a consuming application that does not
+declare them keeps its own coercion when it calls this package. What becomes
+strict is this package calling itself, and this package calling PHP.
+
+It was switched off deliberately until 2026-08-12: `pint.json` carried
+`"declare_strict_types": false` and not one of the 169 files declared it.
+Turning it on changed no behaviour, and the whole suite passed unmodified,
+which says the code was already written as though it were on.
+
+*Enforced by* `pint.json`, which writes the declaration, and by
+`tests/ArchTest.php` twice: an arch expectation over `src/`, and a file walk for
+`tests/` and `config/`, where arch expectations cannot reach because those files
+declare no classes. `poc/` is out of scope, as it is for Pint and PHPStan.
+
 ## Never cite a file that does not exist, and write it first
 
 A comment, docblock or document may only name a path that resolves **at the

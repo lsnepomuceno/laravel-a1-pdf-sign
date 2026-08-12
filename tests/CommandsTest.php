@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;

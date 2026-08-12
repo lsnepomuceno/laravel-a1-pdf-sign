@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Architectural rules, executable.
  *
@@ -319,5 +321,48 @@ it('names every entry point on the front page', function () {
         }
     }
 
+    expect($missing)->toBe([]);
+});
+
+/**
+ * Every file declares strict types.
+ *
+ * `docs/spec/conventions.md` makes it mandatory, and `pint.json` writes it, so
+ * this exists for the case Pint cannot reach: a file added outside the
+ * formatter's path, or the rule being switched off again. It was off on
+ * purpose until 2026-08-12, `"declare_strict_types": false`, and none of the
+ * 169 files carried the declaration.
+ *
+ * The arch expectation covers `src/`. It cannot cover `tests/` or `config/`,
+ * because arch expectations work on classes and those files declare none:
+ * `config/a1-pdf-sign.php` returns an array and the test files are closures.
+ * Hence the walk below as well.
+ */
+arch('src declares strict types')
+    ->expect('LSNepomuceno\LaravelA1PdfSign')
+    ->toUseStrictTypes();
+
+it('declares strict types in every file, including the ones with no class in them', function () {
+    $missing = [];
+
+    foreach (['/src', '/tests', '/config'] as $directory) {
+        /** @var SplFileInfo $file */
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . $directory)) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $contents = (string) file_get_contents($file->getPathname());
+
+            if (! str_contains($contents, 'declare(strict_types=1);')) {
+                $missing[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname());
+            }
+        }
+    }
+
+    sort($missing);
+
+    // poc/ is out of scope, as it is for Pint and PHPStan: throwaway spikes,
+    // not production code.
     expect($missing)->toBe([]);
 });

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LSNepomuceno\LaravelA1PdfSign\Enums;
 
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;

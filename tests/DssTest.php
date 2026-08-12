@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Com\Tecnick\Pdf\Sign\Output\Dss;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
