@@ -17,7 +17,7 @@ use Stringable;
  *
  * See docs/decisions/0013-signing-into-an-existing-field.md.
  */
-class SignatureFieldException extends Exception implements Stringable
+class SignatureFieldException extends Exception implements A1PdfSignException, Stringable
 {
     /**
      * @param  list<string>  $available  Named so the caller can see the spelling

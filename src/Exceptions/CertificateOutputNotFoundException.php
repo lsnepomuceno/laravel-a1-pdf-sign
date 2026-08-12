@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 use Exception;
 use Stringable;
 
-class CertificateOutputNotFoundException extends Exception implements Stringable
+class CertificateOutputNotFoundException extends Exception implements A1PdfSignException, Stringable
 {
     public function __construct(int $code = 0, ?Exception $previous = null)
     {

@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 use Exception;
 use Stringable;
 
-class InvalidPFXException extends Exception implements Stringable
+class InvalidPFXException extends Exception implements A1PdfSignException, Stringable
 {
     public function __construct(string $currentFile, int $code = 0, ?Exception $previous = null)
     {

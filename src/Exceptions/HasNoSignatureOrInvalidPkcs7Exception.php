@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 use Exception;
 use Stringable;
 
-class HasNoSignatureOrInvalidPkcs7Exception extends Exception implements Stringable
+class HasNoSignatureOrInvalidPkcs7Exception extends Exception implements A1PdfSignException, Stringable
 {
     public string $currentFile;
 

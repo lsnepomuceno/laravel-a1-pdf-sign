@@ -45,6 +45,19 @@ being installed**, and a minimal container commonly has the first without the se
 `MissingBinaryException`, and an environment where `proc_open` is disabled raises `ProcessUnavailableException`.
 Neither is reported as a signature that failed to verify.
 
+Every exception this package raises implements `Exceptions\A1PdfSignException`, so an application can handle them
+as a group rather than by name:
+
+```php
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\A1PdfSignException;
+
+$exceptions->report(function (A1PdfSignException $e) { … });
+```
+
+The classes stay granular beneath it. `InvalidCertificatePasswordException` is the one worth catching on its own,
+since a wrong password is the failure a production application meets most, and it extends
+`InvalidCertificateContentException` so the general catch still works.
+
 ```bash
 php artisan vendor:publish --tag=a1-pdf-sign-config
 ```

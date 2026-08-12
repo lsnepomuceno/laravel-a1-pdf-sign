@@ -17,7 +17,7 @@ use Stringable;
  *
  * See docs/decisions/0012-certification-signatures.md.
  */
-class CertificationException extends Exception implements Stringable
+class CertificationException extends Exception implements A1PdfSignException, Stringable
 {
     /**
      * A certification has to be the first signature: it states what may happen

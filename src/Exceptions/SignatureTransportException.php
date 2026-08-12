@@ -19,7 +19,7 @@ use Throwable;
  * catching it to handle a shell-out problem was catching a network problem
  * instead (docs/decisions/0008-exceptions-name-the-real-fault.md).
  */
-final class SignatureTransportException extends Exception
+final class SignatureTransportException extends Exception implements A1PdfSignException
 {
     public function __construct(public readonly string $url, string $detail, ?Throwable $previous = null)
     {

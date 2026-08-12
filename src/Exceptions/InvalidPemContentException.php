@@ -15,7 +15,7 @@ use Stringable;
  * both present but do not belong together is a different failure, and keeps
  * its own class: {@see InvalidX509PrivateKeyException}.
  */
-class InvalidPemContentException extends Exception implements Stringable
+class InvalidPemContentException extends Exception implements A1PdfSignException, Stringable
 {
     /**
      * @param  string  $reason  What is wrong with the input, e.g. which block is missing.

@@ -54,10 +54,39 @@ arch('no trace of SAPP')
     ->expect('ddn\Sapp')
     ->not->toBeUsed();
 
-arch('exceptions are throwable and printable')
-    ->expect('LSNepomuceno\LaravelA1PdfSign\Exceptions')
-    ->toExtend(Exception::class)
-    ->toImplement(Stringable::class);
+/**
+ * Every exception extends Exception.
+ *
+ * Written as a walk rather than as an arch expectation, because the namespace
+ * now holds an interface as well, `A1PdfSignException`, and an arch rule cannot
+ * be told to skip it: `ignoring()` still reports it for not extending
+ * `Exception`, which an interface never does.
+ *
+ * **The Stringable half of the old rule is gone because it could never fail.**
+ * `Throwable` has extended `Stringable` since PHP 8, so every exception
+ * satisfies it whether or not it declares `__toString()`, and three of these
+ * classes do not declare one while the rule passed. PHPStan said so outright:
+ * "will always evaluate to true".
+ */
+it('keeps every exception throwable', function () {
+    $wrong = [];
+
+    $files = glob(dirname(__DIR__) . '/src/Exceptions/*.php');
+
+    foreach ($files === false ? [] : $files as $file) {
+        $name = 'LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\' . basename($file, '.php');
+
+        if (interface_exists($name)) {
+            continue;
+        }
+
+        if (! is_subclass_of($name, Exception::class)) {
+            $wrong[] = $name;
+        }
+    }
+
+    expect($wrong)->toBe([]);
+});
 
 arch('value objects are immutable')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Data')

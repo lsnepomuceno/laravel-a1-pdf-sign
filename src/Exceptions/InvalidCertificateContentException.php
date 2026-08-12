@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Exceptions;
 use Exception;
 use Stringable;
 
-class InvalidCertificateContentException extends Exception implements Stringable
+class InvalidCertificateContentException extends Exception implements A1PdfSignException, Stringable
 {
     /**
      * @param  string  $reason  Detail from the reader, e.g. the OpenSSL error

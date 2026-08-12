@@ -15,7 +15,7 @@ use Stringable;
  * and false of the other fifteen: a structural fault reported itself as a
  * filename problem. See docs/decisions/0008-exceptions-name-the-real-fault.md.
  */
-class InvalidPdfFileException extends Exception implements Stringable
+class InvalidPdfFileException extends Exception implements A1PdfSignException, Stringable
 {
     public function __construct(string $message, int $code = 0, ?Exception $previous = null)
     {
