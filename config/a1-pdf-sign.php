@@ -56,10 +56,21 @@ return [
             'username' => env('A1_TSA_USERNAME'),
             'password' => env('A1_TSA_PASSWORD'),
             'timeout' => 20,
+
+            // A timestamp authority is a third party over the public internet,
+            // and a transient failure would otherwise fail the signature.
+            // Attempts, not retries: 1 means try once and do not retry.
+            'attempts' => 3,
+            'backoff' => 200,
         ],
 
         'ltv' => [
             'timeout' => 10,
+
+            // Revocation material degrades the profile rather than failing it,
+            // so this is deliberately less patient than the timestamp above.
+            'attempts' => 2,
+            'backoff' => 100,
         ],
     ],
 
