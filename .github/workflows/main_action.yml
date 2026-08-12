@@ -1,17 +1,32 @@
 name: CI
 
-# Pull requests targeting main only. Branch pushes are not built: every change
-# reaches main through a pull request, so building both duplicated each run.
+# Pull requests targeting main, and main itself after a merge.
+#
+# The second is not the duplication it looks like. A pull request is tested
+# against its own branch, not against main with it merged, so two branches that
+# are each green can still produce a main that is not: on 2026-08-11 two of them
+# were merged an hour apart, both touching the same test helper, and the merged
+# result was only verified because someone ran the suite by hand.
+#
+# It is also what makes the README's test badge able to say anything: a badge
+# reports the default branch, and until now the default branch had never been
+# built.
 on:
   pull_request:
+    branches: [ main ]
+  push:
     branches: [ main ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
-  cancel-in-progress: true
+  # head_ref is empty on a push, so fall back to the ref: without it every
+  # push to main would share one group and cancel the run before it.
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Superseding a pull request's run is a saving; superseding a main build is a
+  # merge that never got verified, which is the whole reason main is built.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
