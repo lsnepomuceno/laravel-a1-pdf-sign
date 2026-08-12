@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document
+  xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+  xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+  xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  office:version="1.3"
+  office:mimetype="application/vnd.oasis.opendocument.text">
+ <office:meta>
+  <dc:title>Accessible baseline for signature testing</dc:title>
+  <dc:language>en-GB</dc:language>
+ </office:meta>
+ <office:styles>
+  <style:default-style style:family="paragraph">
+   <style:text-properties fo:language="en" fo:country="GB"/>
+  </style:default-style>
+ </office:styles>
+ <office:body>
+  <office:text>
+   <text:h text:outline-level="1">Accessible baseline</text:h>
+   <text:p>This document exists to be signed, so that what signing does to
+   PDF/UA conformance can be measured rather than argued about. It carries a
+   title, a language, and a tagged heading, which is what the machine-checkable
+   part of ISO 14289-1 asks a document this simple to have.</text:p>
+   <text:h text:outline-level="2">Second section</text:h>
+   <text:p>A second heading, so the structure tree has more than one branch.</text:p>
+  </office:text>
+ </office:body>
+</office:document>
