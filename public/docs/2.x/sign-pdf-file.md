@@ -127,6 +127,7 @@ Signature fields must not collide, so each revision gets its own name automatica
 ```PHP
 <?php
 
+use LSNepomuceno\LaravelA1PdfSign\Data\SealLayout;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
@@ -162,7 +163,19 @@ $signed = A1PdfSign::newSignature()
     ->pdf('path/to/document.pdf')
     ->sealFrom('path/to/seal.png')
     ->sign();
+
+// What the seal says and where, overriding the certificate-derived lines
+// (since 2.4)
+$signed = A1PdfSign::newSignature()
+    ->certificate('path/to/certificate.pfx', 'password')
+    ->pdf('path/to/document.pdf')
+    ->seal(layout: SealLayout::saying(['Approved', 'Protocol 4471']))
+    ->sign();
 ```
+
+> **Fixed in 2.4.** `sealFrom()` wrote the image path into the placement and nothing read it back, so the artwork was silently replaced by a render of the certificate. If you called `sealFrom()` before 2.4, your documents were not carrying your image.
+
+**A seal with an alpha channel stays transparent since 2.4**, where before it was flattened onto white. It costs more bytes, because PDF has no PNG filter and the alpha travels as a separate `/SMask` image, and **it makes PDF/A-1 impossible**: §6.4 forbids `/SMask` outright. `'transparent' => false` in the config is the lever, and that is the whole reason the setting exists.
 
 **The page is counted from one, in the order the page tree declares.** `SealPlacement::LAST_PAGE` is the default, so a placement that names no page puts the seal on the last one. A page the document does not have raises `SealPlacementException` rather than being clamped to the nearest one: a seal asked for on page 7 of a three-page contract is a mistake, and putting it on page 3 would look deliberate.
 
@@ -308,3 +321,43 @@ The two cross-reference forms cannot be mixed: appending a classic table to a do
 Object streams took a further release because reading the index is not enough. The catalog is a dictionary, and a dictionary is exactly what gets packed; signing rewrites the catalog to register the field, so a catalog it cannot read is a document it cannot sign. **2.2 read the index and still refused most of these documents.** Nothing is unpacked in place: the revision writes the changed objects back at the top level, and the newer cross-reference entry supersedes the packed one.
 
 If you are signing documents from a source that previously failed, this is why.
+
+<hr>
+
+#### 10 - Locking the fields a signature covers. <small>(since 2.4)</small>
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+A1PdfSign::newSignature()
+    ->certificate('path/to/certificate.pfx', 'password')
+    ->pdf('path/to/contract.pdf')
+    ->lock()                                    // every field
+    ->sign();
+
+->lock(FieldLock::only(['Amount', 'DueDate'])) // those two
+->lock(FieldLock::except(['Countersign']))     // everything but that one
+```
+
+A lock is **a narrower claim than certifying**. A certification governs the whole document; a lock governs the fields you name. One signature can make both, and they are written as two transforms in one `/Reference` array (ISO 32000-1 §12.7.4.5).
+
+**The half that matters is the reading, not the writing.** A later `sign()` into a field an existing lock covers raises `FieldLockException` instead of producing a document whose earlier signature silently stopped verifying. Locks other producers wrote are honoured the same way as the ones this package writes.
+
+<hr>
+
+#### 11 - Extending an archive. <small>(since 2.4)</small>
+
+```PHP
+<?php
+
+use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+
+$extended = A1PdfSign::extendArchive('path/to/archived.pdf');
+```
+
+**No certificate, no key, no password.** A DocTimeStamp is signed by the timestamp authority rather than by the signer, so extending a `pades-b-lta` archive is something a scheduled job can do with no key material anywhere near it.
+
+An archive timestamp is a chain, not a state. Each new one covers the whole file including the previous timestamp, so the evidence can be renewed before the algorithms behind the older links weaken. It needs the same authority configured as `pades-b-t` and above.

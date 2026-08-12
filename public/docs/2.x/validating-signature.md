@@ -44,6 +44,15 @@ foreach ($report->signatures as $signature) {
     $signature->chain;                       // list<Signer>, leaf first
     $signature->chainReachesRoot;            // bool, does it end at a self-signed root
 
+    // since 2.4
+    $signature->hasTimestamp();       // bool, is there an RFC 3161 token at all
+    $signature->timestampVerified;    // ?bool, does it verify and really stamp this signature
+    $signature->attestedAt();         // ?int, the authority's time, never the signer's
+    $signature->profile;              // ?SignatureProfile, the level it actually satisfies
+    $signature->subFilter;            // ?string, the /SubFilter as written
+    $signature->revocation;           // RevocationStatus
+    $signature->isRevoked();          // bool
+
     $signer = $signature->signer();
     $signer?->commonName;
     $signer?->organization;
@@ -113,11 +122,61 @@ $store?->crls;                       // int
 $store?->covers($signature);         // is there material for this signature specifically?
 ```
 
-This reports **what is there, not that it is good**. Counting an OCSP response is not evaluating it: revocation is not checked at validation time, and a store with certificates but no entry for a given signature is carrying material for a different one.
+Up to 2.3 this reported **what was there, not that it was good**: counting an OCSP response is not evaluating one. Since 2.4 the material is evaluated, and section 8 is that.
+
+A store with certificates but no entry for a given signature is still carrying material for a different one, which is what `covers()` answers.
 
 <hr>
 
-#### 7 - Certification. <small>(since 2.2)</small>
+#### 7 - The timestamp, verified. <small>(since 2.4)</small>
+
+A `pades-b-t` document carries an RFC 3161 token. Up to 2.3 the report could say the signature verified and nothing about the token on it.
+
+```PHP
+$signature = $report->latest();
+
+$signature?->hasTimestamp();      // is there a token at all
+$signature?->timestampVerified;   // ?bool
+$signature?->attestedAt();        // ?int, the genTime a verified token asserts
+$signature?->profile;             // ?SignatureProfile
+$signature?->subFilter;           // ?string
+```
+
+**`attestedAt()` returns `null` rather than falling back to `signedAt`.** They answer different questions: one is a third party's clock, the other is the signer's own, and a caller reading an unattested time as an attested one is the mistake the method exists to prevent.
+
+`timestampVerified` is `null` when there is no token, which is the ordinary case at `pades-b-b`. **An absence is not a failure**, and reporting it as `false` would say the token was checked and rejected.
+
+`profile` reports the level the signature **actually satisfies**, read from what the document carries. `subFilter` is the value as written, for a caller who would rather read it themselves:
+
+```PHP
+$signature?->subFilter;   // 'ETSI.CAdES.detached', what it claims
+$signature?->profile;     // SignatureProfile::PadesBB, what it can prove
+```
+
+A document can claim a level it does not reach. A `/SubFilter` of `ETSI.CAdES.detached` says nothing about whether a timestamp is present, so the two are reported separately rather than one being derived from the other.
+
+<hr>
+
+#### 8 - Revocation, evaluated. <small>(since 2.4)</small>
+
+```PHP
+$signature = $report->latest();
+
+$signature?->revocation;   // RevocationStatus: Good, Revoked or Unknown
+$signature?->isRevoked();  // bool
+```
+
+The OCSP responses and CRLs the document carries are parsed, **verified against the issuer**, and then read. All three steps matter: an OCSP response signed by a delegated responder is only believed once that responder is shown to have been issued by a certificate in the chain (RFC 6960 §4.2.2.2). Without that check a response could vouch for itself.
+
+`Unknown` is a real answer, and it covers three different situations: the document carries no material, it carries some but none mentioning this certificate, or what it carries does not verify against the issuer. None of those is evidence of revocation, and reporting them as `Good` would be inventing evidence.
+
+> **`isRevoked()` is separate from `verified`, and it has to be.** A revoked certificate still produces a signature that matches the bytes perfectly. What it stops being is one anyone should accept.
+
+This reads only what the document already carries. **Nothing is fetched at validation time**, so validation makes no network request and cannot be made to.
+
+<hr>
+
+#### 9 - Certification. <small>(since 2.2)</small>
 
 Whether the document's author certified it, and what that permits:
 
@@ -133,7 +192,7 @@ Half a certification is not reported as one: a `/Perms` entry naming a signature
 
 <hr>
 
-#### 8 - Trust. <small>(since 2.3)</small>
+#### 10 - Trust. <small>(since 2.3)</small>
 
 `isValid()` answers whether each signature matches the document. Whether to accept the signer is a separate question, and it is answered against roots you name:
 
@@ -168,13 +227,15 @@ OpenSSL does the path validation, so each intermediate's validity window, `basic
 
 <hr>
 
-#### 9 - What validation still does not do.
+#### 11 - What validation still does not do.
 
-**Revocation is not evaluated.** A `pades-b-lt` document carries OCSP responses and CRLs, and section 6 counts them. It does not read them, so "the material is present" is the answer, not "the certificate was not revoked".
+**It never goes to the network.** Revocation is evaluated since 2.4, but only from the material the document already carries. A signature whose certificate was revoked *after* signing, with no OCSP response in the file saying so, reports `Unknown`: the answer is somewhere on the internet, and fetching it is the host application's decision rather than the validator's.
+
+That is the same rule as everywhere else here. Signing reaches an authority because it has to; validation reads bytes.
 
 <hr>
 
-#### 10 - Verifying independently.
+#### 12 - Verifying independently.
 
 Our validator shares its assumptions with the code that produced the signature, so it is worth checking against something that does not. Poppler's `pdfsig` has caught bugs in this package that the whole test suite passed straight through:
 

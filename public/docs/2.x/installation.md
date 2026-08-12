@@ -58,8 +58,14 @@ return [
         'driver' => env('A1_PDF_SIGN_IMAGE_DRIVER', 'gd'), // gd | imagick
         'font'   => ['path' => null, 'size' => 'large', 'color' => '#16A085'],
         'background' => null,
+
+        // since 2.4
+        'transparent' => true,                    // honour the artwork's alpha channel
+        'text' => ['x' => 160, 'rows' => [80, 150, 250]],
     ],
 ];
 ```
+
+`transparent` defaults to **`true` since 2.4**, where a seal was previously flattened onto white. It costs bytes, since the alpha travels as a separate `/SMask` image rather than inside a JPEG, and it makes PDF/A-1 impossible: §6.4 forbids `/SMask`. Set it to `false` for the old opaque rectangle.
 
 Every argument that has a configured default is nullable at the call site: passing `null` means "use the configuration", so a call site never has to repeat an infrastructure decision.
