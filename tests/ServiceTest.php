@@ -125,6 +125,13 @@ it('lets the container swap the implementation', function () {
             return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
         }
 
+        public function icpBrasil(string $pfxPath, string $password = ''): \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport
+        {
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport(
+                \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilIdentity::none(),
+            );
+        }
+
         public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature
         {
             return app(\LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature::class);

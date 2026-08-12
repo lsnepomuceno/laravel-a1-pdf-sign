@@ -2,7 +2,10 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Testing;
 
+use LSNepomuceno\LaravelA1PdfSign\Enums\IcpBrasilCertificateType;
+use LSNepomuceno\LaravelA1PdfSign\Enums\IcpBrasilOtherName;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
 use OpenSSLAsymmetricKey;
 use OpenSSLCertificate;
 use OpenSSLCertificateSigningRequest;
@@ -134,6 +137,137 @@ final class DebugCertificate
         /** @var string $pfx */
         /** @var string $rootPem */
         return [$pfx, self::PASSWORD, $rootPem];
+    }
+
+    /**
+     * A certificate shaped like an ICP-Brasil one, for reading the fields back.
+     *
+     * **It is self-signed, and that is the point of saying so here.** It
+     * carries the `otherName` fields the Receita Federal's layout fixes, so a
+     * parser can be tested against something with the right shape, and it
+     * chains to nothing: no trust store will accept it, and none should
+     * (docs/decisions/0029-the-identity-a-brazilian-signer-is-known-by.md).
+     *
+     * @param  array<string, string>  $otherNames  OID to written value,
+     *                                             replacing the defaults. Pass a
+     *                                             malformed one to exercise a
+     *                                             finding.
+     * @return array{0: string, 1: string} The PFX bytes and its password.
+     *
+     * @throws CertificateOutputNotFoundException
+     */
+    public static function icpBrasil(
+        IcpBrasilCertificateType $type = IcpBrasilCertificateType::Individual,
+        array $otherNames = [],
+        string $commonName = 'JOAO DA SILVA:11144477735',
+        int $daysValid = 600,
+    ): array {
+        // An empty override leaves the field out entirely, which is how a test
+        // expresses "this certificate does not carry it". An empty otherName is
+        // a different thing, and not the one anybody wants to check.
+        $fields = array_filter([...self::icpBrasilFields($type), ...$otherNames], static fn(string $value): bool => $value !== '');
+
+        $key = self::key();
+
+        $x509 = TemporaryFile::with(
+            sys_get_temp_dir(),
+            '.cnf',
+            self::openSslConfiguration($fields),
+            static function (TemporaryFile $configuration) use ($key, $commonName, $daysValid): OpenSSLCertificate {
+                $options = ['digest_alg' => 'sha256', 'config' => $configuration->path, 'x509_extensions' => 'icp'];
+
+                // openssl_csr_new takes the key by reference, so it is handed a
+                // copy: the analyser widens anything that function touches to
+                // mixed, and the signing call below needs the type intact.
+                $request = $key;
+                $csr = openssl_csr_new(['commonName' => $commonName, 'countryName' => 'BR'], $request, $options);
+
+                if (! $csr instanceof OpenSSLCertificateSigningRequest) {
+                    throw new RuntimeException('Unable to generate the ICP-Brasil test CSR: ' . openssl_error_string());
+                }
+
+                $signed = openssl_csr_sign($csr, null, $key, $daysValid, $options);
+
+                if ($signed === false) {
+                    throw new RuntimeException('Unable to sign the ICP-Brasil test certificate: ' . openssl_error_string());
+                }
+
+                return $signed;
+            },
+        );
+
+        $pfx = '';
+
+        if (! openssl_pkcs12_export($x509, $pfx, $key, self::PASSWORD)) {
+            throw new CertificateOutputNotFoundException();
+        }
+
+        /** @var string $pfx */
+        return [$pfx, self::PASSWORD];
+    }
+
+    /**
+     * The fields each profile is required to carry, filled with values that
+     * satisfy the check digits.
+     *
+     * @return array<string, string>
+     */
+    private static function icpBrasilFields(IcpBrasilCertificateType $type): array
+    {
+        // 8 birth + 11 CPF + 11 NIS + 15 RG + 6 issuer, and "unavailable" is
+        // written as zeros rather than left out.
+        $holder = '11081985' . '11144477735' . '12345678901' . '000000012345678' . 'SSPSP';
+
+        if ($type === IcpBrasilCertificateType::LegalEntity) {
+            return [
+                IcpBrasilOtherName::ResponsibleName->value => 'JOAO DA SILVA',
+                IcpBrasilOtherName::CompanyRegistry->value => '11222333000181',
+                IcpBrasilOtherName::ResponsibleData->value => $holder,
+                IcpBrasilOtherName::CompanySocialSecurity->value => '000000000000',
+            ];
+        }
+
+        return [
+            IcpBrasilOtherName::HolderData->value => $holder,
+            // 12 registration + 3 zone + 4 section + 22 municipality.
+            IcpBrasilOtherName::VoterRegistration->value => '465555610469' . '001' . '0477' . 'SAOPAULOSP',
+            IcpBrasilOtherName::HolderSocialSecurity->value => '000000000000',
+        ];
+    }
+
+    /**
+     * An openssl configuration carrying the fields as `otherName` entries.
+     *
+     * OCTET STRING because the specification says so, in as many words: "the
+     * information in each OtherName field shall be stored as an ASN.1 OCTET
+     * STRING character string". Real certificates also use UTF8String, and the
+     * reader accepts both, so this generates the one the rule names.
+     *
+     * @param  array<string, string>  $fields
+     */
+    private static function openSslConfiguration(array $fields): string
+    {
+        $entries = [];
+        $index = 0;
+
+        foreach ($fields as $oid => $value) {
+            $index++;
+            $entries[] = "otherName.{$index} = {$oid};FORMAT:ASCII,OCTETSTRING:{$value}";
+        }
+
+        return implode("\n", [
+            '[req]',
+            'distinguished_name = dn',
+            '[dn]',
+            '[icp]',
+            'subjectAltName = @alt',
+            'basicConstraints = CA:FALSE',
+            'keyUsage = critical, digitalSignature, nonRepudiation, keyEncipherment',
+            '[alt]',
+            ...$entries,
+            'email = signer@example.test',
+            '',
+        ]);
     }
 
     /**

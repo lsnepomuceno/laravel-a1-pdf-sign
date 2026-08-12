@@ -12,9 +12,11 @@ use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
@@ -22,6 +24,8 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\ArchiveExtender;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
+use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
+use LSNepomuceno\LaravelA1PdfSign\Validation\IcpBrasilValidator;
 use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
 use SensitiveParameter;
 
@@ -147,6 +151,44 @@ final readonly class A1PdfSignManager implements A1PdfSign
             Files::read($pdfPath),
             basename($pdfPath),
         );
+    }
+
+    public function icpBrasil(
+        string $pfxPath,
+        #[SensitiveParameter]
+        string $password = '',
+    ): IcpBrasilReport {
+        $bytes = Files::read($pfxPath);
+
+        // PEM needs no reader and no password: the identity is a public field
+        // of the certificate, and demanding a private key to read one would be
+        // asking for the wrong thing. Gated on content rather than on the
+        // extension, since PEM ships as .pem and .crt alike.
+        $bundle = Pem::hasCertificate($bytes)
+            ? $bytes
+            : $this->container->make(CertificateReader::class)->read($bytes, $password)->original;
+
+        $certificate = Pem::certificates($bundle)[0] ?? '';
+
+        return $this->container->make(IcpBrasilValidator::class)->validate(
+            $certificate,
+            $this->commonName($certificate),
+        );
+    }
+
+    /**
+     * The subject common name, for the cross-check against the CPF in the
+     * extension.
+     */
+    private function commonName(string $certificate): ?string
+    {
+        $parsed = openssl_x509_parse($certificate, false);
+
+        $name = is_array($parsed) && is_array($parsed['subject'] ?? null)
+            ? ($parsed['subject']['commonName'] ?? null)
+            : null;
+
+        return is_string($name) ? $name : null;
     }
 
     public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string

@@ -35,6 +35,37 @@ Nothing here is configurable, and that is deliberate: the previous behaviour was
 a conformant document going in and a non-conformant one coming out.
 `seal.transparent => false` is still the lever for PDF/A-1.
 
+### Who signed, in the number Brazil knows them by
+
+A validated document now answers the first question anyone asks of one:
+
+```php
+$signer = A1PdfSign::validate($path)->signers()[0];
+
+$signer->icpBrasil?->cpf;                 // '11144477735'
+$signer->icpBrasil?->cnpj;                // the company, for an e-CNPJ
+$signer->icpBrasil?->formattedRegistry(); // '11.222.333/0001-81'
+$signer->name();                          // 'JOAO DA SILVA', without the number
+```
+
+Before this, the CPF was only available glued to the end of `commonName`, so
+every consumer wrote the same `explode(':')`, which is wrong for an e-CNPJ:
+its common name carries the company while the CPF in the extension belongs to
+whoever answers for it.
+
+`A1PdfSign::icpBrasil($pfxPath, $password)` checks the certificate against the
+rules its own specification states, and says which field is wrong before
+anything is signed.
+
+**`conforms()` is not `isTrusted()`.** Every rule checked is decidable from the
+certificate alone, so a self-signed certificate built to satisfy them will
+conform. Whether the chain reaches an ICP-Brasil root is `TrustStore`'s
+question ([0029](docs/decisions/0029-the-identity-a-brazilian-signer-is-known-by.md)).
+
+`Contracts\A1PdfSign` gained `icpBrasil()`, which matters only to someone
+implementing the interface. `Data\Signer` gained `$icpBrasil` and `name()`,
+appended with defaults.
+
 ## From 2.3.1 to 2.4.0
 
 No public class was removed and no signature was narrowed, so an application
