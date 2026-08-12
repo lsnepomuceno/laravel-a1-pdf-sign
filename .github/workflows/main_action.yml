@@ -102,9 +102,32 @@ jobs:
 
       # These reach a live timestamp authority, so an outage on their side is
       # not a defect in this package. Reported, never blocking.
+      #
+      # The profiles themselves are gated offline against
+      # Testing\LocalTimestampAuthority, so what is left here is the only
+      # question a local authority cannot answer: whether this package
+      # interoperates with somebody else's
+      # (docs/decisions/0027-the-transport-is-a-seam.md).
       - name: Run tests against a live timestamp authority
+        id: interop
         continue-on-error: true
         run: vendor/bin/pest --group=network
+
+      # continue-on-error hides the outcome behind a green tick, and that is how
+      # three of these tests were committed broken, went green, and were noticed
+      # only by someone reading the log. Non-blocking is the decision; invisible
+      # was not.
+      - name: Say how the live authority answered
+        if: always()
+        run: |
+          if [ "${{ steps.interop.outcome }}" = "success" ]; then
+            echo "### Live timestamp authority: passed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ⚠️ Live timestamp authority: FAILED" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Not blocking, because an outage on a third party's side is not a defect here." >> "$GITHUB_STEP_SUMMARY"
+            echo "It is still the only check on interoperability with a real authority, so read the step before assuming it was the weather." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   quality:
     name: Code style and static analysis
