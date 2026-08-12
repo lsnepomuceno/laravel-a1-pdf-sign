@@ -143,3 +143,46 @@ with its own behaviour"
 That reasoning predates this rule and is not obviously wrong, and reversing it
 now would change the type of a public property. It stays as it is, named here so
 the next person finds a decision rather than an oversight.
+
+---
+
+# 3. A docblock documents the thing under it
+
+Two failures, both of which shipped, both now checked by `tests/ArchTest.php`
+rather than left to review.
+
+## Never leave two docblocks in a row
+
+```php
+/**
+ * The signature applied last, which is the only one covering the whole file.
+ */
+/**
+ * The archive timestamps, which are reported separately from signatures.
+ */
+public function timestamps(): array
+```
+
+That is real code from `Data\SignatureReport`. A method was inserted between a
+docblock and the method it described, so the first block ended up attached to
+the newcomer and `latest()` was left undocumented. **Every tool that reads
+docblocks then reports the wrong thing about two methods**, and the diff that
+caused it looks like a pure addition.
+
+Found four times across `src/` and `tests/` the day the rule was written.
+
+When adding a method next to an existing one, put the new docblock **above the
+new method**, not above the old one. When a docblock and a `@param` block end up
+separated, merge them into one block; PHP associates only the last.
+
+## Never leave a `@param` naming a parameter that is gone
+
+The other half of the same problem: the signature moved and the prose did not.
+A docblock that documents nothing is a comment nobody reads. A docblock that
+documents the wrong thing is worse than no docblock, because it is believed.
+
+## What is deliberately not checked
+
+Whether the prose is *true*. No tool can, which is why the rule is narrow: it
+catches the two failures that are mechanical, and leaves the rest where it
+belongs, with whoever changed the code.

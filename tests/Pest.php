@@ -137,6 +137,68 @@ function reversedPages(int $count = 3): array
 }
 
 /**
+ * What qpdf says about a file.
+ *
+ * Here rather than in a test file because a second one needs it now, and a
+ * helper defined inside one is invisible to the others under --parallel.
+ *
+ * **A development and validation instrument only.** qpdf is never invoked by
+ * `src/`, and `tests/ArchTest.php` fails if that changes: a consuming
+ * application installs a signing library, not a toolchain.
+ */
+function qpdfCheck(string $path, #[SensitiveParameter] string $password = ''): string
+{
+    // qpdf exits non-zero for warnings and for errors alike, which are two
+    // different things, so the verdict is read from the output rather than from
+    // the status.
+    return app(LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner::class)->run(sprintf(
+        'qpdf --check %s %s 2>&1 || true',
+        $password === '' ? '' : '--password=' . escapeshellarg($password),
+        escapeshellarg($path),
+    ));
+}
+
+/**
+ * The complaints qpdf has about a file, with the offsets taken out.
+ *
+ * Offsets move when a revision is appended, which is the whole point, so a
+ * warning that says the same thing about the same object has to compare equal
+ * before and after.
+ *
+ * @return list<string>
+ */
+function qpdfComplaints(string $contents): array
+{
+    $found = [];
+
+    foreach (explode("\n", $contents) as $line) {
+        if (preg_match('/^(WARNING|ERROR):/', trim($line)) !== 1) {
+            continue;
+        }
+
+        // "…, object 3 0 at offset 34353: kid 0 …" keeps the object and the
+        // complaint, and loses the position.
+        $found[] = trim((string) preg_replace(
+            ['/ at offset \d+/', '/^[^,]*, /'],
+            ['', ''],
+            trim($line),
+        ));
+    }
+
+    sort($found);
+
+    return array_values(array_unique($found));
+}
+
+/**
+ * @return list<string>
+ */
+function qpdfComplaintsAbout(string $path, #[SensitiveParameter] string $password = ''): array
+{
+    return qpdfComplaints(qpdfCheck($path, $password));
+}
+
+/**
  * veraPDF's verdict on a file, as PASS or FAIL.
  *
  * Here rather than in a test file because two of them need it, and a helper

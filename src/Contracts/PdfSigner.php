@@ -40,6 +40,12 @@ interface PdfSigner
      *                                  afterwards at all.
      *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
+     * @param  string  $documentPassword  Opens the document when it is
+     *                                     encrypted. Unrelated to the
+     *                                     certificate's password: one opens the
+     *                                     file, the other unlocks the signing
+     *                                     key (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+     *
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException
@@ -56,5 +62,7 @@ interface PdfSigner
         ?string $intoField = null,
         ?CertificationLevel $certification = null,
         ?FieldLock $lock = null,
+        #[\SensitiveParameter]
+        string $documentPassword = '',
     ): SignedPdf;
 }

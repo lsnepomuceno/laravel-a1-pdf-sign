@@ -3,7 +3,6 @@
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
 
 /**
  * The structure of what the revision writer emits, checked by qpdf.
@@ -18,63 +17,22 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * `src/`, and `tests/ArchTest.php` fails if that changes: a consuming
  * application installs a signing library, not a toolchain.
  *
+ * `qpdfCheck()` and `qpdfComplaintsAbout()` live in tests/Pest.php, because
+ * tests/EncryptedDocumentTest.php needs them too and a helper defined inside
+ * one test file is invisible to the others under --parallel.
+ *
  * See docs/spec/quality-policy.md.
  */
-function qpdfCheck(string $path): string
-{
-    // qpdf exits non-zero for warnings and for errors alike, which are two
-    // different things, so the verdict is read from the output rather than from
-    // the status.
-    return app(ProcessRunner::class)->run(
-        sprintf('qpdf --check %s 2>&1 || true', escapeshellarg($path)),
-    );
-}
 
+/**
+ * Whether qpdf finds nothing wrong at all, which is stronger than finding
+ * nothing new.
+ */
 function qpdfIsClean(string $path): bool
 {
     // Matched on the prefix: the sentence ends "errors found" in qpdf 11 and
     // "errors detected" in some builds, and the gate should not turn on which.
     return str_contains(qpdfCheck($path), 'No syntax or stream encoding errors');
-}
-
-/**
- * The complaints qpdf has about a file, with the offsets taken out.
- *
- * Offsets move when a revision is appended, which is the whole point, so a
- * warning that says the same thing about the same object has to compare equal
- * before and after.
- *
- * @return list<string>
- */
-function qpdfComplaints(string $contents): array
-{
-    $found = [];
-
-    foreach (explode("\n", $contents) as $line) {
-        if (preg_match('/^(WARNING|ERROR):/', trim($line)) !== 1) {
-            continue;
-        }
-
-        // "…, object 3 0 at offset 34353: kid 0 …" keeps the object and the
-        // complaint, and loses the position.
-        $found[] = trim((string) preg_replace(
-            ['/ at offset \d+/', '/^[^,]*, /'],
-            ['', ''],
-            trim($line),
-        ));
-    }
-
-    sort($found);
-
-    return array_values(array_unique($found));
-}
-
-/**
- * @return list<string>
- */
-function qpdfComplaintsAbout(string $path): array
-{
-    return qpdfComplaints(qpdfCheck($path));
 }
 
 beforeEach(function () {

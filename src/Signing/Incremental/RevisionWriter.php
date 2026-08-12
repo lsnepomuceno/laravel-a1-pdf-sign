@@ -11,6 +11,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\ObjectCipher;
 use LSNepomuceno\LaravelA1PdfSign\Support\SrgbProfile;
 
 /**
@@ -50,6 +51,11 @@ final class RevisionWriter
         ?FieldLock       $lock = null,
     ): string {
         $visible = $seal !== null && $placement !== null;
+
+        // Inactive for an ordinary document, so every emitter below writes the
+        // same code whether or not the file is encrypted
+        // (docs/decisions/0030-signing-a-document-that-is-encrypted.md).
+        $cipher = ObjectCipher::for($document);
 
         // Where the seal was asked for, in page-tree order. Empty whenever the
         // signature is invisible, since a zero rectangle appears on no page at
@@ -103,7 +109,7 @@ final class RevisionWriter
         $offsets = [];
 
         $offsets[$signatureNumber] = $base + strlen($body);
-        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile, $certification, $lock, $catalogNumber);
+        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile, $certification, $lock, $catalogNumber, $cipher);
 
         $offsets[$widgetNumber] = $base + strlen($body);
         $body .= $target === null
@@ -115,23 +121,24 @@ final class RevisionWriter
                 $appearanceNumber,
                 $visible ? $this->appearance->rectangle($placement, $seal) : null,
                 $lock,
+                $cipher,
             )
             : $this->filledWidget($pdf, $document, $target, $signatureNumber, $appearanceNumber, $lock);
 
         if ($visible) {
             $offsets[$imageNumber] = $base + strlen($body);
-            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber, $profileNumber);
+            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber, $profileNumber, $cipher);
 
             $offsets[$profileNumber] = $base + strlen($body);
-            $body .= $this->appearance->profileObject($profileNumber, new SrgbProfile()->bytes());
+            $body .= $this->appearance->profileObject($profileNumber, new SrgbProfile()->bytes(), $cipher);
 
             if ($seal->isTransparent()) {
                 $offsets[$maskNumber] = $base + strlen($body);
-                $body .= $this->appearance->maskObject($maskNumber, $seal);
+                $body .= $this->appearance->maskObject($maskNumber, $seal, $cipher);
             }
 
             $offsets[$formNumber] = $base + strlen($body);
-            $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);
+            $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal, $cipher);
 
             $rectangle = $this->appearance->rectangle($placement, $seal);
 
@@ -141,7 +148,7 @@ final class RevisionWriter
             }
         } else {
             $offsets[$formNumber] = $base + strlen($body);
-            $body .= $this->appearance->emptyForm($formNumber);
+            $body .= $this->appearance->emptyForm($formNumber, $cipher);
         }
 
         // A field the document already carries is already registered on the
@@ -329,11 +336,13 @@ final class RevisionWriter
         ?CertificationLevel $certification = null,
         ?FieldLock       $lock = null,
         int              $catalogNumber = 0,
+        ?ObjectCipher    $cipher = null,
     ): string {
+        $cipher ??= new ObjectCipher();
         $metadata = '';
 
         foreach ($info->toDictionary() as $key => $value) {
-            $metadata .= "/{$key} (" . $this->escape($value) . ') ';
+            $metadata .= "/{$key} " . $cipher->text($value, $number) . ' ';
         }
 
         return "{$number} 0 obj\n"
@@ -344,7 +353,10 @@ final class RevisionWriter
             . '/Contents <' . str_repeat('0', $contentsHexLength) . '> '
             . $metadata
             . $this->references($certification, $lock, $catalogNumber)
-            . '/M (' . $this->timestamp() . ')'
+            // /Contents is deliberately not encrypted, and it is the one entry
+            // that must not be: ISO 32000-1 §7.6.2 excludes it, because it is
+            // the signature over the bytes rather than content of the document.
+            . '/M ' . $cipher->text($this->timestamp(), $number)
             . ">>\nendobj\n";
     }
 
@@ -432,6 +444,7 @@ final class RevisionWriter
         ?int   $formNumber = null,
         ?array $rectangle = null,
         ?FieldLock $lock = null,
+        ?ObjectCipher $cipher = null,
     ): string {
         // A zero rectangle keeps the signature invisible, which is the default
         // when no seal was supplied.
@@ -445,7 +458,7 @@ final class RevisionWriter
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
             . $rect
             . $appearance
-            . '/T (' . $this->escape($fieldName) . ')'
+            . '/T ' . ($cipher ?? new ObjectCipher())->text($fieldName, $number)
             . "/V {$signatureNumber} 0 R"
             . "/P {$pageNumber} 0 R"
             . '/F 132'
@@ -671,7 +684,22 @@ final class RevisionWriter
         $info = $document->infoRef !== null ? "/Info {$document->infoRef}" : '';
 
         return "trailer\n<</Size {$size}/Root {$root} 0 R{$info}{$this->identifier($document)}"
+            . $this->encryption($document)
             . "/Prev {$document->startxref}>>\n";
+    }
+
+    /**
+     * The `/Encrypt` reference, repeated into this revision's trailer.
+     *
+     * ISO 32000-1 §7.5.5: every trailer carries it. A revision that leaves it
+     * out reads as the point where the document stopped being encrypted, so a
+     * reader stops decrypting and every stream written before it inflates to
+     * nothing. qpdf says "incorrect header check"; a user says the file is
+     * broken.
+     */
+    private function encryption(DocumentInfo $document): string
+    {
+        return $document->encryptRef === 0 ? '' : "/Encrypt {$document->encryptRef} 0 R";
     }
 
     /**

@@ -52,8 +52,7 @@ final readonly class ChainBuilder
      * An incomplete chain is not invalid. It means the material to finish it
      * lives outside the document, which is exactly what a Document Security
      * Store exists to avoid.
-     */
-    /**
+     *
      * @param  list<string>  $chain
      */
     public function reachesRoot(array $chain): bool

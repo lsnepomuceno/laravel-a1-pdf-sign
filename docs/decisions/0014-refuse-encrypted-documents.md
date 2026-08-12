@@ -1,6 +1,6 @@
 # 0014: Encrypted documents are refused, not signed badly
 
-**Status:** accepted, implemented.
+**Status:** accepted, implemented, and now **conditional**. [0030](0030-signing-a-document-that-is-encrypted.md) implemented the security handler this record described as the real fix, so an AES-encrypted document opens with its password instead of being refused. Everything below still holds for a document this package cannot key: RC4 content, a non-standard handler, or an encrypted document packed into object streams.
 
 ## Context
 
