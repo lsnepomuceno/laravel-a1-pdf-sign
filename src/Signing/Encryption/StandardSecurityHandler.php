@@ -306,7 +306,10 @@ final readonly class StandardSecurityHandler
             $rotated = '';
 
             for ($index = 0; $index < strlen($key); $index++) {
-                $rotated .= chr(ord($key[$index]) ^ $round);
+                // Masked so the range is provable rather than merely true: an
+                // exclusive or of two bytes is a byte, and the analyser cannot
+                // see that on its own.
+                $rotated .= chr((ord($key[$index]) ^ $round) & 0xFF);
             }
 
             $value = self::rc4($rotated, $value);
@@ -340,7 +343,7 @@ final readonly class StandardSecurityHandler
             $second = ($second + $state[$first]) % 256;
             [$state[$first], $state[$second]] = [$state[$second], $state[$first]];
 
-            $out .= chr(ord($data[$index]) ^ $state[($state[$first] + $state[$second]) % 256]);
+            $out .= chr((ord($data[$index]) ^ $state[($state[$first] + $state[$second]) % 256]) & 0xFF);
         }
 
         return $out;
