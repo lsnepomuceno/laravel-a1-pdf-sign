@@ -43,27 +43,42 @@ defects.
 
 ## Mutation testing
 
-Covers `src/Certificates`, `src/Signing` and `src/Validation`, the three
-namespaces where a test that only asserts "it did not throw" would keep passing
-with broken cryptography.
+Covers `src/Certificates`, `src/Signing`, `src/Validation` and `src/Support`,
+the namespaces where a test that only asserts "it did not throw" would keep
+passing with broken cryptography.
 
 **It runs nightly, not on pull requests** (`.github/workflows/mutation.yml`),
-one runner per namespace, each with its own floor:
+one runner per namespace, each with its own floor. Measured on the nightly runs
+of 2026-08-09 through 2026-08-12, read from the job logs:
 
-| Namespace | Measured | Floor |
-|---|---|---|
-| `src/Certificates` | 64.71% / 61.76% | 58 |
-| `src/Signing` | 66.02% / 67.50% | 62 |
-| `src/Validation` | 77.68% / 77.68% | 75 |
+| Namespace | Measured | Lowest | Floor | Margin |
+|---|---|---|---|---|
+| `src/Certificates` | 68.13 / 68.13 / 68.13 / 73.48 | 68.13 | 64 | 4.13 |
+| `src/Signing` | 70.05 / 70.02 / 72.75 / 73.98 | 70.02 | 66 | 4.02 |
+| `src/Validation` | 75.19 / 76.74 / 78.95 / 79.50 | 75.19 | 75 | **0.19** |
+| `src/Support` | 78.26 / 79.26 | 78.26 | 74 | 4.26 |
+
+`src/Validation` is the one to watch. Its floor was set when the namespace was
+believed not to move, and the run of 2026-08-09 cleared it by less than a fifth
+of a point. It is not raised, because nothing here justifies raising it, and it
+is not lowered, because that is what the second rule below forbids. It is
+written down so the night it fires is not the night somebody first learns the
+margin was that thin.
 
 Three rules govern this, and each cost something to learn:
 
 **The score is not reproducible.** It tracks how many mutations time out, which
 tracks machine load. A mutation that breaks a loop condition burns the full
 timeout, which the plugin derives from the suite duration and does not expose as
-an option. `Certificates` shells out to `openssl` and swings three points
-between identical runs; `Validation` times out twice and does not move at all.
-Every floor therefore sits below the lowest observed value for its namespace.
+an option. Every floor therefore sits below the lowest observed value for its
+namespace.
+
+*Which namespace moves is not stable either.* This document used to say that
+`Certificates` swings three points between identical runs while `Validation`
+does not move at all. Four consecutive nights say the opposite: `Certificates`
+scored 68.13 three times running, and `Validation` covered a 4.31-point range.
+The claim was true when it was measured and was left standing after it stopped
+being true, which is the failure this table exists to prevent.
 
 **Raise a floor only after measuring it.** Never set a target ahead of the
 measurement, and never lower one to make a run pass.
@@ -309,10 +324,14 @@ came out of `Signing` the same way. Extracting them removed real duplication and
 **silently took the code out of the gate it had been under**, since the nightly
 matrix names namespaces rather than following the code.
 
-The floor is provisional. One measurement, 83.44%, where the rule above asks for
-two consecutive ones, so it sits at 65 rather than close. Tighten it after the
-second nightly run, and not before: a floor set from one measurement of a score
-that moves with machine load is a floor that fails a night when nothing changed.
+The floor was provisional at 65, set from a single measurement of 83.44% where
+the rule above asks for two consecutive ones. The runs since have measured
+78.26% and 79.26%, so the floor is now 74, four points below the lower of them.
+
+**Both of those are below the measurement the provisional floor was set from**,
+which is the case for asking for two. Had 65 been tightened to "close" against
+83.44% on the strength of one run, the nightly would have failed twice on code
+nobody had touched.
 
 ## Why the backward compatibility check reports rather than blocks
 

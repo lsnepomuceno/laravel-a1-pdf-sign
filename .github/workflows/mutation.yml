@@ -104,25 +104,34 @@ jobs:
         # scores 64.71% with 8 uncovered, while shard 1/2 reports 61.76% with
         # 26 uncovered and shard 2/2 reports 69.12%. Faster, and wrong.
         #
-        # Each floor sits below the lowest of two consecutive measurements of
-        # that namespace, because the score is not reproducible to the point:
-        # it tracks how many mutations time out, which tracks machine load.
-        # Certificates swings the most (~20 timeouts out of 68); Validation
-        # does not move at all (2 timeouts), so its floor can sit close.
+        # Each floor sits a few points below the lowest measurement of that
+        # namespace, because the score is not reproducible to the point: it
+        # tracks how many mutations time out, which tracks machine load.
+        #
+        # Measurements below are the nightly runs of 2026-08-09 through
+        # 2026-08-12, read from the logs rather than remembered. Every one of
+        # them is higher than the pair each floor was originally set from, so
+        # the floors were sitting six to twelve points low and had stopped
+        # being able to fail.
         include:
-          - namespace: Certificates   # measured 64.71% / 61.76%
-            min: 58
-          - namespace: Signing        # measured 66.02% / 67.50%
-            min: 62
-          - namespace: Validation     # measured 77.68% / 77.68% / 78.95%
+          - namespace: Certificates   # 68.13 / 68.13 / 68.13 / 73.48
+            min: 64
+          - namespace: Signing        # 70.05 / 70.02 / 72.75 / 73.98
+            min: 66
+          # Left where it is. The lowest observation, 75.19, clears this floor
+          # by 0.19, which is the tightest margin here by an order of
+          # magnitude. Raising it would be indefensible and lowering it is what
+          # the rule in docs/spec/quality-policy.md forbids, so it stays and
+          # the margin is written down instead of discovered on a red night.
+          - namespace: Validation     # 75.19 / 76.74 / 78.95 / 79.50
             min: 75
           # Added when two helpers moved here out of Signing and Validation,
           # which quietly took them out of the gate they had been under. The
-          # floor is provisional: one measurement, not the two the rule above
-          # asks for, so it sits well below rather than close. Tighten it after
-          # the second nightly run, not before.
-          - namespace: Support        # measured 83.44%, one run only
-            min: 65
+          # floor was provisional at 65, from a single measurement of 83.44%.
+          # Two consecutive runs have since scored lower than that one, which
+          # is exactly why the rule asks for two.
+          - namespace: Support        # 78.26 / 79.26
+            min: 74
 
     steps:
       - name: Checkout
