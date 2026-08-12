@@ -235,8 +235,18 @@ file; do not spell it.
 cites. It is a gate rather than a review point, and it is the reason this rule
 can be stated so flatly.
 
-**What it does not catch**: a comment naming a class, method or constant that no
-longer exists. Paths are checked; symbols are not.
+**Symbols are checked too**, on the same terms: a comment naming a class or a
+`Class::member` of this package must resolve. Restricted to
+`LSNepomuceno\LaravelA1PdfSign`, because prose legitimately names other
+people's classes, PHP functions and PDF syntax that looks like neither, and one
+comment has to be able to name `ddn/sapp` precisely because it is the thing
+deliberately absent. Within this package's own namespace the question is
+mechanically decidable and needs no allowlist.
+
+Only comment and docblock text is read from a PHP file: a `namespace` or `use`
+line is code, already answered by the autoloader and by PHPStan.
+`docs/history/` and `UPGRADE.md` are exempt, since recording what the package
+used to be is their whole job.
 
 ## What is deliberately not checked
 
