@@ -227,7 +227,20 @@ OpenSSL does the path validation, so each intermediate's validity window, `basic
 
 <hr>
 
-#### 11 - What validation still does not do.
+#### 11 - Who signed, under ICP-Brasil. <small>(since 2.5)</small>
+
+```PHP
+$signer = $report->signers()[0];
+
+$signer->icpBrasil?->cpf;   // '11144477735'
+$signer->name();            // the name, without the number glued to it
+```
+
+A Brazilian certificate carries its holder's identity in `subjectAlternativeName` rather than in the subject, and it has its own page: [ICP-Brasil](/docs/2.x/icp-brasil).
+
+<hr>
+
+#### 12 - What validation still does not do.
 
 **It never goes to the network.** Revocation is evaluated since 2.4, but only from the material the document already carries. A signature whose certificate was revoked *after* signing, with no OCSP response in the file saying so, reports `Unknown`: the answer is somewhere on the internet, and fetching it is the host application's decision rather than the validator's.
 
@@ -235,7 +248,7 @@ That is the same rule as everywhere else here. Signing reaches an authority beca
 
 <hr>
 
-#### 12 - Verifying independently.
+#### 13 - Verifying independently.
 
 Our validator shares its assumptions with the code that produced the signature, so it is worth checking against something that does not. Poppler's `pdfsig` has caught bugs in this package that the whole test suite passed straight through:
 

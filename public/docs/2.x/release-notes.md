@@ -1,3 +1,83 @@
+# 2.5.0
+
+## A visible seal no longer costs PDF/A conformance
+
+The seal was embedded as `/DeviceRGB`, which PDF/A allows only where the file declares an OutputIntent, so a conformant document came back non-conformant. It now carries its own `/ICCBased` profile and asks the document for nothing.
+
+| | 2.4 | 2.5 |
+|---|---|---|
+| PDF/A-1b, opaque seal | FAIL | **PASS** |
+| PDF/A-1b, transparent seal | FAIL | FAIL, and always will: §6.4 forbids `/SMask` |
+| PDF/A-2b, opaque seal | FAIL | **PASS** |
+| PDF/A-2b, transparent seal | FAIL | **PASS** |
+
+The profile is **built rather than vendored**, from the numbers IEC 61966-2-1 publishes, so no third party's binary and no third party's licence enters an MIT package. Its computed colorants match the published sRGB profile to four decimal places, which is asserted rather than assumed: veraPDF validates the container, not the colours, so a structurally valid profile with the wrong primaries would pass every conformance check and render the seal in the wrong colour.
+
+**A sealed document grows by about 2.4 KB.** An invisible signature embeds nothing and is unchanged.
+
+<hr>
+
+## Who signed, in the number Brazil knows them by
+
+```PHP
+$signer = A1PdfSign::validate($path)->signers()[0];
+
+$signer->icpBrasil?->cpf;                 // '11144477735'
+$signer->icpBrasil?->cnpj;                // the company, for an e-CNPJ
+$signer->icpBrasil?->formattedRegistry(); // '11.222.333/0001-81'
+$signer->name();                          // 'JOAO DA SILVA', without the number
+```
+
+The identity lives in `subjectAlternativeName`, and PHP renders every one of those fields as `othername:<unsupported>`, so until now the only way to get a CPF was `explode(':', $commonName)`. That breaks on a name containing a colon and is wrong for an e-CNPJ, whose common name carries the company while the CPF belongs to whoever answers for it.
+
+`A1PdfSign::icpBrasil()` also checks a certificate against the rules its own specification states, and says which field is wrong before anything is signed. **`conforms()` is not `isTrusted()`**: every rule is decidable from the certificate alone, so a self-signed certificate built to satisfy them will conform.
+
+[ICP-Brasil →](/docs/2.x/icp-brasil)
+
+<hr>
+
+## A document protected by a password can be signed
+
+```PHP
+A1PdfSign::newSignature()
+    ->certificate($pfxPath, $certificatePassword)
+    ->pdf($path, 'the document password')
+    ->sign();
+```
+
+Encrypted documents used to be refused outright, which was correct rather than good: the cross-reference table is not encrypted, so reading gets far enough to look successful while everything around it is unreadable, and a plaintext revision beside it produces a file whose new objects no reader can decrypt.
+
+The standard security handler is implemented for **AES-128 and AES-256**. The document's password and the certificate's are different things and are passed separately: one opens the file, the other unlocks the key that signs it.
+
+**RC4 is refused**, because signing an RC4 document means writing RC4 back into it, and this package will not weaken a file in order to sign it. Also refused, each with a message naming why: a non-standard security handler, an encrypted document packed into object streams, and `pades-b-lt` and above while encrypted.
+
+Verified against qpdf in both directions: the fixtures are qpdf's output, and qpdf reads the signed result back.
+
+<hr>
+
+## Extending an archive refreshes the evidence it archives
+
+`extendArchive()` used to append the timestamp and nothing else, so a document could gain a fifth archive timestamp over revocation material gathered on the day it was signed. That is the one thing long-term validation exists to prevent.
+
+It now gathers fresh material for every chain the document carries and writes the store **before** the timestamp, which is the order ETSI EN 319 142-1 fixes: the evidence goes inside the file while it is still verifiable, and the timestamp then covers it. The timestamp authorities' own certificates are included, because they are what the next archive timestamp has to be able to check.
+
+<hr>
+
+## Also
+
+- **`SECURITY.md`**, saying what counts as a vulnerability and, more usefully, what looks like one and is a documented decision.
+- The README was rewritten. It had never mentioned reading a CPF, signing an encrypted document, field locks or extending an archive.
+- Two docblock rules are now executable, after four stacked docblocks turned up across the package, one of them describing `latest()` while sitting above `timestamps()`.
+- `main` is built after a merge. A pull request is tested against its own branch, not against main with it merged, and two branches that are each green can produce a main that is not.
+
+<hr>
+
+## Upgrading
+
+No public class was removed and no signature was narrowed. `Contracts\A1PdfSign` gained `icpBrasil()` and `Contracts\PdfSigner::sign()` gained a document password argument, both of which matter only to someone implementing those interfaces. `Data\Signer` gained `$icpBrasil` and `name()`, appended with defaults.
+
+**The bytes of every sealed document change**, because the seal's colour space did.
+
 # 2.4.0
 
 ## Validation reads what signing writes

@@ -72,6 +72,14 @@ export default <Doc>{
                     url: "validating-signature",
                     footerActions: {
                         previousLink: "signature-profiles",
+                        nextLink: "icp-brasil",
+                    },
+                },
+                {
+                    title: "ICP-Brasil",
+                    url: "icp-brasil",
+                    footerActions: {
+                        previousLink: "validating-signature",
                         nextLink: "commands",
                     },
                 },
@@ -86,7 +94,7 @@ export default <Doc>{
             url: "commands",
             icon: "fa-terminal",
             footerActions: {
-                previousLink: "validating-signature",
+                previousLink: "icp-brasil",
                 nextLink: "not-laravel-or-lumen",
             },
         },
