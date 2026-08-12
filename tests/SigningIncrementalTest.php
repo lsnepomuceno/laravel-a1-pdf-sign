@@ -61,8 +61,13 @@ it('gives each signature its own field name', function () {
 });
 
 it('writes the signature metadata into the document', function () {
+    // A variable rather than the call inline: the signer takes the document by
+    // reference so it can release it while hashing, and PHP does not pass an
+    // expression by reference (docs/decisions/0034-signing-owns-the-document.md).
+    $contents = Files::read(resource('test.pdf'));
+
     $signed = app(IncrementalSigner::class)->sign(
-        Files::read(resource('test.pdf')),
+        $contents,
         testCertificate(),
         new SignatureInfo(name: 'Lucas', location: 'Brazil', reason: 'Contract'),
     );
@@ -73,7 +78,9 @@ it('writes the signature metadata into the document', function () {
 });
 
 it('rejects a file that is not a PDF', function () {
-    app(IncrementalSigner::class)->sign('not a pdf', testCertificate(), new SignatureInfo());
+    $contents = 'not a pdf';
+
+    app(IncrementalSigner::class)->sign($contents, testCertificate(), new SignatureInfo());
 })->throws(InvalidPdfFileException::class);
 
 it('reads the last byte range, not the first', function () {

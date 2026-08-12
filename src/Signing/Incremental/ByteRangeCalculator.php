@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Bytes;
 
 /**
  * Computes and writes the /ByteRange of the revision being signed.
@@ -26,11 +27,17 @@ final class ByteRangeCalculator
     /**
      * Replaces the placeholder of the last revision with the real offsets.
      *
+     * Written over the document in place, by reference, because the
+     * replacement is the same width as the placeholder by construction: that
+     * is the whole reason the placeholder is padded. Building a new string to
+     * change twenty characters costs the size of the document again, which on
+     * a 200 MB plan is 200 MB (issue #285).
+     *
      * @param  int  $contentsHexLength  Size of the /Contents placeholder, in hex characters.
      *
      * @throws InvalidPdfFileException
      */
-    public function apply(string $pdf, int $contentsHexLength): string
+    public function apply(string &$pdf, int $contentsHexLength): void
     {
         $open = $this->lastContentsOffset($pdf);
         $close = $open + 1 + $contentsHexLength + 1;            // offset just past '>'
@@ -54,7 +61,7 @@ final class ByteRangeCalculator
             throw new InvalidPdfFileException('no /ByteRange placeholder to fill');
         }
 
-        return substr_replace($pdf, $replacement, $position, strlen($placeholder));
+        Bytes::overwrite($pdf, $replacement, $position);
     }
 
     /**

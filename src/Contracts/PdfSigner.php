@@ -52,7 +52,7 @@ interface PdfSigner
      * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\SignatureFieldException
      */
     public function sign(
-        string $pdfContents,
+        string &$pdfContents,
         Certificate $certificate,
         SignatureInfo $info,
         string $fieldName = 'Signature',
