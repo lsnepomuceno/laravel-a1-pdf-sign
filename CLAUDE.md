@@ -135,6 +135,7 @@ DocTimeStamps are classified separately (`isTimestamp`) and excluded from `isVal
 
 - **PHPStan `level: max`, no baseline.** The baseline was deleted, not shrunk (§7, decision 13); the gate is "no errors", not "no new errors". Only Pest's untypeable fluent API is ignored, scoped to `tests/*`.
 - **Type coverage gated at 100%.**
+- **Dead code is refused.** PHPStan already reports a private method nobody calls (`method.unused`) and a property only ever written (`property.onlyWritten`). A local variable assigned and never read is what it misses, so `tests/DeadCodeTest.php` walks the tree with `token_get_all()`: no ecosystem tool fits here, and the reasons are in `docs/spec/quality-policy.md`. It under-reports on purpose. **Unused public methods are deliberately not checked**: the API exists for consumers whose code is not in this repository.
 - **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`, nightly rather than on pull requests. The floors live in `.github/workflows/mutation.yml` and are explained in `docs/spec/quality-policy.md`. They are not repeated here, because a number kept in three places drifts in two of them. Raise a floor only after measuring; never set a target ahead of the measurement.
 - **Do not split mutation runs with `--shard`.** It divides the test suite, and every mutation needs the whole suite: a mutation killed by a test in another shard is reported as uncovered. Split by mutated path instead.
 - `composer-dependency-analyser.php` catches unused and shadow dependencies.

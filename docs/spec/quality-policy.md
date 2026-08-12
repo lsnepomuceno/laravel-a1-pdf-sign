@@ -39,6 +39,34 @@ defects.
 
 `poc/` is excluded: it holds throwaway spikes, not production code.
 
+## Dead code
+
+**PHPStan already refuses most of it**, at `level: max` with no baseline:
+`method.unused` for a private method nobody calls, `property.onlyWritten` for a
+property only ever written. Verified with a probe class rather than assumed.
+
+**A local variable assigned and never read is the one it does not see**, and
+nothing in the ecosystem fits here: `shipmonk/phpstan-rules` has no such rule,
+`phpmd/phpmd` cannot run in this tree at all because PDepend's Symfony
+extension is incompatible with the installed Symfony, and
+`slevomat/coding-standard` arrives through PHPCS, a second toolchain beside
+Pint for one check.
+
+So `tests/DeadCodeTest.php` walks the tree with `token_get_all()`, the way
+`tests/ArchTest.php` and `tests/SpecTest.php` already do. **It under-reports on
+purpose**: it flags only a plain `$x = …` whose variable is named exactly once
+in the whole function body. A destructuring target, a `foreach` value, a
+parameter default and anything inside a nested closure are left alone. A gate
+with no baseline that cries wolf is a gate people learn to re-run.
+
+Two of its own tests exist to keep it honest: one asserts it finds a variable
+planted to be found, and two assert it stays quiet on the shapes that look
+unused and are not.
+
+**Unused public methods are deliberately not checked.** The public API exists to
+be called by consumers whose code is not in this repository, so a detector
+pointed at `src/` would flag `docs/spec/public-api.md` in its entirety.
+
 ## Type coverage is gated at 100%
 
 ## Mutation testing
