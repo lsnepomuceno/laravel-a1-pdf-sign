@@ -14,6 +14,7 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport validate(string $pdfPath, ?\LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore $trust = null)
  * @method static list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField> signatureFields(string $pdfPath)
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf extendArchive(string $pdfPath)
+ * @method static \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport icpBrasil(string $pfxPath, string $password = '')
  * @method static \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature newSignature()
  * @method static string tempPath(bool $tempFile = false, string $fileExt = '.pfx')
  *

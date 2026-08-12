@@ -39,4 +39,7 @@ enum Asn1Tag: int
 
     /** Context-specific [1], constructed: unsignedAttrs in a SignerInfo. */
     case Context1 = 0xA1;
+
+    /** Context-specific [3], constructed: the extensions of a certificate. */
+    case Context3 = 0xA3;
 }

@@ -2,6 +2,8 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Data;
 
+use LSNepomuceno\LaravelA1PdfSign\Certificates\IcpBrasilReader;
+
 /**
  * Who signed, as read from the certificate embedded in the signature.
  */
@@ -10,6 +12,12 @@ final readonly class Signer extends BaseData
     /**
      * @param  array<string, mixed>  $subject
      * @param  array<string, mixed>  $issuer
+     * @param  ?IcpBrasilIdentity  $icpBrasil  Who this is under ICP-Brasil, when
+     *                                         the certificate was read from
+     *                                         bytes rather than only from a
+     *                                         parse. Null means "not looked
+     *                                         for"; a type of `None` means
+     *                                         "looked for and not there".
      */
     public function __construct(
         public ?string $commonName,
@@ -21,12 +29,34 @@ final readonly class Signer extends BaseData
         public ?int $validTo,
         public array $subject = [],
         public array $issuer = [],
+        public ?IcpBrasilIdentity $icpBrasil = null,
     ) {}
 
     /**
-     * @param  array<string, mixed>  $parsed  Output of openssl_x509_parse() with long names.
+     * The name without the CPF an ICP-Brasil common name carries after a colon.
+     *
+     * `JOAO DA SILVA:01672780838` is the format the Receita Federal fixes for
+     * an e-CPF, and a caller wanting to show a name should not have to know
+     * that. The whole value is returned unchanged for any other certificate.
      */
-    public static function fromParsedCertificate(array $parsed): self
+    public function name(): ?string
+    {
+        if ($this->commonName === null) {
+            return null;
+        }
+
+        return (string) preg_replace('/:\d{11,14}$/', '', $this->commonName);
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed  Output of openssl_x509_parse() with long names.
+     * @param  ?string  $pem  The certificate the parse came from, when the
+     *                        caller still has it. Without it the ICP-Brasil
+     *                        identity cannot be read, because
+     *                        openssl_x509_parse() renders those fields as
+     *                        `othername:<unsupported>`.
+     */
+    public static function fromParsedCertificate(array $parsed, ?string $pem = null): self
     {
         /** @var array<string, mixed> $subject */
         $subject = is_array($parsed['subject'] ?? null) ? $parsed['subject'] : [];
@@ -43,6 +73,7 @@ final readonly class Signer extends BaseData
             validTo: is_int($parsed['validTo_time_t'] ?? null) ? $parsed['validTo_time_t'] : null,
             subject: $subject,
             issuer: $issuer,
+            icpBrasil: $pem === null ? null : new IcpBrasilReader()->read($pem),
         );
     }
 

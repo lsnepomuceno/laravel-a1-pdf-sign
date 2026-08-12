@@ -26,10 +26,10 @@ final class Pkcs7Reader
      */
     public function signers(string $der): array
     {
-        return array_map(
-            static fn(array $parsed): Signer => Signer::fromParsedCertificate($parsed),
-            $this->parsedCertificates($der),
-        );
+        // Through the PEM rather than through parsedCertificates(), because a
+        // Signer now carries what only the bytes can answer: openssl_x509_parse()
+        // renders every ICP-Brasil otherName as `othername:<unsupported>`.
+        return $this->signersFromPem($this->certificates($der));
     }
 
     /**
@@ -47,7 +47,7 @@ final class Pkcs7Reader
 
             if ($parsed !== false) {
                 /** @var array<string, mixed> $parsed */
-                $signers[] = Signer::fromParsedCertificate($parsed);
+                $signers[] = Signer::fromParsedCertificate($parsed, $one);
             }
         }
 

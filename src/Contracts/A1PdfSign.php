@@ -133,6 +133,32 @@ interface A1PdfSign
     public function extendArchive(string $pdfPath): SignedPdf;
 
     /**
+     * Reads the ICP-Brasil identity out of a certificate and checks it against
+     * the rules the specification states about its own bytes.
+     *
+     * **Structural only, and never a substitute for trust.** Every rule checked
+     * is decidable from the certificate alone, so a self-signed certificate
+     * built to satisfy them all will conform. Whether the chain reaches an
+     * ICP-Brasil root is a different question, answered by
+     * `Validation\TrustStore`.
+     *
+     * Useful before signing rather than after being rejected: it says which
+     * field is wrong, from the file, instead of leaving that to whatever
+     * receives the document.
+     *
+     * @param  string  $pfxPath  A PKCS#12 file, or a PEM certificate.
+     *
+     * @throws \Throwable
+     *
+     * @see docs/decisions/0029-the-identity-a-brazilian-signer-is-known-by.md
+     */
+    public function icpBrasil(
+        string $pfxPath,
+        #[\SensitiveParameter]
+        string $password = '',
+    ): \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
+
+    /**
      * Starts a fluent signature. Nothing happens until sign() is called.
      */
     public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
