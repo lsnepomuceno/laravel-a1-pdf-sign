@@ -84,6 +84,7 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 | **Verification** | the CMS is actually verified, with the timestamp, the profile and revocation reported |
 | **ICP-Brasil identity** | CPF, CNPJ and the rest, read from the certificate rather than parsed out of a name |
 | **PDF/A** | a signed document stays conformant, measured with veraPDF rather than assumed |
+| **PDF/UA** | measured too, and the answer is no: signing costs an accessible document its conformance |
 
 ## Certificates
 
@@ -315,7 +316,8 @@ signer proves very little:
 | | |
 |---|---|
 | **poppler** `pdfsig` | reads the samples independently, and has caught defects the suite passed straight through |
-| **veraPDF** | decides PDF/A conformance, in CI and in the development image |
+| **veraPDF** | decides PDF/A and PDF/UA conformance, in CI and in the development image |
+| **pyHanko** | enforces `/DocMDP`, so a certification broken by a later revision is caught by something that is not us |
 | **qpdf** | checks structure, and reads back documents this package encrypted |
 
 [`samples/`](samples/README.md) holds one signed document per profile plus a six-signature document. Open them in any
