@@ -80,12 +80,35 @@ What the network tests assert:
   implementing the contract, which the Roave check reports.
 - `DocTimeStampWriter` takes `SignatureFieldReader` as a further defaulted
   constructor parameter, appended.
-- Nothing refreshes the Document Security Store while extending. A rigorous
-  chain re-collects revocation material for the *previous* timestamp's
-  certificate before stamping over it, and this does not: it appends the
-  timestamp only. Named here rather than implied, and it is the same gap
-  [0016](0016-trust-is-the-applications-policy.md) left open around revocation
-  generally.
+- ~~Nothing refreshes the Document Security Store while extending.~~ **Fixed.**
+  This section said a rigorous chain re-collects revocation material for the
+  previous timestamp's certificate before stamping over it, and that this did
+  not: it appended the timestamp only. A document could therefore gain a fifth
+  archive timestamp over evidence gathered on the day it was signed, which is
+  the one thing long-term validation exists to prevent.
+
+  `extend()` now refreshes the store first, and the order is the correctness
+  claim: ETSI EN 319 142-1 puts the material for everything the document already
+  carries **inside the file while it is still verifiable**, and the archive
+  timestamp then covers it. A store appended afterwards is material the
+  timestamp does not attest.
+
+  The chains are built per signature with `Validation\ChainBuilder` rather than
+  pooled, because `collectValidationMaterial()` treats each certificate's
+  neighbour as its issuer: a mixed pile would build an OCSP request against the
+  wrong pair and embed the answer. The timestamps' own chains are included, and
+  that is the point of the exercise, since the authority's certificate is what
+  the *next* archive timestamp has to be able to check.
+
+  Gated offline by `tests/ArchiveRefreshTest.php`. Two pieces of test-only
+  machinery were needed and neither is a stub of the thing under test:
+  `DebugCertificate::makeRevocable()` issues a certificate that names its own
+  distribution point, because `collectValidationMaterial()` reads the endpoints
+  from the certificate and one carrying none is never asked about whatever
+  transport is bound; and `Testing\LocalRevocationAuthority` answers with
+  material, where `LocalTimestampAuthority` answers false. Whether that material
+  is *good* is [0024](0024-revocation-is-evaluated-not-counted.md)'s question,
+  with its own fixtures.
 
 ## Alternatives rejected
 

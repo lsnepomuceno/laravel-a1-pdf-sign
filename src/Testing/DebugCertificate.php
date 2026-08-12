@@ -169,31 +169,12 @@ final class DebugCertificate
 
         $key = self::key();
 
-        $x509 = TemporaryFile::with(
-            sys_get_temp_dir(),
-            '.cnf',
+        $x509 = self::signWithExtensions(
             self::openSslConfiguration($fields),
-            static function (TemporaryFile $configuration) use ($key, $commonName, $daysValid): OpenSSLCertificate {
-                $options = ['digest_alg' => 'sha256', 'config' => $configuration->path, 'x509_extensions' => 'icp'];
-
-                // openssl_csr_new takes the key by reference, so it is handed a
-                // copy: the analyser widens anything that function touches to
-                // mixed, and the signing call below needs the type intact.
-                $request = $key;
-                $csr = openssl_csr_new(['commonName' => $commonName, 'countryName' => 'BR'], $request, $options);
-
-                if (! $csr instanceof OpenSSLCertificateSigningRequest) {
-                    throw new RuntimeException('Unable to generate the ICP-Brasil test CSR: ' . openssl_error_string());
-                }
-
-                $signed = openssl_csr_sign($csr, null, $key, $daysValid, $options);
-
-                if ($signed === false) {
-                    throw new RuntimeException('Unable to sign the ICP-Brasil test certificate: ' . openssl_error_string());
-                }
-
-                return $signed;
-            },
+            'icp',
+            ['commonName' => $commonName, 'countryName' => 'BR'],
+            $key,
+            $daysValid,
         );
 
         $pfx = '';
@@ -204,6 +185,102 @@ final class DebugCertificate
 
         /** @var string $pfx */
         return [$pfx, self::PASSWORD];
+    }
+
+    /**
+     * A certificate that names where its revocation material lives.
+     *
+     * `Signer::collectValidationMaterial()` reads the endpoints out of the
+     * certificate, so a certificate carrying none is never asked about, whatever
+     * transport is bound. Without this, the code that gathers a Document
+     * Security Store could only be exercised against a real authority
+     * (docs/decisions/0022-the-archive-timestamp-is-a-chain.md).
+     *
+     * The URLs are unroutable on purpose. A substituted transport answers them,
+     * and anything that reached the network would be a test lying about what it
+     * checks.
+     *
+     * @return array{0: string, 1: string} The PFX bytes and its password.
+     *
+     * @throws CertificateOutputNotFoundException
+     */
+    public static function makeRevocable(
+        string $crlUrl = 'http://crl.invalid/test.crl',
+        string $ocspUrl = 'http://ocsp.invalid',
+        int $daysValid = 600,
+    ): array {
+        $key = self::key();
+
+        $configuration = implode("\n", [
+            '[req]',
+            'distinguished_name = dn',
+            '[dn]',
+            '[leaf]',
+            'basicConstraints = CA:FALSE',
+            'keyUsage = critical, digitalSignature, nonRepudiation, keyEncipherment',
+            "crlDistributionPoints = URI:{$crlUrl}",
+            "authorityInfoAccess = OCSP;URI:{$ocspUrl}",
+            '',
+        ]);
+
+        $x509 = self::signWithExtensions(
+            $configuration,
+            'leaf',
+            ['commonName' => 'Revocable Test Certificate'],
+            $key,
+            $daysValid,
+        );
+
+        $pfx = '';
+
+        if (! openssl_pkcs12_export($x509, $pfx, $key, self::PASSWORD)) {
+            throw new CertificateOutputNotFoundException();
+        }
+
+        /** @var string $pfx */
+        return [$pfx, self::PASSWORD];
+    }
+
+    /**
+     * Issues a self-signed certificate whose extensions come from a written
+     * configuration, which is the only way openssl accepts an `otherName` or a
+     * distribution point.
+     *
+     * @param  array<string, string>  $subject
+     */
+    private static function signWithExtensions(
+        string $configuration,
+        string $section,
+        array $subject,
+        OpenSSLAsymmetricKey $key,
+        int $daysValid,
+    ): OpenSSLCertificate {
+        return TemporaryFile::with(
+            sys_get_temp_dir(),
+            '.cnf',
+            $configuration,
+            static function (TemporaryFile $file) use ($section, $subject, $key, $daysValid): OpenSSLCertificate {
+                $options = ['digest_alg' => 'sha256', 'config' => $file->path, 'x509_extensions' => $section];
+
+                // openssl_csr_new takes the key by reference, so it is handed a
+                // copy: the analyser widens anything that function touches to
+                // mixed, and the signing call below needs the type intact.
+                $request = $key;
+                $csr = openssl_csr_new($subject, $request, $options);
+
+                if (! $csr instanceof OpenSSLCertificateSigningRequest) {
+                    throw new RuntimeException('Unable to generate the test CSR: ' . openssl_error_string());
+                }
+
+                $signed = openssl_csr_sign($csr, null, $key, $daysValid, $options);
+
+                if ($signed === false) {
+                    throw new RuntimeException('Unable to sign the test certificate: ' . openssl_error_string());
+                }
+
+                return $signed;
+            },
+        );
     }
 
     /**
