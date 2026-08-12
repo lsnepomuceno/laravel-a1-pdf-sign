@@ -177,27 +177,20 @@ it('keeps every revision sound as they stack up', function () {
     }
 });
 
-it('reports no structural error in any committed sample', function () {
+it('reports nothing at all about any committed sample', function () {
     // These are what readers are pointed at, in Adobe and in ITI Validar, so a
     // structural fault in one would be a fault in the evidence.
     //
-    // Errors only, and that is a compromise worth naming. Two samples descend
-    // from minimal fixtures whose page objects carry no /Resources, which
-    // ISO 32000-1 §7.7.3.3 requires somewhere in the page tree; qpdf 12 warns
-    // and repairs, qpdf 11 said nothing. The fault is in the fixtures and
-    // predates every test here, and fixing it means regenerating them and the
-    // samples derived from them, which several tests pin object numbers
-    // against. Left as a follow-up rather than papered over by loosening the
-    // comparative gate above, which is the one that actually watches the
-    // signer.
+    // This filtered down to errors until the fixtures were rebuilt. Two samples
+    // descend from minimal PDF 1.5 files whose page objects carried no
+    // /Resources, which ISO 32000-1 §7.7.3.3 requires somewhere in the page
+    // tree, so qpdf warned and repaired. That one warning was reason enough to
+    // ignore warnings on every other sample too, which is how a compromise in
+    // one place turns off a gate everywhere. `poc/rebuild-stream-fixtures.php`
+    // regenerates them, and the verdict is now the whole verdict.
     $samples = glob(dirname(__DIR__) . '/samples/*.pdf');
 
     foreach ($samples === false ? [] : $samples as $sample) {
-        $errors = array_filter(
-            qpdfComplaintsAbout($sample),
-            static fn(string $line): bool => str_starts_with($line, 'ERROR'),
-        );
-
-        expect($errors)->toBe([]);
+        expect(qpdfComplaintsAbout($sample))->toBe([]);
     }
 });

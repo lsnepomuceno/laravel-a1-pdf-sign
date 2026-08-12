@@ -78,7 +78,7 @@ it('keeps a PDF/A document conformant when the signature is invisible', function
 })->with(['1b', '2b'])->group('pdfa');
 
 it('keeps a PDF/A document conformant with a seal drawn on it', function (string $flavour) {
-    // This asserted FAIL until 2.5, and the comment said the day it flipped was
+    // This asserted FAIL until 0028, and the comment said the day it flipped was
     // the day someone should be told. The seal now carries its own ICCBased
     // profile instead of asking the document for an OutputIntent it may not
     // have (docs/decisions/0028-the-seal-carries-its-own-colour-space.md).

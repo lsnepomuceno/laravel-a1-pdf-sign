@@ -61,7 +61,7 @@ and it is what turns PDF/A-1b from FAIL to PASS.
 
 ### A visible seal costs conformance, in both parts
 
-**Fixed in 2.5 by [0028](0028-the-seal-carries-its-own-colour-space.md), which
+**Fixed by [0028](0028-the-seal-carries-its-own-colour-space.md), which
 took the next step this section named. What follows is the state that record
 started from, kept because it is why the fix took the shape it did.**
 
