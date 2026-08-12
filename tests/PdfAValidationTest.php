@@ -77,24 +77,34 @@ it('keeps a PDF/A document conformant when the signature is invisible', function
     unlink($path);
 })->with(['1b', '2b'])->group('pdfa');
 
-it('loses conformance when a seal is drawn, which is the colour space', function (string $flavour) {
-    // Asserted as FAIL on purpose. The seal is DeviceRGB, which both parts
-    // allow only where the file carries an RGB OutputIntent, and adding one is
-    // the author's statement about their document rather than the signer's.
-    //
-    // The day the seal moves to an ICCBased space this test fails, and that is
-    // exactly when someone should be told.
+it('keeps a PDF/A document conformant with a seal drawn on it', function (string $flavour) {
+    // This asserted FAIL until 2.5, and the comment said the day it flipped was
+    // the day someone should be told. The seal now carries its own ICCBased
+    // profile instead of asking the document for an OutputIntent it may not
+    // have (docs/decisions/0028-the-seal-carries-its-own-colour-space.md).
     $path = signedPdfA($flavour, seal: true, transparent: false);
 
-    expect(veraPdfVerdict($path, $flavour))->toBe('FAIL');
+    expect(veraPdfVerdict($path, $flavour))->toBe('PASS');
 
     unlink($path);
 })->with(['1b', '2b'])->group('pdfa');
 
+it('keeps PDF/A-2 conformant with a transparent seal, which part 1 cannot be', function () {
+    // Part 2 allows transparency, and the last rule standing was §6.2.10: the
+    // page needs a group naming its blending colour space. veraPDF named that
+    // rule and nothing else, so the group closed it.
+    $path = signedPdfA('2b', seal: true, transparent: true);
+
+    expect(veraPdfVerdict($path, '2b'))->toBe('PASS');
+
+    unlink($path);
+})->group('pdfa');
+
 it('never conforms to PDF/A-1 with a transparent seal, whatever else changes', function () {
     // ISO 19005-1 §6.4 forbids /SMask outright, so no arrangement of this
-    // package's output makes a transparent seal conformant to part 1.
-    // seal.transparent is the lever, and this is why it exists.
+    // package's output makes a transparent seal conformant to part 1. It is the
+    // one cell the colour space could not rescue, and seal.transparent is the
+    // lever, which is why it exists.
     $path = signedPdfA('1b', seal: true, transparent: true);
 
     expect(veraPdfVerdict($path, '1b'))->toBe('FAIL');

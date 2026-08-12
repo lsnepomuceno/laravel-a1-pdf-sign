@@ -37,6 +37,7 @@ document drifts away from the code it describes.
 | [0025](0025-what-signing-does-to-pdf-a.md) | What signing does to PDF/A, measured |
 | [0026](0026-verification-tools-are-instruments.md) | The verification tools are instruments, and nothing skips |
 | [0027](0027-the-transport-is-a-seam.md) | The transport is a seam, so the profiles can be gated |
+| [0028](0028-the-seal-carries-its-own-colour-space.md) | The seal carries its own colour space, built rather than vendored |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

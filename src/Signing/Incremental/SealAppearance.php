@@ -25,14 +25,21 @@ final class SealAppearance
      *                            separate greyscale image, not a fourth
      *                            component of this one.
      */
-    public function imageObject(int $number, SealImage $seal, ?int $maskNumber = null): string
+    public function imageObject(int $number, SealImage $seal, ?int $maskNumber = null, ?int $profileNumber = null): string
     {
         $mask = $maskNumber !== null && $seal->isTransparent() ? "/SMask {$maskNumber} 0 R" : '';
+
+        // /DeviceRGB is what the samples are, but PDF/A allows it only where the
+        // file carries an RGB OutputIntent, which is the author's statement
+        // about their document and not the signer's to add. An /ICCBased space
+        // carries its own profile and needs no such declaration
+        // (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+        $colourSpace = $profileNumber === null ? '/DeviceRGB' : "[/ICCBased {$profileNumber} 0 R]";
 
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Image'
             . "/Width {$seal->width}/Height {$seal->height}"
-            . '/ColorSpace/DeviceRGB/BitsPerComponent 8'
+            . "/ColorSpace{$colourSpace}/BitsPerComponent 8"
             . '/Filter/' . $seal->pdfFilter()
             . $mask
             . '/Length ' . strlen($seal->contents)
@@ -60,6 +67,25 @@ final class SealAppearance
             . '/Length ' . strlen($alpha)
             . ">>\nstream\n"
             . $alpha
+            . "\nendstream\nendobj\n";
+    }
+
+    /**
+     * The ICC profile the seal's colour space points at.
+     *
+     * Deflated, because it is 2.6 KB of tables that compress to well under half
+     * that, and every signed document carries one.
+     */
+    public function profileObject(int $number, string $profile): string
+    {
+        $deflated = (string) gzcompress($profile, 9);
+
+        return "{$number} 0 obj\n"
+            . '<</N 3'
+            . '/Filter/FlateDecode'
+            . '/Length ' . strlen($deflated)
+            . ">>\nstream\n"
+            . $deflated
             . "\nendstream\nendobj\n";
     }
 
