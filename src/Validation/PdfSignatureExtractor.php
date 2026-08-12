@@ -21,7 +21,16 @@ final class PdfSignatureExtractor
     {
         // ISO 32000-1 allows any whitespace between the four numbers, and a
         // signer must pad them to a fixed width to patch the values in place.
-        if (preg_match_all('/\/ByteRange\[0 (\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) === 0) {
+        //
+        // Tolerated before the array and after its bracket too, which the first
+        // version of this pattern did not. It required `/ByteRange[0 `
+        // literally, so a document from any producer that writes
+        // `/ByteRange [0 9875 15069 565]`, pyHanko among them, reported no
+        // signatures at all and raised as unsigned. That is invariant 4,
+        // "never assume whitespace in PDF syntax", which was written for the
+        // signing side and applies here just as hard: what this package emits
+        // is one of the shapes it has to read, not the only one.
+        if (preg_match_all('/\/ByteRange\s*\[\s*0\s+(\d+)\s+(\d+)\s+(\d+)\s*\]/', $pdf, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) === 0) {
             return [];
         }
 
@@ -59,25 +68,44 @@ final class PdfSignatureExtractor
      */
     private function isDocumentTimestamp(string $pdf, int $byteRangeOffset): bool
     {
-        // The /Type and /SubFilter sit in the same dictionary, just ahead of
-        // the /ByteRange this entry was found at.
-        $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
+        $dictionary = $this->dictionaryAround($pdf, $byteRangeOffset);
 
         return str_contains($dictionary, '/DocTimeStamp') || str_contains($dictionary, 'ETSI.RFC3161');
     }
 
     /**
+     * The signature dictionary around a /ByteRange, on both sides of it.
+     *
+     * Key order inside a dictionary carries no meaning, and producers differ.
+     * This package writes /Type, /SubFilter and /ByteRange before the 16 KB
+     * /Contents placeholder, so everything worth reading sits *behind* the
+     * /ByteRange. pyHanko writes /Contents first and /Type, /Filter and
+     * /SubFilter *after* the /ByteRange, and reading only backwards found
+     * neither: the sub-filter came back null, and with it the profile, and a
+     * /DocTimeStamp from that producer would have been classified as a
+     * signature and then reported invalid for failing to verify as one.
+     *
+     * Both windows are 200 bytes, which cannot reach a neighbouring signature:
+     * the /Contents placeholder between two of them is measured in kilobytes.
+     */
+    private function dictionaryAround(string $pdf, int $byteRangeOffset): string
+    {
+        return substr($pdf, max(0, $byteRangeOffset - 200), 200)
+            . substr($pdf, $byteRangeOffset, 200);
+    }
+
+    /**
      * The /SubFilter the signature declares.
      *
-     * Read from the same window as /Type above, since both sit in the
-     * dictionary just ahead of the /ByteRange. What the entry claims to be is
+     * Read from the same window as /Type above, since both sit in the same
+     * dictionary as the /ByteRange. What the entry claims to be is
      * worth reporting on its own: the profile the package derives from it is a
      * reading of the document's contents, and a caller comparing the two can
      * see a file that says CAdES while carrying nothing a CAdES signature needs.
      */
     private function subFilter(string $pdf, int $byteRangeOffset): ?string
     {
-        $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
+        $dictionary = $this->dictionaryAround($pdf, $byteRangeOffset);
 
         return preg_match('#/SubFilter\s*/([A-Za-z0-9.]+)#', $dictionary, $found) === 1 ? $found[1] : null;
     }
