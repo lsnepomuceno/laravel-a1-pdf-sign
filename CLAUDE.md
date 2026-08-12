@@ -26,6 +26,10 @@ Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a refer
 
 `ARCHITECTURE.md` is the index. When you change behaviour that a decision record justifies, update that record's outcome section too: a record whose outcome is never written back is how the previous document drifted away from the code.
 
+**A behaviour change is not finished until every surface that describes it says the same thing.** `CONTRIBUTING.md` enumerates them, and the list is enumerated rather than summarised because "and any other relevant documentation" is exactly what let three of them go stale at once: `samples/` sat a release behind, the documentation site stopped at 2.3.1 while 2.4 shipped, and the README never named two facade methods that had been public for a release. Three of those surfaces now have gates (`tests/SamplesTest.php`, and two rules in `tests/ArchTest.php` covering docblocks and the README's coverage of the facade); the rest are review.
+
+**The documentation site lives on the `docs` branch, not here.** Nothing in a pull request against `main` can check it, and no test on `main` will ever fail because of it. It is updated in its own pull request, on the day a version is tagged, and it deliberately describes only what is installable: a feature merged and not yet tagged does not belong on it.
+
 ## Commands
 
 ```bash

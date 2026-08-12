@@ -1,82 +1,51 @@
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/14093492/127516361-48fbde85-1f34-4626-82ae-44b11aa0de15.png" alt="Signature image">
-</p>
-
-<h1 align="center">Sign PDF files with valid x509 certificate</h1>
+<h1 align="center">Sign PDF files with an A1 certificate</h1>
 
 <p align="center">
-  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/releases/latest">
-    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v" alt="Latest Stable Version">
-  </a>
-  <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats">
-    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/downloads" alt="Total Downloads">
-  </a>
-  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/tree/dev">
-    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/v/unstable" alt="Latest Unstable Version">
-  </a>
-  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md">
-    <img src="https://poser.pugx.org/lsnepomuceno/laravel-a1-pdf-sign/license" alt="License">
-  </a>
-  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml">
-    <img src="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml/badge.svg" alt="Tests">
-  </a>
+  Digital signatures for Laravel, from PKCS#12 or PEM, with PAdES profiles, long-term validation
+  <br>and cryptographic verification of signatures a document already carries.
 </p>
 
-<table align="center">
-  <thead>
-    <tr>
-      <th colspan="4">Reference</th>
-    </tr>
-  </thead>
-  <tr>
-    <td>Laravel version</td>
-    <td>PHP version</td>
-    <td>Package version</td>
-    <td>Docs</td>
-  </tr>
+<p align="center">
+  <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign"><img alt="Latest version" src="https://img.shields.io/packagist/v/lsnepomuceno/laravel-a1-pdf-sign?style=flat-square&color=1f7a3d&label=packagist"></a>
+  <a href="https://packagist.org/packages/lsnepomuceno/laravel-a1-pdf-sign/stats"><img alt="Downloads" src="https://img.shields.io/packagist/dt/lsnepomuceno/laravel-a1-pdf-sign?style=flat-square&color=1f7a3d"></a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/actions/workflows/main_action.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/lsnepomuceno/laravel-a1-pdf-sign/main_action.yml?branch=main&style=flat-square&label=tests"></a>
+  <a href="https://github.com/lsnepomuceno/laravel-a1-pdf-sign/blob/main/LICENSE.md"><img alt="License" src="https://img.shields.io/packagist/l/lsnepomuceno/laravel-a1-pdf-sign?style=flat-square&color=555"></a>
+</p>
 
-  <tr>
-    <td>^8 ~8.54</td>
-    <td rowspan="2">^7.4</td>
-    <td>^0 ~0.0.11</td>
-    <td rowspan="2"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home">Official Doc</a></td>
-  </tr>
+<p align="center">
+  <img alt="PHP" src="https://img.shields.io/badge/php-8.4%20%E2%80%93%208.5-777bb4?style=flat-square&logo=php&logoColor=white">
+  <img alt="Laravel" src="https://img.shields.io/badge/laravel-13-ff2d20?style=flat-square&logo=laravel&logoColor=white">
+  <img alt="PHPStan" src="https://img.shields.io/badge/phpstan-level%20max-2a2a2a?style=flat-square">
+  <img alt="Type coverage" src="https://img.shields.io/badge/type%20coverage-100%25-1f7a3d?style=flat-square">
+</p>
 
-  <tr>
-    <td>^8.56+</td>
-    <td>^0.0.12</td>
-  </tr>
+<p align="center">
+  <a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/home"><b>Documentation</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/release-notes">Release notes</a>
+  &nbsp;·&nbsp;
+  <a href="UPGRADE.md">Upgrading</a>
+  &nbsp;·&nbsp;
+  <a href="samples/README.md">Signed samples</a>
+</p>
 
-  <tr>
-    <td>^9</td>
-    <td>^8.1 || ^8.2</td>
-    <td rowspan="3">^1</td>
-    <td rowspan="3"><a href="https://laravel-a1-pdf-sign.netlify.app/docs/1.x/release-notes">Official Doc</a></td>
-  </tr>
+---
 
-  <tr>
-    <td>^10</td>
-    <td>^8.1 || ^8.2 || ^8.3</td>
-  </tr>
-
-  <tr>
-    <td>^11 || ^12</td>
-    <td>^8.2 || ^8.3 || ^8.4</td>
-  </tr>
-
-  <tr>
-    <td>^13</td>
-    <td>^8.4 || ^8.5</td>
-    <td>^2</td>
-    <td><a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/release-notes">Official Doc</a></td>
-  </tr>
-</table>
-
-## Version 2
+## Installation
 
 ```bash
 composer require lsnepomuceno/laravel-a1-pdf-sign
 ```
+
+Nothing else to register: the service provider is discovered, and the `A1PdfSign` facade is available immediately.
+`openssl` on `PATH` is **not** required to sign; it is used only for verifying a signature and for reading a legacy
+PFX file.
+
+```bash
+php artisan vendor:publish --tag=a1-pdf-sign-config
+```
+
+## Signing
 
 ```php
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
@@ -88,52 +57,90 @@ $signed = A1PdfSign::newSignature()
     ->seal()                       // omit for an invisible signature
     ->sign();
 
-$signed->contents();               // string
+$signed->contents;                 // string
 $signed->save($path);              // path
 $signed->download('contract.pdf'); // BinaryFileResponse
 ```
 
-**Signing appends a revision rather than rebuilding the document.** The original bytes survive, so annotations and form
-fields are preserved and a document can carry more than one signature, the request in
-[TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021.
+> [!IMPORTANT]
+> **Signing appends a revision rather than rebuilding the document.** The original bytes survive byte for byte, so
+> annotations, form fields and every earlier signature are preserved, and a document can carry as many signatures as it
+> needs. That is [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021, and it is the single most
+> important behaviour in this package.
 
-### PEM certificates
+[Signing a document →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/sign-pdf-file)
 
-PKCS#12 (`.pfx` / `.p12`) is not the only accepted encoding. A PEM certificate is read through its own entry point,
-with the private key in the same file or in one of its own:
+## What it does
+
+| | |
+|---|---|
+| **PKCS#12 and PEM** | `.pfx`, `.p12`, or a PEM certificate with the key beside it or in its own file |
+| **PAdES profiles** | `legacy` through `pades-b-lta`, with RFC 3161 timestamps and long-term validation |
+| **Visible seals** | rendered from the certificate or drawn from your own artwork, on the page you name |
+| **Template fields** | fills a signature field a contract already carries, instead of appending beside it |
+| **Certification** | ISO 32000-1 §12.8.2.2 DocMDP, plus field locks that later signatures honour |
+| **Encrypted documents** | AES-128 and AES-256, signed and re-encrypted under the document's own key |
+| **Archive maintenance** | refresh a B-LTA archive with no certificate and no key material involved |
+| **Verification** | the CMS is actually verified, with the timestamp, the profile and revocation reported |
+| **ICP-Brasil identity** | CPF, CNPJ and the rest, read from the certificate rather than parsed out of a name |
+| **PDF/A** | a signed document stays conformant, measured with veraPDF rather than assumed |
+
+## Certificates
 
 ```php
-A1PdfSign::newSignature()
-    ->certificatePem($certificatePath, $keyPath, $password)   // $keyPath null when combined
-    ->pdf($pdfPath)
-    ->sign();
+// PKCS#12
+A1PdfSign::newSignature()->certificate($pfxPath, $password);
 
-A1PdfSign::signFromPem($pemPath, $password, $pdfPath);        // one-shot
-A1PdfSign::newSignature()->certificateFromPem($bytes);        // from an upload or a secret store
+// PEM, key in the same file or in its own
+A1PdfSign::newSignature()->certificatePem($certificatePath, $keyPath, $password);
+
+// From an upload or a secret store
+A1PdfSign::newSignature()->certificateFromPem($bytes);
 ```
 
-The format is decided by content, not by extension: PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`. The
-`pdf:sign` command detects it the same way, and takes `--key` for the two-file form:
+The encoding is decided by content, not by extension, since PEM ships as `.pem`, `.crt`, `.cer`, `.key` and `.txt`.
+Pass an empty password when the private key is unencrypted: **PEM permits that and PKCS#12 does not**, and an
+unprotected key on disk is readable by anything that can read the file.
 
-```bash
-php artisan pdf:sign contract.pdf certificate.pem "" signed.pdf --key=private.key
+### One call, when there is nothing to configure
+
+The builder exists for the cases that need it. When none of them apply, there is a one-shot form for each source:
+
+```php
+A1PdfSign::signFromFile($pfxPath, $password, $pdfPath);
+A1PdfSign::signFromPem($pemPath, $password, $pdfPath, $keyPath);
+A1PdfSign::signFromUpload($request->file('certificate'), $password, $pdfPath);
 ```
 
-Pass an empty password when the private key is unencrypted. **PEM permits that and PKCS#12 does not**, and an unprotected
-key on disk is readable by anything that can read the file, so prefer an encrypted one where you have the choice.
+### Storing a certificate
 
-Signed samples for every profile, including a document carrying six signatures, live in
-[`samples/`](samples/README.md). Open them in any reader to see what the package produces.
+A certificate and its password can be encrypted for storage and read back later, so an application that signs on a
+schedule does not keep either in plaintext:
 
-### PAdES profiles
+```php
+$stored = A1PdfSign::encryptCertificate($uploadedOrPath, $password);
 
-| Profile       | Adds                                                                               |
-|---------------|------------------------------------------------------------------------------------|
-| `legacy`      | ISO 32000-1 detached CMS                                                           |
-| `pades-b-b`   | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default**            |
-| `pades-b-t`   | plus an RFC 3161 timestamp                                                         |
-| `pades-b-lt`  | plus a Document Security Store, so it still verifies after the certificate expires |
-| `pades-b-lta` | plus an archive timestamp over the whole file                                      |
+$stored->hash;         // the key both values were encrypted with. Required to read them back
+$stored->certificate;
+$stored->password;
+
+$certificate = A1PdfSign::decryptCertificate($stored->hash, $stored->certificate, $stored->password);
+```
+
+**The hash is the key**, so keep it somewhere other than the ciphertext it opens. Without it the pair cannot be read
+back, by you or by anyone else.
+
+[Working with certificates →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/working-with-certificate)
+
+## PAdES profiles
+
+| Profile | Adds |
+|---|---|
+| `legacy` | ISO 32000-1 detached CMS. Widest reader support |
+| `pades-b-b` | CAdES signed attributes, with ESS `signing-certificate-v2`. **Default** |
+| `pades-b-t` | plus an RFC 3161 timestamp, so the signing time is attested by a third party |
+| `pades-b-lt` | plus a Document Security Store, so it still verifies after the certificate expires |
+| `pades-b-lta` | plus an archive timestamp over the whole file |
 
 ```php
 A1PdfSign::newSignature()
@@ -143,7 +150,17 @@ A1PdfSign::newSignature()
     ->sign();
 ```
 
-### Signing into a template's own fields
+An archive is a chain rather than a state, so it can be extended before the algorithms behind it weaken. **No
+certificate is involved**: a DocTimeStamp is signed by the authority, not by the signer, so a scheduled job can do this
+with no key material anywhere near it.
+
+```php
+A1PdfSign::extendArchive($path);
+```
+
+[Signature profiles →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/signature-profiles)
+
+## Signing into a template's own fields
 
 A contract laid out by someone else arrives with its signature fields already placed. `intoField()` fills the one you
 name instead of appending another beside it:
@@ -159,36 +176,42 @@ A1PdfSign::newSignature()
     ->certificate($pfx, $password)
     ->pdf($template)
     ->intoField('SignatureManager')
-    ->seal()              // drawn into the field's own rectangle
+    ->seal()             // drawn into the field's own rectangle
     ->sign();
 ```
 
-A field that is missing or already signed raises rather than falling back to appending, since that fallback is the
-failure this prevents: a signature that is valid and in the wrong place, with the template's field still empty.
+A field that is missing or already signed raises rather than falling back to appending. That fallback is the failure
+this prevents: a signature that is valid and in the wrong place, with the template's field still empty.
 
-### Certification
+## Certification and locks
 
-A certification signature says what may happen to the document from here on, rather than what the bytes were
-(ISO 32000-1 §12.8.2.2):
+```php
+A1PdfSign::newSignature()->certificate($pfx, $password)->pdf($path)
+    ->certify('form-filling')                  // no-changes | form-filling | annotations
+    ->lock(FieldLock::only(['Amount']))        // ->lock() for every field
+    ->sign();
+```
+
+A certification governs the whole document; a lock governs the fields you name. **The half that matters is the
+reading**: a later signature into a field an existing lock covers is refused, rather than producing a document whose
+earlier signature silently stopped verifying.
+
+## Encrypted documents
+
+A password-protected document is signed and re-encrypted under its own key, so the file stays consistent:
 
 ```php
 A1PdfSign::newSignature()
-    ->certificate($pfx, $password)
-    ->pdf($path)
-    ->certify('form-filling')   // no-changes | form-filling | annotations
+    ->certificate($pfxPath, $certificatePassword)
+    ->pdf($path, 'the document password')
     ->sign();
 ```
 
-| Level | Permits |
-|---|---|
-| `no-changes` | nothing; the document **cannot be signed again** |
-| `form-filling` | filling form fields and signing. **Default** |
-| `annotations` | form filling, signing and annotations |
+The document's password and the certificate's are different things and are passed separately: one opens the file, the
+other unlocks the key that signs it. AES-128 and AES-256 are supported. **RC4 is refused**, because signing it would
+mean writing RC4 back into a document in order to sign it.
 
-A certification has to be the first signature and there can be only one. Both are enforced, and so is the exclusion at
-`no-changes`: a further signature is a further revision, which is exactly what that level forbids.
-
-### Validation
+## Validation
 
 ```php
 $report = A1PdfSign::validate($pdfPath);
@@ -199,28 +222,122 @@ $report->signers();     // structured signer identity
 $report->isCertified(); // whether the author certified the document
 ```
 
-`isValid()` answers whether each signature matches the document. Whether to accept the signer is a separate question:
+`isValid()` means **the CMS actually verifies**. Each signature also reports what the document can prove about it:
+
+```php
+$signature = $report->latest();
+
+$signature?->attestedAt();       // the timestamp authority's time, or null. Never the signer's own clock
+$signature?->profile;            // the level it actually satisfies, not the one it claims
+$signature?->isRevoked();        // what the document's own OCSP responses and CRLs say
+$signature?->coversWholeDocument;
+```
+
+Revocation is evaluated from the material the document carries, and the material is verified against the issuer before
+it is believed. **Nothing is fetched**: validation makes no network request and cannot be made to.
+
+Whether to accept the signer is a separate question, answered against roots you name:
 
 ```php
 $store = TrustStore::fromFile(storage_path('icp-brasil.pem'));
 
 $report = A1PdfSign::validate($pdfPath, $store);
-
 $report->isTrusted();   // ?bool. null when no store was given: nobody was asked
 ```
 
-**The package ships no trust store and will not.** A bundled one goes stale between releases, and shipping it would make
-this package's release cadence the thing that decides whose signatures you accept. For ICP-Brasil, fetch the current
-chain from the ITI and keep it with your configuration. Verifying against the roots you named is the part this does, and
-OpenSSL does the path validation, so intermediate validity, `basicConstraints`, key usage and name constraints are all
-checked rather than approximated.
+> [!NOTE]
+> **The package ships no trust store and will not.** A bundled one goes stale between releases, and shipping it would
+> make this package's release cadence the thing that decides whose signatures you accept. For ICP-Brasil, fetch the
+> current chain from the ITI and keep it with your configuration. OpenSSL does the path validation, so intermediate
+> validity, `basicConstraints`, key usage and name constraints are all checked rather than approximated.
+>
+> An untrusted signature is not an invalid one: the two questions are independent.
 
-An untrusted signature is not an invalid one: the two questions are independent.
+[Validating a signature →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/validating-signature)
 
-Configuration is publishable:
+## ICP-Brasil
 
-```bash
-php artisan vendor:publish --tag=a1-pdf-sign-config
+A Brazilian certificate carries the holder's identity in `subjectAlternativeName`, not in the subject, and PHP renders
+every one of those fields as `othername:<unsupported>`. This package reads them:
+
+```php
+$signer = A1PdfSign::validate($path)->signers()[0];
+
+$signer->icpBrasil?->cpf;                 // '11144477735'
+$signer->icpBrasil?->cnpj;                // the company, for an e-CNPJ
+$signer->icpBrasil?->formattedRegistry(); // '11.222.333/0001-81'
+$signer->name();                          // the name, without the number glued to it
 ```
 
-Upgrading from 1.x? See [UPGRADE.md](UPGRADE.md).
+A certificate can also be checked against the rules its own specification states, before anything is signed:
+
+```php
+$report = A1PdfSign::icpBrasil($pfxPath, $password);
+
+$report->conforms();   // required fields, widths, alphabet, check digits, the CPF in two places agreeing
+$report->messages();   // one line per finding, naming the field
+```
+
+> [!WARNING]
+> **`conforms()` is not `isTrusted()`.** Every rule it checks is decidable from the certificate alone, so a self-signed
+> certificate built to satisfy them will conform. Whether the chain reaches an ICP-Brasil root is `TrustStore`'s
+> question, and it is a different one.
+
+## Command line
+
+```bash
+php artisan pdf:sign contract.pdf certificate.pfx "password" signed.pdf
+php artisan pdf:sign contract.pdf certificate.pem "" signed.pdf --key=private.key
+php artisan pdf:validate-signature signed.pdf
+```
+
+[Commands →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/commands)
+
+## Compatibility
+
+| Package | Laravel | PHP | Documentation |
+|---|---|---|---|
+| **^2** | ^13 | 8.4 – 8.5 | [2.x](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/home) |
+| ^1 | ^9 – ^12 | 8.1 – 8.4 | [1.x](https://laravel-a1-pdf-sign.netlify.app/docs/1.x/home) |
+| ^0 | ^8 | ^7.4 | [0.x](https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home) |
+
+Laravel 12 is not supported by v2, despite reaching PHP 8.5: it requires `symfony/process ^7.2` while the test
+toolchain requires `^8.1`, so the two cannot be installed together.
+
+Coming from 1.x? The v1 surface is **gone, not deprecated**, and [UPGRADE.md](UPGRADE.md) maps every removed API to its
+replacement.
+
+## Verified, not asserted
+
+Signed output is checked against tools that were not written here, because a validator sharing its assumptions with the
+signer proves very little:
+
+| | |
+|---|---|
+| **poppler** `pdfsig` | reads the samples independently, and has caught defects the suite passed straight through |
+| **veraPDF** | decides PDF/A conformance, in CI and in the development image |
+| **qpdf** | checks structure, and reads back documents this package encrypted |
+
+[`samples/`](samples/README.md) holds one signed document per profile plus a six-signature document. Open them in any
+reader to see what the package produces.
+
+## Contributing
+
+Patches are expected to come with tests. `composer check` runs everything CI runs: Pint, PHPStan at level max with no
+baseline, a dependency report and the suite.
+
+```bash
+docker compose -f .docker/compose.yaml run --rm php composer check
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md), and [ARCHITECTURE.md](ARCHITECTURE.md) for how the package is put together and
+why. The rules that break the product when violated are in [docs/spec/invariants.md](docs/spec/invariants.md), and the
+reasoning behind the design is one numbered file per decision in [docs/decisions/](docs/decisions/README.md).
+
+## Security
+
+Found a vulnerability? Please follow [SECURITY.md](SECURITY.md) rather than opening a public issue.
+
+## License
+
+MIT. See [LICENSE.md](LICENSE.md).

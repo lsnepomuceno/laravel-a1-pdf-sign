@@ -288,3 +288,36 @@ it('documents parameters that exist', function () {
 
     expect($found)->toBe([]);
 });
+
+/**
+ * The front door describes the package.
+ *
+ * `icpBrasil()` and `extendArchive()` were both public for a release before the
+ * README mentioned either, which is the same failure as a stale docblock at a
+ * larger scale: the thing that tells people what the package does had stopped
+ * being true. A method a consumer is expected to call is a method the first
+ * page should name (CONTRIBUTING.md).
+ *
+ * The check is deliberately shallow. It asks whether the name appears, not
+ * whether what is written about it is any good, because only the second is
+ * worth a human's time and only the first can be checked at all.
+ */
+it('names every entry point on the front page', function () {
+    $readme = (string) file_get_contents(dirname(__DIR__) . '/README.md');
+    $missing = [];
+
+    foreach (new ReflectionClass(LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign::class)->getMethods() as $method) {
+        // tempPath() is infrastructure a consumer never calls on purpose, and
+        // newSignature() appears as the builder in every example rather than by
+        // name.
+        if (in_array($method->getName(), ['tempPath', 'newSignature'], true)) {
+            continue;
+        }
+
+        if (! str_contains($readme, $method->getName())) {
+            $missing[] = $method->getName();
+        }
+    }
+
+    expect($missing)->toBe([]);
+});
