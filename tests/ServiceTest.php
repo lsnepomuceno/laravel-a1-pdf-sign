@@ -120,6 +120,11 @@ it('lets the container swap the implementation', function () {
             return new SignatureReport([]);
         }
 
+        public function extendArchive(string $pdfPath): \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf
+        {
+            return new \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf('faked');
+        }
+
         public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature
         {
             return app(\LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature::class);

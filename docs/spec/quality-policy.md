@@ -157,6 +157,87 @@ suite passed straight through. `samples/` holds one signed PDF per profile plus
 a six-signature document. Regenerate them with `poc/sign-samples.php` and
 re-check after any change to `src/Signing/`.
 
+**PDF/A conformance is measured with veraPDF**, the reference validator. It is
+installed in the development image and in CI, so it runs everywhere the suite
+runs:
+
+```bash
+docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
+```
+
+It **blocks**, unlike the timestamp group: veraPDF is deterministic and runs
+offline once installed, so a failure there is this package's rather than
+somebody else's outage.
+
+**Nothing skips.** `composer test` carries `--fail-on-skipped`, because every
+check has to run somewhere and a skip is how one quietly stops.
+
+**The timestamp profiles are gated, not merely reported.**
+`Testing\LocalTimestampAuthority` answers with real RFC 3161 tokens from
+`openssl ts -reply`, with no server and no connection, so B-T, B-LT, B-LTA, the
+archive chain and PDF/A conformance at B-LTA all run in the blocking suite
+([0027](../decisions/0027-the-transport-is-a-seam.md)).
+
+The live tests against freetsa.org stay in the `network` group beside them, and
+they answer a different question: a local authority establishes that the package
+builds, embeds and verifies a token correctly, and cannot establish that it
+interoperates with somebody else's. veraPDF was
+behind a build argument and its group skipped by default, which meant the
+conformance claims were unverified on the machine where the work was being
+done. The JRE it costs is the price of the check actually happening.
+
+The matrix it asserts includes the cases that **fail**: a sealed document is not
+PDF/A conformant, for reasons that are the colour space rather than the
+signature, and asserting the failure is what will tell someone the day that
+changes ([0025](../decisions/0025-what-signing-does-to-pdf-a.md)).
+
+**Structure is checked by qpdf**, which reads the same cross-reference tables
+and streams this package writes by hand, and is strict where poppler forgives:
+a table whose offsets are slightly wrong still opens in a reader that recovers
+by scanning, and the fault stays hidden. It is C++ and a couple of megabytes, so
+unlike veraPDF it lives in the everyday image and the group needs no service of
+its own.
+
+The gate is **comparative**: signing must not introduce a complaint that was not
+already there. Two fixtures are minimal documents whose pages carry no
+`/Resources`, a fault in the input rather than in anything written here, and a
+gate that failed on it would be measuring the fixture.
+
+**Corrupted input is guarded**, from a fixed seed, over every reader that parses
+bytes the application did not write: the document reader, the signature
+extractor, the ASN.1 walker, the stream filters, the PNG reader and the
+revocation checker. The contract is narrow and the same for all of them: read
+it, or throw the documented exception. Never a `TypeError`, never a fatal.
+
+**Dependencies are audited** in CI. `shivammathur/setup-php` sets
+`COMPOSER_NO_AUDIT`, so advisories were silently unchecked; for a signing
+package a known vulnerability in the tree is worth blocking on.
+
+---
+
+## The instruments are never dependencies
+
+**veraPDF, qpdf, `pdfsig`, `pdftoppm` and Ghostscript are development and
+validation tooling, and none of them may reach production.**
+
+Nothing in `src/` may invoke one. A package that shells out to a JVM, or to
+anything else, to answer a runtime question would be a different package, and
+the consuming application would inherit an installation requirement nobody wrote
+down.
+
+Nor do they ship. Everything built for testing is `export-ignore`d, so the
+archive a consumer installs carries `src/`, `config/` and four files and nothing
+else. That list had already drifted: `phpstan.neon`, `pint.json`,
+`composer-dependency-analyser.php` and `package-lock.json` were all being
+distributed, each added later than the rule.
+
+*Enforced by* `tests/ArchTest.php` for the first half and
+`tests/DistributionTest.php` for the second, which asks `git archive` what a
+release actually contains rather than trusting the list.
+
+Rationale, and what each instrument has caught:
+[0026](../decisions/0026-verification-tools-are-instruments.md).
+
 **One trap in that cross-check.** `Testing\DebugCertificate` gives every
 certificate it generates the same subject, `CN=Test Certificate, O=Internet
 Widgits Pty Ltd`, and so does `samples/certificate.pfx`. `pdfsig` resolves the

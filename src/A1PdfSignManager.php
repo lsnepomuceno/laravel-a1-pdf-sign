@@ -18,6 +18,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\ArchiveExtender;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
 use LSNepomuceno\LaravelA1PdfSign\Support\Files;
@@ -138,6 +139,14 @@ final readonly class A1PdfSignManager implements A1PdfSign
     public function signatureFields(string $pdfPath): array
     {
         return $this->container->make(SignatureFieldReader::class)->read(Files::read($pdfPath));
+    }
+
+    public function extendArchive(string $pdfPath): SignedPdf
+    {
+        return $this->container->make(ArchiveExtender::class)->extend(
+            Files::read($pdfPath),
+            basename($pdfPath),
+        );
     }
 
     public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string

@@ -101,7 +101,7 @@ Two traps this code has already fallen into, and they must not be reintroduced:
 
 `CONTENTS_HEX_LENGTH` is deliberately larger than tc-lib-pdf's reserve: overflowing the placeholder is a hard failure, and embedding the chain grows the CMS.
 
-Profiles live in `Enums\SignatureProfile` (Legacy, B-B, B-T, B-LT, B-LTA) and own their `/SubFilter` plus what each level requires. `Cades\HttpTransport` is the injected TSA/OCSP/CRL client: the host application owns that SSRF surface, so keep network access behind it.
+Profiles live in `Enums\SignatureProfile` (Legacy, B-B, B-T, B-LT, B-LTA) and own their `/SubFilter` plus what each level requires. `Contracts\SignatureTransport`, implemented by `Cades\HttpTransport`, is the injected TSA/OCSP/CRL client: the host application owns that SSRF surface, so keep network access behind it. It is an interface so `Testing\LocalTimestampAuthority` can substitute it and gate B-T, B-LT, B-LTA and the archive chain offline, with real `openssl ts -reply` tokens (`docs/decisions/0027-the-transport-is-a-seam.md`).
 
 ### Certificates
 
@@ -181,4 +181,7 @@ Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.m
 
 - `*.pdf`, `*.pfx` and `dist/` are gitignored, so never commit generated certificates or signed output. `dist/` is a build of the separate docs site (https://laravel-a1-pdf-sign.netlify.app).
 - Do not define `K_PATH_FONTS` globally: tc-lib-pdf and TCPDF 6 read it with different formats, and defining it kills TCPDF silently.
+- **Every verification tool is development and CI only, and none may reach production** (`docs/decisions/0026-verification-tools-are-instruments.md`). veraPDF, qpdf, `pdfsig`, `pdftoppm` and Ghostscript are instruments: nothing in `src/` may invoke one (`tests/ArchTest.php`), and nothing built for testing may ship (`tests/DistributionTest.php` asks `git archive` what a release contains).
+- **Structure is checked by qpdf**, in the everyday image, comparatively: signing must not introduce a complaint the input did not already have. **Corrupted input is guarded** from a fixed seed over every reader that parses bytes the application did not write, in `tests/RobustnessTest.php`.
+- **PDF/A conformance is measured with veraPDF**, installed in the development image and in CI so it runs everywhere the suite runs. It blocks, unlike the network group. **Nothing skips:** `composer test` carries `--fail-on-skipped`, because every check has to run somewhere and a skip is how one quietly stops. veraPDF, `pdfsig`, `pdftoppm` and Ghostscript are **development and CI instruments only**: nothing in `src/` may invoke one, and `tests/ArchTest.php` fails if it does.
 - Independent verification is done with poppler's `pdfsig`; it has caught bugs the suite passed straight through. `samples/` holds one signed PDF per profile plus a six-signature document. Regenerate them with `poc/sign-samples.php` and re-check them after any change to `src/Signing/`.

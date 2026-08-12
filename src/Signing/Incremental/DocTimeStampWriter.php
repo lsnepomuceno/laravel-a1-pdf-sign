@@ -6,9 +6,9 @@ use Com\Tecnick\Pdf\Sign\Output\DocTimeStamp;
 use Com\Tecnick\Pdf\Sign\Timestamp\Client as TimestampClient;
 use Com\Tecnick\Pdf\Sign\Timestamp\Config as TimestampConfig;
 use Illuminate\Contracts\Config\Repository as Config;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
-use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\HttpTransport;
 use Throwable;
 
 /**
@@ -38,9 +38,12 @@ final readonly class DocTimeStampWriter
         private DocumentReader $reader,
         private RevisionWriter $writer,
         private ByteRangeCalculator $byteRange,
-        private HttpTransport $transport,
+        private SignatureTransport $transport,
         private Config $config,
         private DocTimeStamp $docTimeStamp = new DocTimeStamp(),
+        private SignatureFieldReader $fields = new SignatureFieldReader(new DocumentReader()),
+        // Appended, so the arity a hand-built writer relies on does not move.
+        private SealAppearance $appearance = new SealAppearance(),
     ) {}
 
     /**
@@ -61,11 +64,18 @@ final readonly class DocTimeStampWriter
 
         $stampNumber = $document->size;
         $widgetNumber = $stampNumber + 1;
+        $appearanceNumber = $widgetNumber + 1;
         $pageNumber = $this->reader->findFirstPage($pdf, $document);
 
         $objects = [
             $stampNumber => $this->docTimeStamp->valueObject($stampNumber, self::CONTENTS_HEX_LENGTH),
-            $widgetNumber => $this->widget($widgetNumber, $stampNumber, $pageNumber, $pdf),
+            $widgetNumber => $this->widget($widgetNumber, $stampNumber, $pageNumber, $appearanceNumber, $pdf, $document),
+            // ISO 19005-1 §6.9 wants every form field to have an appearance
+            // dictionary, and a timestamp is a form field like any other. The
+            // signature widget was given one and this was left without, which
+            // 0025 named as unmeasured and a committed B-LTA sample then showed
+            // outright (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+            $appearanceNumber => $this->appearance->emptyForm($appearanceNumber),
             $document->root => $this->writer->catalogWithField($pdf, $document, $widgetNumber),
             $pageNumber => $this->writer->pageWithAnnotation($pdf, $document, $pageNumber, $widgetNumber),
         ];
@@ -135,14 +145,29 @@ final readonly class DocTimeStampWriter
     /**
      * The widget the timestamp occupies. It is never visible, but it still
      * needs a field so readers list it alongside the signatures.
+     *
+     * The index comes from the form's own /Fields list rather than from
+     * counting "/FT /Sig" in the raw bytes. That scan undercounts a document
+     * whose fields are packed into an object stream, which 2.3 made signable,
+     * and two fields sharing a name is a form readers disagree about
+     * (docs/decisions/0022-the-archive-timestamp-is-a-chain.md).
+     *
+     * @throws InvalidPdfFileException
      */
-    private function widget(int $number, int $stampNumber, int $pageNumber, string $pdf): string
-    {
-        $index = $this->signatureCount($pdf) + 1;
+    private function widget(
+        int $number,
+        int $stampNumber,
+        int $pageNumber,
+        int $appearanceNumber,
+        string $pdf,
+        DocumentInfo $document,
+    ): string {
+        $index = count($this->fields->read($pdf, $document)) + 1;
 
         return "{$number} 0 obj\n"
             . '<</Type/Annot/Subtype/Widget/FT/Sig'
             . '/Rect[0 0 0 0]'
+            . "/AP<</N {$appearanceNumber} 0 R>>"
             . "/T (Timestamp{$index})"
             . "/V {$stampNumber} 0 R"
             . "/P {$pageNumber} 0 R"
@@ -170,15 +195,5 @@ final readonly class DocTimeStampWriter
         $value = $this->config->get("a1-pdf-sign.{$key}", $default);
 
         return is_numeric($value) ? (int) $value : $default;
-    }
-
-    /**
-     * How many signature fields the document already carries.
-     */
-    private function signatureCount(string $pdf): int
-    {
-        $count = preg_match_all('/\/FT\s*\/Sig/', $pdf);
-
-        return $count === false ? 0 : $count;
     }
 }

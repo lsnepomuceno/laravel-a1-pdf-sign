@@ -151,3 +151,46 @@ it('uses no constant the host platform may not define', function () {
 
     expect($found)->toBe([]);
 });
+
+/**
+ * veraPDF is a measuring instrument, not a dependency.
+ *
+ * So are qpdf, poppler and Ghostscript. Every one of them is installed for
+ * development and CI, to establish verdicts the suite cannot establish for
+ * itself, and **none of them may reach production**
+ * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+ *
+ * **Nothing in src/ may reach for it.** A package that shells out to a JVM to
+ * answer a question at runtime would be a different package, and the consuming
+ * application would inherit an installation requirement nobody wrote down. The
+ * same applies to poppler's pdfsig, which has verified this package's output
+ * since 2.0 and has never been called by it.
+ */
+it('keeps the verification tools out of the package', function () {
+    $tools = ['verapdf', 'veraPDF', 'pdfsig', 'pdftoppm', 'qpdf', 'ghostscript'];
+    $found = [];
+
+    /** @var SplFileInfo $file */
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . '/src')) as $file) {
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
+
+        // Only string literals. Naming a tool in a docblock is expected and
+        // happens: what must not exist is a code path that invokes one, and
+        // matching the raw text would flag the comment explaining that.
+        foreach (token_get_all((string) file_get_contents($file->getPathname())) as $token) {
+            if (! is_array($token) || $token[0] !== T_CONSTANT_ENCAPSED_STRING) {
+                continue;
+            }
+
+            foreach ($tools as $tool) {
+                if (stripos($token[1], $tool) !== false) {
+                    $found[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) . ": {$tool}";
+                }
+            }
+        }
+    }
+
+    expect($found)->toBe([]);
+});

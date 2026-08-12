@@ -2,6 +2,7 @@
 
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
@@ -45,6 +46,7 @@ final class RevisionWriter
         SignatureProfile $profile = SignatureProfile::PadesBB,
         ?SignatureField  $target = null,
         ?CertificationLevel $certification = null,
+        ?FieldLock       $lock = null,
     ): string {
         $visible = $seal !== null && $placement !== null;
 
@@ -60,11 +62,18 @@ final class RevisionWriter
         // whole point (docs/decisions/0013-signing-into-an-existing-field.md).
         $widgetNumber = $target === null ? $number++ : $target->objectNumber;
         $imageNumber = $number++;
+        // Allocated whether or not the seal is transparent, so the numbers
+        // below do not depend on the artwork
+        // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+        $maskNumber = $number++;
         $formNumber = $number++;
 
-        // Null keeps the signature invisible, and it is what both widget
-        // builders read to decide whether to write an /AP at all.
-        $appearanceNumber = $visible ? $formNumber : null;
+        // Both widget builders point /AP here. An invisible signature gets an
+        // empty form rather than no appearance at all: ISO 19005-1 §6.9 wants
+        // every form field to have an appearance dictionary, and veraPDF fails
+        // a signed PDF/A-1 document without one
+        // (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+        $appearanceNumber = $formNumber;
 
         $catalogNumber = $document->root;
         // A field states its own page through /P, and that wins: intoField()
@@ -89,7 +98,7 @@ final class RevisionWriter
         $offsets = [];
 
         $offsets[$signatureNumber] = $base + strlen($body);
-        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile, $certification);
+        $body .= $this->signatureObject($signatureNumber, $info, $contentsHexLength, $profile, $certification, $lock, $catalogNumber);
 
         $offsets[$widgetNumber] = $base + strlen($body);
         $body .= $target === null
@@ -100,12 +109,18 @@ final class RevisionWriter
                 $fieldName,
                 $appearanceNumber,
                 $visible ? $this->appearance->rectangle($placement, $seal) : null,
+                $lock,
             )
-            : $this->filledWidget($pdf, $document, $target, $signatureNumber, $appearanceNumber);
+            : $this->filledWidget($pdf, $document, $target, $signatureNumber, $appearanceNumber, $lock);
 
         if ($visible) {
             $offsets[$imageNumber] = $base + strlen($body);
-            $body .= $this->appearance->imageObject($imageNumber, $seal);
+            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber);
+
+            if ($seal->isTransparent()) {
+                $offsets[$maskNumber] = $base + strlen($body);
+                $body .= $this->appearance->maskObject($maskNumber, $seal);
+            }
 
             $offsets[$formNumber] = $base + strlen($body);
             $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal);
@@ -116,6 +131,9 @@ final class RevisionWriter
                 $offsets[$stampNumber] = $base + strlen($body);
                 $body .= $this->stampObject($stampNumber, $formNumber, $page, $rectangle);
             }
+        } else {
+            $offsets[$formNumber] = $base + strlen($body);
+            $body .= $this->appearance->emptyForm($formNumber);
         }
 
         // A field the document already carries is already registered on the
@@ -237,6 +255,7 @@ final class RevisionWriter
             $document->root,
             $document->infoRef,
             $document->startxref,
+            $document->id,
         ) . $ending;
     }
 
@@ -290,6 +309,8 @@ final class RevisionWriter
         int              $contentsHexLength,
         SignatureProfile $profile,
         ?CertificationLevel $certification = null,
+        ?FieldLock       $lock = null,
+        int              $catalogNumber = 0,
     ): string {
         $metadata = '';
 
@@ -304,26 +325,59 @@ final class RevisionWriter
             . ByteRangeCalculator::placeholder()
             . '/Contents <' . str_repeat('0', $contentsHexLength) . '> '
             . $metadata
-            . $this->docMdpReference($certification)
+            . $this->references($certification, $lock, $catalogNumber)
             . '/M (' . $this->timestamp() . ')'
             . ">>\nendobj\n";
     }
 
     /**
-     * The /DocMDP transform, ISO 32000-1 §12.8.2.2.
+     * The signature's /Reference array, ISO 32000-1 §12.8.2.
      *
-     * /V is the version of the transform's own parameter dictionary, fixed at
-     * 1.2 for DocMDP. It is unrelated to the PDF version and to the profile.
+     * One array holding both transforms, because a signature may certify the
+     * document *and* lock fields, and writing two /Reference entries would
+     * leave a reader to pick one.
+     *
+     * /V is the version of each transform's own parameter dictionary, fixed at
+     * 1.2 for both. It is unrelated to the PDF version and to the profile.
      */
-    private function docMdpReference(?CertificationLevel $certification): string
+    private function references(?CertificationLevel $certification, ?FieldLock $lock, int $catalogNumber): string
     {
-        if ($certification === null) {
+        $entries = '';
+
+        if ($certification !== null) {
+            $entries .= '<</Type/SigRef/TransformMethod/DocMDP'
+                . '/TransformParams<</Type/TransformParams/P ' . $certification->permission() . '/V/1.2>>'
+                . '>>';
+        }
+
+        if ($lock !== null) {
+            // FieldMDP is what a reader enforces; the widget's /Lock is what it
+            // shows. Writing only the /Lock produces a document that says the
+            // fields are locked and lets them be filled anyway
+            // (docs/decisions/0021-locking-fields-and-honouring-locks.md).
+            $entries .= '<</Type/SigRef/TransformMethod/FieldMDP'
+                . '/TransformParams<</Type/TransformParams'
+                . '/Action/' . $lock->action->pdfName()
+                . $this->lockFields($lock)
+                . '/V/1.2>>'
+                // §12.8.2.4: /Data names the object the transform applies to,
+                // which for FieldMDP is the document catalog.
+                . "/Data {$catalogNumber} 0 R"
+                . '>>';
+        }
+
+        return $entries === '' ? '' : "/Reference[{$entries}]";
+    }
+
+    private function lockFields(FieldLock $lock): string
+    {
+        if (! $lock->action->needsFields()) {
             return '';
         }
 
-        return '/Reference[<</Type/SigRef/TransformMethod/DocMDP'
-            . '/TransformParams<</Type/TransformParams/P ' . $certification->permission() . '/V/1.2>>'
-            . '>>]';
+        $names = array_map(fn(string $field): string => '(' . $this->escape($field) . ')', $lock->fields);
+
+        return '/Fields[' . implode('', $names) . ']';
     }
 
     /**
@@ -359,6 +413,7 @@ final class RevisionWriter
         string $fieldName,
         ?int   $formNumber = null,
         ?array $rectangle = null,
+        ?FieldLock $lock = null,
     ): string {
         // A zero rectangle keeps the signature invisible, which is the default
         // when no seal was supplied.
@@ -377,6 +432,7 @@ final class RevisionWriter
             . "/P {$pageNumber} 0 R"
             . '/F 132'
             . '/Ff 0'
+            . ($lock === null ? '' : '/Lock ' . $lock->toDictionary())
             . ">>\nendobj\n";
     }
 
@@ -458,11 +514,21 @@ final class RevisionWriter
         SignatureField $target,
         int            $signatureNumber,
         ?int           $formNumber,
+        ?FieldLock     $lock = null,
     ): string {
         $widget = $this->injectBeforeClose(
             $this->reader->rawObject($pdf, $document, $target->objectNumber),
             "/V {$signatureNumber} 0 R",
         );
+
+        if ($lock !== null) {
+            // A template may already carry a /Lock of its own, and the caller
+            // asking for one now is asking for theirs: replaced rather than
+            // joined, since two locks on one field settle nothing.
+            $widget = preg_match('/\/Lock\s*<<.*?>>/s', $widget) === 1
+                ? (string) preg_replace('/\/Lock\s*<<.*?>>/s', '/Lock ' . $lock->toDictionary(), $widget, 1)
+                : $this->injectBeforeClose($widget, '/Lock ' . $lock->toDictionary());
+        }
 
         if ($formNumber !== null) {
             // An empty signature field often ships with an appearance of its
@@ -565,7 +631,26 @@ final class RevisionWriter
     {
         $info = $document->infoRef !== null ? "/Info {$document->infoRef}" : '';
 
-        return "trailer\n<</Size {$size}/Root {$root} 0 R{$info}/Prev {$document->startxref}>>\n";
+        return "trailer\n<</Size {$size}/Root {$root} 0 R{$info}{$this->identifier($document)}"
+            . "/Prev {$document->startxref}>>\n";
+    }
+
+    /**
+     * The document's /ID, carried into the revision's trailer.
+     *
+     * ISO 32000-1 §14.4: it identifies the file, and every trailer carries it.
+     * Dropping it made a signed PDF/A document stop conforming on §6.1.3, which
+     * is how this was found, and it costs a document its identity for every
+     * reader besides
+     * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
+     *
+     * The pair is carried through unchanged. The second string is meant to
+     * change when the file does, and inventing one here would be inventing a
+     * digest no reader checks, while the first has to stay put either way.
+     */
+    private function identifier(DocumentInfo $document): string
+    {
+        return $document->id === null ? '' : "/ID {$document->id}";
     }
 
     private function timestamp(): string

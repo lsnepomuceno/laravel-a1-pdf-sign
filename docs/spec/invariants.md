@@ -116,9 +116,16 @@ Two places legitimately reach a process, both through the runner:
 
 ## 9. Network access stays behind the injected transport
 
-`Signing\Cades\HttpTransport` is the TSA / OCSP / CRL client. The host
-application owns that SSRF surface, so nothing else in `src/` opens a
-connection.
+`Contracts\SignatureTransport` is the TSA / OCSP / CRL client, implemented by
+`Signing\Cades\HttpTransport`. The host application owns that SSRF surface, so
+nothing else in `src/` opens a connection.
+
+**It is an interface, and that is load-bearing.** Everything the profiles above
+`pades-b-b` add rides through it, so a suite that cannot substitute it can only
+test them against a live authority: reported, never blocking.
+`Testing\LocalTimestampAuthority` is the substitute, and it is what lets B-T,
+B-LT, B-LTA and the archive chain be gated
+(docs/decisions/0027-the-transport-is-a-seam.md).
 
 ---
 

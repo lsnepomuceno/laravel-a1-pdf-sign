@@ -84,6 +84,34 @@ Docker service described below.
 Both hooks can be bypassed with `--no-verify`. That is deliberate, for stashing work in
 progress; on `pre-push` it means you are choosing to push to `main` and saying so.
 
+### The verification tools never ship
+
+`veraPDF`, `qpdf`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are **development
+and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
+testing reaches the package a consumer installs: an architectural test enforces the first
+and `tests/DistributionTest.php` asks `git archive` what a release actually contains.
+
+`qpdf` is in the development image and its checks run with the rest of the suite. It is
+strict where poppler forgives, which is the point: a cross-reference table with slightly
+wrong offsets still opens in a reader that recovers by scanning.
+
+### Checking PDF/A conformance
+
+`veraPDF` is the reference validator and the only thing that can establish a conformance
+verdict. It is Java and it is installed in the development image, so it runs with the rest
+of the suite:
+
+``` bash
+$ docker compose -f .docker/compose.yaml run --rm php vendor/bin/pest --group=pdfa
+```
+
+**No test is allowed to skip.** `composer test` carries `--fail-on-skipped`: every check
+has to run somewhere, and a skip is how one quietly stops. If you run the suite outside
+the container and veraPDF is not installed, that group will fail rather than pass silently.
+
+It is a **development and CI instrument only**: nothing in `src/` may invoke veraPDF,
+`qpdf`, `pdfsig`, `pdftoppm` or Ghostscript, and an architectural test fails if it does.
+
 ### Checking the output in a real reader
 
 Our validator shares its assumptions with the code it validates, so a green

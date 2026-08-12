@@ -82,6 +82,20 @@ function resource(string $name): string
 }
 
 /**
+ * Absolute path of a committed sample.
+ *
+ * The samples are the package's own output, kept for validation in real
+ * readers. Reading them back in the suite is the same principle one step
+ * further: a document produced at pades-b-t carries a token from a real
+ * authority, and no fixture that can be generated offline does
+ * (docs/decisions/0019-validation-reads-what-it-writes.md).
+ */
+function sample(string $name): string
+{
+    return __DIR__ . '/../samples/' . $name;
+}
+
+/**
  * The contract template: two empty signature fields, laid out by someone else.
  *
  * See docs/decisions/0013-signing-into-an-existing-field.md.
@@ -120,6 +134,26 @@ function reversedPages(int $count = 3): array
     }
 
     return [pdfWith($objects), $numbers];
+}
+
+/**
+ * veraPDF's verdict on a file, as PASS or FAIL.
+ *
+ * Here rather than in a test file because two of them need it, and a helper
+ * defined inside one is invisible to the others under --parallel.
+ */
+function veraPdfVerdict(string $path, string $flavour): string
+{
+    // "|| true" because veraPDF exits 1 for a non-conformant file, which is a
+    // verdict rather than a failure to run. The verdict itself is the first
+    // word of stdout either way.
+    $output = app(LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner::class)->run(sprintf(
+        'verapdf --format text -f %s %s 2>&1 || true',
+        escapeshellarg($flavour),
+        escapeshellarg($path),
+    ));
+
+    return str_starts_with(trim($output), 'PASS') ? 'PASS' : 'FAIL';
 }
 
 /**

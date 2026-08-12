@@ -65,6 +65,44 @@ enum SignatureProfile: string
         return $this->isPades() ? 'ETSI.CAdES.detached' : 'adbe.pkcs7.detached';
     }
 
+    /**
+     * The highest level a signature actually satisfies.
+     *
+     * The inverse of the three questions above, and deliberately built from
+     * what the document carries rather than from what it claims. A `/SubFilter`
+     * says the signature is CAdES; it does not say a timestamp token is really
+     * there, and a document can be produced at B-LTA by one tool and stripped by
+     * another without the sub-filter changing.
+     *
+     * Null for a sub-filter this package does not write, which includes
+     * ETSI.RFC3161: a DocTimeStamp is a timestamp over the file, not a
+     * signature at a profile.
+     */
+    public static function classify(
+        ?string $subFilter,
+        bool $hasTimestamp,
+        bool $hasLongTermMaterial,
+        bool $hasArchiveTimestamp,
+    ): ?self {
+        if ($subFilter === self::Legacy->subFilter()) {
+            return self::Legacy;
+        }
+
+        if ($subFilter !== self::PadesBB->subFilter()) {
+            return null;
+        }
+
+        if (! $hasTimestamp) {
+            return self::PadesBB;
+        }
+
+        if (! $hasLongTermMaterial) {
+            return self::PadesBT;
+        }
+
+        return $hasArchiveTimestamp ? self::PadesBLTA : self::PadesBLT;
+    }
+
     public function toCadesConfig(string $digestAlgorithm = 'sha256'): CadesConfig
     {
         return new CadesConfig($this->value, $digestAlgorithm);

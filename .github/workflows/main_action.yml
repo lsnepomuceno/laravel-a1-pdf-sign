@@ -48,6 +48,55 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
+      # setup-php sets COMPOSER_NO_AUDIT, so advisories were silently not
+      # checked. For a signing package a known vulnerability in the tree is
+      # worth blocking on, and --abandoned=ignore keeps the gate about
+      # vulnerabilities rather than about maintenance status.
+      - name: Audit dependencies
+        run: composer audit --abandoned=ignore
+
+      - name: Install qpdf
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf
+
+      # veraPDF is the reference PDF/A validator and the only thing that can
+      # establish a conformance verdict. Pinned rather than tracking "latest":
+      # a validator that changes its verdicts between builds cannot be the
+      # thing a gate is measured against.
+      # See docs/decisions/0025-what-signing-does-to-pdf-a.md.
+      - name: Install veraPDF
+        env:
+          VERAPDF_VERSION: '1.30.2'
+        run: |
+          set -eux
+          curl -sSL -o /tmp/verapdf.zip \
+            "https://software.verapdf.org/releases/${VERAPDF_VERSION%.*}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-src
+          cat > /tmp/verapdf-auto.xml <<'XML'
+          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+          <AutomatedInstallation langpack="eng">
+          <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
+          <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
+          <installpath>/opt/verapdf</installpath>
+          </com.izforge.izpack.panels.target.TargetPanel>
+          <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
+          <pack index="0" name="veraPDF GUI" selected="true"/>
+          <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
+          <pack index="3" name="veraPDF Corpus and Tests" selected="false"/>
+          <pack index="4" name="veraPDF Documentation" selected="false"/>
+          <pack index="5" name="veraPDF Sample Plugins" selected="false"/>
+          </com.izforge.izpack.panels.packs.PacksPanel>
+          <com.izforge.izpack.panels.install.InstallPanel id="install"/>
+          <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
+          </AutomatedInstallation>
+          XML
+          java -jar /tmp/verapdf-src/verapdf-greenfield-*/verapdf-izpack-installer-*.jar /tmp/verapdf-auto.xml
+          sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
+          verapdf --version
+
+      # composer test carries --fail-on-skipped: every check has to run
+      # somewhere, and a skip is how one quietly stops. The PDF/A group used to
+      # skip itself when veraPDF was absent, and a job could go green having
+      # validated nothing.
       - name: Run tests
         run: composer test -- --exclude-group=network
 

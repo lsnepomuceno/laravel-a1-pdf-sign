@@ -6,6 +6,7 @@ use Com\Tecnick\Pdf\Sign\Signer;
 use Com\Tecnick\Pdf\Sign\Timestamp\Client as TimestampClient;
 use Com\Tecnick\Pdf\Sign\Timestamp\Config as TimestampConfig;
 use Illuminate\Contracts\Config\Repository as Config;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
@@ -25,7 +26,7 @@ final readonly class CadesBuilder
 {
     public function __construct(
         private Config $config,
-        private HttpTransport $transport,
+        private SignatureTransport $transport,
         private Signer $signer = new Signer(),
     ) {}
 

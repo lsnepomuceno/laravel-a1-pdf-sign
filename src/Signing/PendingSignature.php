@@ -9,6 +9,9 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\FieldLock;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealImage;
+use LSNepomuceno\LaravelA1PdfSign\Data\SealLayout;
 use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
@@ -16,6 +19,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\FontSize;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPFXException;
@@ -48,6 +52,10 @@ final class PendingSignature
     private ?CertificationLevel $certification = null;
 
     private ?SealPlacement $placement = null;
+
+    private ?FieldLock $lock = null;
+
+    private ?SealLayout $sealLayout = null;
 
     private bool $withSeal = false;
 
@@ -189,17 +197,26 @@ final class PendingSignature
      * Makes the signature visible, rendering a seal from the certificate.
      *
      * Position and size default to the configured placement; pass a
-     * SealPlacement to override it.
+     * SealPlacement to override it. What the seal *says*, and where on the
+     * artwork it says it, is a SealLayout:
+     *
+     * ```php
+     * ->seal(layout: SealLayout::saying(['Approved', 'Protocol 4471']))
+     * ```
+     *
+     * @see docs/decisions/0023-a-seal-that-can-be-transparent.md
      */
     public function seal(
         ?SealPlacement $placement = null,
         FontSize|string|null $fontSize = null,
         bool $showExpiry = false,
+        ?SealLayout $layout = null,
     ): self {
         $this->withSeal = true;
         $this->placement = $placement;
         $this->sealFontSize = $fontSize;
         $this->sealShowsExpiry = $showExpiry;
+        $this->sealLayout = $layout;
 
         return $this;
     }
@@ -273,6 +290,31 @@ final class PendingSignature
     }
 
     /**
+     * Locks form fields once this signature is applied, ISO 32000-1 §12.7.4.5.
+     *
+     * A narrower claim than certifying: a certification governs the whole
+     * document, a lock governs named fields. Both can be made by one signature,
+     * and they are written as two transforms in one /Reference array.
+     *
+     * ```php
+     * ->lock()                                   // every field
+     * ->lock(FieldLock::only(['Amount']))        // that one
+     * ->lock(FieldLock::except(['Countersign'])) // everything else
+     * ```
+     *
+     * A later `sign()` into a field this lock covers is refused rather than
+     * allowed to break the signature that imposed it.
+     *
+     * @see docs/decisions/0021-locking-fields-and-honouring-locks.md
+     */
+    public function lock(?FieldLock $lock = null): self
+    {
+        $this->lock = $lock ?? FieldLock::all();
+
+        return $this;
+    }
+
+    /**
      * Signs into a field the document already carries, rather than creating one.
      *
      * The case this exists for is a template someone else laid out: a contract
@@ -300,6 +342,7 @@ final class PendingSignature
 
     /**
      * @throws CertificationException
+     * @throws FieldLockException
      * @throws FileNotFoundException
      * @throws SealPlacementException
      * @throws SignatureFieldException
@@ -318,9 +361,7 @@ final class PendingSignature
             throw new FileNotFoundException('no document given; call pdf() first');
         }
 
-        $seal = $this->withSeal
-            ? $this->sealRenderer->render($this->certificate, $this->sealFontSize, $this->sealShowsExpiry)
-            : null;
+        $seal = $this->withSeal ? $this->renderSeal() : null;
 
         $signed = $this->signer->sign(
             $this->pdfContents,
@@ -332,6 +373,7 @@ final class PendingSignature
             SignatureProfile::resolve($this->profile ?? $this->configuredProfile()),
             $this->targetField,
             $this->certification,
+            $this->lock,
         );
 
         return new SignedPdf($signed->contents, $this->signedFileName());
@@ -342,6 +384,32 @@ final class PendingSignature
         $value = config('a1-pdf-sign.signature.profile');
 
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * The caller's own image when sealFrom() named one, and the certificate
+     * seal otherwise.
+     *
+     * SealPlacement::$imagePath was written by sealFrom() and read by nothing
+     * at all, so the caller's artwork was silently replaced by a render of the
+     * certificate (docs/decisions/0023-a-seal-that-can-be-transparent.md).
+     *
+     * @throws FileNotFoundException
+     */
+    private function renderSeal(): SealImage
+    {
+        $imagePath = $this->placement === null ? '' : $this->placement->imagePath;
+
+        if ($imagePath !== '') {
+            return $this->sealRenderer->fromImage($imagePath, $this->sealLayout);
+        }
+
+        return $this->sealRenderer->render(
+            $this->certificate ?? throw new FileNotFoundException('no certificate'),
+            $this->sealFontSize,
+            $this->sealShowsExpiry,
+            layout: $this->sealLayout,
+        );
     }
 
     private function defaultPlacement(): SealPlacement

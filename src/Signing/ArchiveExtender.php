@@ -1,0 +1,91 @@
+<?php
+
+namespace LSNepomuceno\LaravelA1PdfSign\Signing;
+
+use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
+use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\CertificationReader;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocTimeStampWriter;
+use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DocumentReader;
+use LSNepomuceno\LaravelA1PdfSign\Validation\PdfSignatureExtractor;
+
+/**
+ * Adds a fresh archive timestamp to a document that already has one.
+ *
+ * B-LTA is not a state a document stays in. An archive timestamp is only as
+ * good as the authority's certificate and the digest algorithm behind it, and
+ * both age: ETSI EN 319 142-1 answers that with a **chain** of archive
+ * timestamps, each one stamped over everything before it while the previous one
+ * is still verifiable.
+ *
+ * The package could produce the first link and not the second, so a document it
+ * signed for a twenty-year retention had to be re-signed to stay checkable,
+ * which loses the original signing time.
+ *
+ * **No certificate is involved.** A DocTimeStamp is signed by the authority,
+ * not by the signer, so extending is something a scheduled job can do to an
+ * archive with no key material anywhere near it.
+ *
+ * See docs/decisions/0022-the-archive-timestamp-is-a-chain.md.
+ */
+final readonly class ArchiveExtender
+{
+    public function __construct(
+        private DocumentReader $reader,
+        private DocTimeStampWriter $timestamps,
+        private PdfSignatureExtractor $extractor,
+        private CertificationReader $certifications,
+    ) {}
+
+    /**
+     * @throws CertificationException
+     * @throws HasNoSignatureOrInvalidPkcs7Exception
+     * @throws InvalidPdfFileException
+     * @throws ProcessRunTimeException
+     */
+    public function extend(string $pdfContents, string $fileName = ''): SignedPdf
+    {
+        $signatures = $this->extractor->extract($pdfContents);
+
+        // Timestamping an unsigned document is legal and pointless: it attests
+        // bytes nobody vouched for. Saying so beats returning a file that looks
+        // archived and proves nothing about a signer.
+        if ($signatures === []) {
+            throw new HasNoSignatureOrInvalidPkcs7Exception($fileName === '' ? 'the document' : $fileName);
+        }
+
+        $document = $this->reader->read($pdfContents);
+        $level = $this->certifications->level($pdfContents, $document);
+
+        // An archive timestamp is a further revision, which is exactly what
+        // no-changes forbids (docs/decisions/0012-certification-signatures.md).
+        if ($level === CertificationLevel::NoChanges) {
+            throw CertificationException::forbidsArchiveTimestamp();
+        }
+
+        return new SignedPdf($this->timestamps->append($pdfContents), $fileName);
+    }
+
+    /**
+     * Whether the document already carries an archive timestamp.
+     *
+     * Extending one that has none is still useful, since it makes the document
+     * B-LTA from that point on, so this is reported rather than enforced.
+     *
+     * @throws HasNoSignatureOrInvalidPkcs7Exception
+     */
+    public function isArchived(string $pdfContents): bool
+    {
+        foreach ($this->extractor->extract($pdfContents) as $entry) {
+            if ($entry['isTimestamp']) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

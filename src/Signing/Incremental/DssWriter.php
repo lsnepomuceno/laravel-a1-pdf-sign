@@ -4,9 +4,9 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing\Incremental;
 
 use Com\Tecnick\Pdf\Sign\Output\Dss;
 use Com\Tecnick\Pdf\Sign\Signer;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
-use LSNepomuceno\LaravelA1PdfSign\Signing\Cades\HttpTransport;
 use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
 use Throwable;
 
@@ -27,7 +27,7 @@ final readonly class DssWriter
         private DocumentReader $reader,
         private RevisionWriter $writer,
         private ByteRangeCalculator $byteRange,
-        private HttpTransport $transport,
+        private SignatureTransport $transport,
         private Signer $signer = new Signer(),
         private Dss $dss = new Dss(),
     ) {}

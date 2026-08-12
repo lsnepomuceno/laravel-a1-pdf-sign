@@ -3,6 +3,7 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Signing\Cades;
 
 use Illuminate\Contracts\Config\Repository as Config;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 
 /**
@@ -12,8 +13,12 @@ use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
  * the host owns networking, and therefore owns the SSRF surface. Every URL
  * reached here comes from configuration or from an extension inside the
  * signer's own certificate, never from the document being signed.
+ *
+ * The interface behind it exists so a test can substitute a local authority
+ * and gate the profiles that need one
+ * (docs/decisions/0027-the-transport-is-a-seam.md).
  */
-final readonly class HttpTransport
+final readonly class HttpTransport implements SignatureTransport
 {
     public function __construct(private Config $config) {}
 

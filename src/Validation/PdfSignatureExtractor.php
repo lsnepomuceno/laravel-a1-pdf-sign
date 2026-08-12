@@ -15,7 +15,7 @@ final class PdfSignatureExtractor
     public function __construct(private readonly DerReader $der = new DerReader()) {}
 
     /**
-     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int, isTimestamp: bool, signedAt: ?int}>
+     * @return list<array{byteRange: array{0:int,1:int,2:int}, cms: string, coverageEnd: int, isTimestamp: bool, signedAt: ?int, subFilter: ?string}>
      */
     public function extract(string $pdf): array
     {
@@ -42,6 +42,7 @@ final class PdfSignatureExtractor
                 'coverageEnd' => $close + $trailing,
                 'isTimestamp' => $this->isDocumentTimestamp($pdf, $match[0][1]),
                 'signedAt' => $this->claimedTime($pdf, $match[0][1]),
+                'subFilter' => $this->subFilter($pdf, $match[0][1]),
             ];
         }
 
@@ -63,6 +64,22 @@ final class PdfSignatureExtractor
         $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
 
         return str_contains($dictionary, '/DocTimeStamp') || str_contains($dictionary, 'ETSI.RFC3161');
+    }
+
+    /**
+     * The /SubFilter the signature declares.
+     *
+     * Read from the same window as /Type above, since both sit in the
+     * dictionary just ahead of the /ByteRange. What the entry claims to be is
+     * worth reporting on its own: the profile the package derives from it is a
+     * reading of the document's contents, and a caller comparing the two can
+     * see a file that says CAdES while carrying nothing a CAdES signature needs.
+     */
+    private function subFilter(string $pdf, int $byteRangeOffset): ?string
+    {
+        $dictionary = substr($pdf, max(0, $byteRangeOffset - 200), 200);
+
+        return preg_match('#/SubFilter\s*/([A-Za-z0-9.]+)#', $dictionary, $found) === 1 ? $found[1] : null;
     }
 
     /**

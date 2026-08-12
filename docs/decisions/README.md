@@ -28,6 +28,15 @@ document drifts away from the code it describes.
 | [0016](0016-trust-is-the-applications-policy.md) | Trust is the application's policy, and its verification is ours |
 | [0017](0017-the-seal-goes-where-it-was-asked-for.md) | The seal goes where it was asked for |
 | [0018](0018-prefer-the-platforms-own-constructs.md) | Prefer the platform's own constructs: Laravel's helpers, and enums over class constants |
+| [0019](0019-validation-reads-what-it-writes.md) | Validation reads what it writes, one level down |
+| [0020](0020-decode-the-filters-documents-use.md) | Decode the filters documents actually use |
+| [0021](0021-locking-fields-and-honouring-locks.md) | Locking fields, and honouring the locks already there |
+| [0022](0022-the-archive-timestamp-is-a-chain.md) | The archive timestamp is a chain, not a state |
+| [0023](0023-a-seal-that-can-be-transparent.md) | A seal that can be transparent, and say what the caller wants |
+| [0024](0024-revocation-is-evaluated-not-counted.md) | Revocation is evaluated, not counted |
+| [0025](0025-what-signing-does-to-pdf-a.md) | What signing does to PDF/A, measured |
+| [0026](0026-verification-tools-are-instruments.md) | The verification tools are instruments, and nothing skips |
+| [0027](0027-the-transport-is-a-seam.md) | The transport is a seam, so the profiles can be gated |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its
