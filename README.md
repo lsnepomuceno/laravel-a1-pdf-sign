@@ -38,8 +38,12 @@ composer require lsnepomuceno/laravel-a1-pdf-sign
 ```
 
 Nothing else to register: the service provider is discovered, and the `A1PdfSign` facade is available immediately.
+
 `openssl` on `PATH` is **not** required to sign; it is used only for verifying a signature and for reading a legacy
-PFX file.
+PFX file. Where it is needed it is needed properly: **`ext-openssl` being loaded is a different thing from the binary
+being installed**, and a minimal container commonly has the first without the second. Validating without it raises
+`MissingBinaryException`, and an environment where `proc_open` is disabled raises `ProcessUnavailableException`.
+Neither is reported as a signature that failed to verify.
 
 ```bash
 php artisan vendor:publish --tag=a1-pdf-sign-config
