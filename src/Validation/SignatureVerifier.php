@@ -3,9 +3,9 @@
 namespace LSNepomuceno\LaravelA1PdfSign\Validation;
 
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
 use LSNepomuceno\LaravelA1PdfSign\Support\TemporaryFile;
-use Throwable;
 
 /**
  * Decides whether a detached CMS matches the bytes it covers.
@@ -46,9 +46,17 @@ final readonly class SignatureVerifier
                     return true;
                 });
             });
-        } catch (Throwable) {
+        } catch (ProcessRunTimeException) {
             // A non-zero exit is the expected outcome for a signature that does
             // not match; it is a verdict, not a failure to report.
+            //
+            // Narrowed from catch (Throwable), which swallowed the difference
+            // between "this signature does not verify" and "nothing verified
+            // it". A missing openssl binary, proc_open disabled, an unwritable
+            // temporary directory: every one of those used to arrive here and
+            // leave as `false`, so a valid document was reported as invalid
+            // with nothing to read anywhere. ProcessUnavailableException and
+            // MissingBinaryException now travel past this catch on purpose.
             return false;
         }
     }
@@ -92,8 +100,10 @@ final readonly class SignatureVerifier
     {
         try {
             $tstInfo = $this->tstInfo($this->paths->tempPath(), $token);
-        } catch (Throwable) {
+        } catch (ProcessRunTimeException) {
             // A token whose own CMS does not verify writes nothing out.
+            // Narrowed for the reason above: an environment that cannot run
+            // openssl must not read as a token that failed to verify.
             return null;
         }
 
