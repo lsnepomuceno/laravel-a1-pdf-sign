@@ -104,6 +104,10 @@ final class RevisionWriter
             $stampNumbers[$page] = $number++;
         }
 
+        // Per page, because a document can carry a landscape scan beside a
+        // portrait cover and the seal may go on both.
+        $geometry = $this->reader->pageGeometry($pdf, $document, $pageNumber);
+
         $base = strlen($pdf);
         $body = "\n";
         $offsets = [];
@@ -119,7 +123,7 @@ final class RevisionWriter
                 $pageNumber,
                 $fieldName,
                 $appearanceNumber,
-                $visible ? $this->appearance->rectangle($placement, $seal) : null,
+                $visible ? $this->appearance->rectangle($placement, $seal, $geometry) : null,
                 $lock,
                 $cipher,
             )
@@ -138,13 +142,18 @@ final class RevisionWriter
             }
 
             $offsets[$formNumber] = $base + strlen($body);
-            $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal, $cipher);
-
-            $rectangle = $this->appearance->rectangle($placement, $seal);
+            $body .= $this->appearance->formObject($formNumber, $imageNumber, $placement, $seal, $cipher, $geometry);
 
             foreach ($stampNumbers as $page => $stampNumber) {
                 $offsets[$stampNumber] = $base + strlen($body);
-                $body .= $this->stampObject($stampNumber, $formNumber, $page, $rectangle);
+                $body .= $this->stampObject(
+                    $stampNumber,
+                    $formNumber,
+                    $page,
+                    // Each stamp asks its own page, since /Rotate is a property
+                    // of the page rather than of the document.
+                    $this->appearance->rectangle($placement, $seal, $this->reader->pageGeometry($pdf, $document, $page)),
+                );
             }
         } else {
             $offsets[$formNumber] = $base + strlen($body);

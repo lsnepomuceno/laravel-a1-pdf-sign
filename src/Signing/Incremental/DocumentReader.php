@@ -280,6 +280,59 @@ final class DocumentReader
     }
 
     /**
+     * How a page is displayed, against how its coordinates read.
+     *
+     * /Rotate and /MediaBox are both inheritable (ISO 32000-1 §7.7.3.4,
+     * Table 30), and a document declared landscape once on /Pages is the common
+     * case rather than the exotic one, so reading them from the page object
+     * alone would miss it.
+     *
+     * @throws InvalidPdfFileException
+     */
+    public function pageGeometry(string $pdf, DocumentInfo $document, int $pageNumber): PageGeometry
+    {
+        $rotate = $this->inherited($pdf, $document, $pageNumber, 'Rotate');
+        $mediaBox = $this->inherited($pdf, $document, $pageNumber, 'MediaBox');
+
+        $box = null;
+
+        if ($mediaBox !== null && preg_match_all('/-?[\d.]+/', $mediaBox, $numbers) === 4) {
+            $box = [(float) $numbers[0][0], (float) $numbers[0][1], (float) $numbers[0][2], (float) $numbers[0][3]];
+        }
+
+        return PageGeometry::of((int) ($rotate ?? 0), $box);
+    }
+
+    /**
+     * An inheritable page attribute, from the page or from the nearest ancestor
+     * that declares it.
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function inherited(string $pdf, DocumentInfo $document, int $number, string $key): ?string
+    {
+        $seen = [];
+
+        while (! isset($seen[$number]) && $document->has($number)) {
+            $seen[$number] = true;
+
+            $node = $this->rawObject($pdf, $document, $number);
+
+            if (preg_match('#/' . $key . '\s*(\[[^\]]*\]|-?[\d.]+)#', $node, $found) === 1) {
+                return $found[1];
+            }
+
+            if (preg_match('/\/Parent\s+(\d+)\s+\d+\s+R/', $node, $parent) !== 1) {
+                return null;
+            }
+
+            $number = (int) $parent[1];
+        }
+
+        return null;
+    }
+
+    /**
      * @throws InvalidPdfFileException
      */
     public function findFirstPage(string $pdf, DocumentInfo $document): int
