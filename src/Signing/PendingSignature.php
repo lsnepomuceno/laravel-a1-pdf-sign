@@ -41,6 +41,16 @@ final class PendingSignature
 
     private ?string $pdfContents = null;
 
+    /**
+     * Where the document came from, when it came from a file.
+     *
+     * Kept so the bytes can be released while signing and read back if this
+     * builder is used again. A 200 MB document held here through the whole of
+     * sign() is a third copy nothing needs, on top of the revision being
+     * assembled and the span being hashed (issue #285).
+     */
+    private ?string $pdfPath = null;
+
     private string $fileName = '';
 
     private SignatureInfo $info;
@@ -178,6 +188,7 @@ final class PendingSignature
         }
 
         $this->pdfContents = Files::read($pdfPath);
+        $this->pdfPath = $pdfPath;
         $this->fileName = pathinfo($pdfPath, PATHINFO_BASENAME);
         $this->documentPassword = $password;
 
@@ -187,6 +198,7 @@ final class PendingSignature
     public function pdfContents(string $contents, string $fileName = ''): self
     {
         $this->pdfContents = $contents;
+        $this->pdfPath = null;
         $this->fileName = $fileName;
 
         return $this;
@@ -367,12 +379,24 @@ final class PendingSignature
             throw new FileNotFoundException('no certificate given; call certificate() first');
         }
 
+        if ($this->pdfContents === null && $this->pdfPath !== null) {
+            // Signed once already, and the bytes were released. Reading them
+            // back is cheaper than holding a copy for a reuse that usually
+            // never happens.
+            $this->pdfContents = Files::read($this->pdfPath);
+        }
+
         if ($this->pdfContents === null) {
-            throw new FileNotFoundException('no document given; call pdf() first');
+            throw new FileNotFoundException(
+                'no document given; call pdf() first, or pdfContents() again if this builder has already signed',
+            );
         }
 
         $seal = $this->withSeal ? $this->renderSeal() : null;
 
+        // By reference, so the signer can release the document the moment the
+        // revision is appended. Holding it here as well would keep a whole
+        // extra copy alive through hashing, which for a 200 MB plan is 200 MB.
         $signed = $this->signer->sign(
             $this->pdfContents,
             $this->certificate,

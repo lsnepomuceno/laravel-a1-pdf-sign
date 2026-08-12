@@ -9,6 +9,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
+use LSNepomuceno\LaravelA1PdfSign\Support\Bytes;
 use Throwable;
 
 /**
@@ -81,7 +82,10 @@ final readonly class DocTimeStampWriter
         ];
 
         $withRevision = $this->writer->appendObjects($pdf, $document, $objects);
-        $withByteRange = $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
+        // In place: apply() writes a fixed-width span over the document
+        // rather than returning a new one (issue #285).
+        $this->byteRange->apply($withRevision, self::CONTENTS_HEX_LENGTH);
+        $withByteRange = $withRevision;
 
         return $this->embedToken($withByteRange, $url);
     }
@@ -110,12 +114,9 @@ final readonly class DocTimeStampWriter
             ));
         }
 
-        return substr_replace(
-            $pdf,
-            str_pad($hex, self::CONTENTS_HEX_LENGTH, '0'),
-            $open + 1,
-            self::CONTENTS_HEX_LENGTH,
-        );
+        Bytes::overwrite($pdf, str_pad($hex, self::CONTENTS_HEX_LENGTH, '0'), $open + 1);
+
+        return $pdf;
     }
 
     /**

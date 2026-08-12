@@ -26,6 +26,7 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\DssWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\FieldLockReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
+use LSNepomuceno\LaravelA1PdfSign\Support\Bytes;
 
 /**
  * Signs by appending a revision, leaving the original bytes untouched.
@@ -70,7 +71,7 @@ final readonly class IncrementalSigner implements PdfSigner
     ) {}
 
     public function sign(
-        string $pdfContents,
+        string &$pdfContents,
         Certificate $certificate,
         SignatureInfo $info,
         string $fieldName = 'Signature',
@@ -138,12 +139,16 @@ final readonly class IncrementalSigner implements PdfSigner
             $lock,
         );
 
-        // The parameter is the last reference to the original bytes, and every
-        // guard above has already run.
-        unset($pdfContents);
+        // The caller passed the document by reference and every guard above has
+        // already read it, so emptying it here releases the last copy of the
+        // original bytes while the revision is hashed. On a 200 MB plan that is
+        // 200 MB not held for the rest of the call (issue #285).
+        $pdfContents = '';
 
-        $signed = $this->byteRange->apply($signed, self::CONTENTS_HEX_LENGTH);
-        $signed = $this->embedSignature($signed, $certificate, $profile);
+        // Both of these rewrite a fixed-width span, so both work on the
+        // document in place rather than returning a new one.
+        $this->byteRange->apply($signed, self::CONTENTS_HEX_LENGTH);
+        $this->embedSignature($signed, $certificate, $profile);
 
         // B-LT and above append the validation material as a further revision,
         // after the signature it vouches for is already in place.
@@ -163,7 +168,7 @@ final readonly class IncrementalSigner implements PdfSigner
     /**
      * @throws InvalidPdfFileException
      */
-    private function embedSignature(string $pdf, Certificate $certificate, SignatureProfile $profile): string
+    private function embedSignature(string &$pdf, Certificate $certificate, SignatureProfile $profile): void
     {
         [$open, $close, $trailing] = $this->byteRange->readLast($pdf);
         $open = $this->byteRange->lastContentsOffset($pdf);
@@ -185,13 +190,9 @@ final readonly class IncrementalSigner implements PdfSigner
         }
 
         // Only the hex payload is replaced, so no offset moves and the
-        // ByteRange written moments ago stays correct.
-        return substr_replace(
-            $pdf,
-            str_pad($hex, self::CONTENTS_HEX_LENGTH, '0'),
-            $open + 1,
-            self::CONTENTS_HEX_LENGTH,
-        );
+        // ByteRange written moments ago stays correct. In place, since the
+        // width is fixed and the document may be very large.
+        Bytes::overwrite($pdf, str_pad($hex, self::CONTENTS_HEX_LENGTH, '0'), $open + 1);
     }
 
     /**
