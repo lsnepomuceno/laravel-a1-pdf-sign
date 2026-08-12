@@ -96,6 +96,18 @@ function sample(string $name): string
 }
 
 /**
+ * The password of the committed sample certificate, as samples/README.md
+ * documents it.
+ *
+ * Deliberately full of the characters that break a naive command line, since
+ * the sample exists to be handed to real readers and real tools.
+ */
+function samplePassword(): string
+{
+    return 'example\'s password with special chars: $ & * ? " \'';
+}
+
+/**
  * The contract template: two empty signature fields, laid out by someone else.
  *
  * See docs/decisions/0013-signing-into-an-existing-field.md.
@@ -216,6 +228,94 @@ function veraPdfVerdict(string $path, string $flavour): string
     ));
 
     return str_starts_with(trim($output), 'PASS') ? 'PASS' : 'FAIL';
+}
+
+/**
+ * What pyHanko says about a file, in full.
+ *
+ * pyHanko is the only instrument here that evaluates a certification rather
+ * than reporting the bytes of one: it compares the appended revisions against
+ * the /DocMDP policy and says whether they were permitted
+ * (docs/decisions/0031-certification-verified-by-a-reader.md).
+ *
+ * **A development and validation instrument only.** Nothing in src/ may invoke
+ * it, and tests/ArchTest.php fails if it does.
+ *
+ * Revocation checking is off. Every document these tests produce is signed
+ * offline by a throwaway certificate that chains to nothing and publishes no
+ * CRL or OCSP endpoint, so the check could only reach the network and fail,
+ * and reaching the network is what docs/decisions/0027-the-transport-is-a-seam.md
+ * exists to avoid.
+ *
+ * @param  string  $trust  A PEM certificate to trust as an anchor. The
+ *                         certificates used here are self-signed, so without
+ *                         one every verdict is INVALID for want of a path.
+ */
+function pyHankoReport(string $path, string $trust): string
+{
+    // "|| true" because pyHanko exits 1 for a document it judges invalid,
+    // which is a verdict rather than a failure to run.
+    return app(LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner::class)->run(sprintf(
+        'pyhanko sign validate --pretty-print --no-revocation-check --trust %s %s 2>/dev/null || true',
+        escapeshellarg($trust),
+        escapeshellarg($path),
+    ));
+}
+
+/**
+ * Whether pyHanko judges every signature in a file valid.
+ */
+function pyHankoJudgesValid(string $path, string $trust): bool
+{
+    $report = pyHankoReport($path, $trust);
+
+    return str_contains($report, 'The signature is judged VALID')
+        && ! str_contains($report, 'The signature is judged INVALID');
+}
+
+/**
+ * Whether pyHanko reports the appended revisions as breaking the certification.
+ *
+ * The wording is pyHanko's, and matching it is deliberate: what is being
+ * asserted is that an outside reader reached a verdict about the document
+ * modification policy, not that this package can find its own /DocMDP.
+ */
+function pyHankoReportsPolicyViolation(string $path, string $trust): bool
+{
+    return str_contains(
+        pyHankoReport($path, $trust),
+        'incompatible with the current document modification policy',
+    );
+}
+
+/**
+ * Writes the certificate out of a PKCS#12 bundle, so pyHanko has a trust
+ * anchor for a signature made with it.
+ */
+function trustAnchorFrom(string $pfxPath, #[SensitiveParameter] string $password): string
+{
+    // Drain any error a previous call left behind, so a failure here is this
+    // call's, the way Certificates\NativeCertificateReader does it.
+    while (openssl_error_string() !== false) {
+        continue;
+    }
+
+    $parsed = [];
+
+    if (! openssl_pkcs12_read((string) file_get_contents($pfxPath), $parsed, $password)) {
+        // Never write an empty anchor. pyHanko given one reports every
+        // signature as untrusted, so the verdict would change for a reason
+        // that has nothing to do with the document under test, and the test
+        // would fail somewhere else entirely.
+        throw new RuntimeException('Could not read the bundle for a trust anchor: ' . $pfxPath);
+    }
+
+    /** @var array{cert?: string} $parsed */
+    $path = LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign::tempPath(true, '.pem');
+
+    file_put_contents($path, $parsed['cert'] ?? '');
+
+    return $path;
 }
 
 /**

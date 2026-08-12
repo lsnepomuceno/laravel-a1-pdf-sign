@@ -142,9 +142,32 @@ Measured on 2026-08-09, in Okular, which uses poppler as its backend:
 **Poppler does not enforce `/DocMDP`.** That is a fact about poppler, not about
 these bytes, and it is worth more than "unverified" was: the question is
 answered, and the answer names what would have to change for anyone to check
-further. **No reader available to this project enforces the transform**, so the
-enforcement path can only be exercised in Adobe Reader or ITI Validar.
-`samples/certified.pdf` exists for whoever has one.
+further.
+
+### A reader that does enforce it was found, and it is now a gate
+
+This section used to end here, saying no reader available to the project
+enforced the transform and that the path could only be exercised in Adobe
+Reader or ITI Validar. That was true of the readers being looked at and wrong
+as a general claim: **pyHanko enforces it**, and it automates.
+
+It does not merely read `/Perms/DocMDP`. It compares the appended revisions
+against the policy and reaches a verdict, which is the difference between
+reporting a certification and honouring one. Measured on this package's own
+output:
+
+| Document | Verdict |
+|---|---|
+| Certified at `no-changes`, untouched | "The signature covers the entire file", VALID |
+| The same, one page resized in an appended revision | "incompatible with the current document modification policy", INVALID |
+| Certified at `form-filling`, signed again | "compatible with the current document modification policy", VALID |
+
+`tests/CertificationEnforcementTest.php` blocks on all three
+([0031](0031-certification-verified-by-a-reader.md)). The claim this record
+carried for two releases is now checked on every run rather than deferred to
+whoever owned a copy of Acrobat.
+
+`samples/certified.pdf` still exists for whoever wants to look at it in one.
 
 What poppler did confirm, in Okular's signature panel and not only on the
 command line: a certified document opens and renders, both signatures report as
