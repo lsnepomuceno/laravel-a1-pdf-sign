@@ -1,5 +1,36 @@
 # Upgrading
 
+## From 2.4.0 to 2.5.0
+
+One change, and no API moves. **A visible seal stops costing PDF/A
+conformance**, which means the bytes of every sealed document change.
+
+### The seal carries its own colour space
+
+The seal was embedded as `/DeviceRGB`, which PDF/A allows only where the file
+declares an OutputIntent, so a conformant document came back non-conformant. It
+is now drawn in an `/ICCBased` space carrying an sRGB profile built from
+IEC 61966-2-1, so it asks the document for nothing
+([0028](docs/decisions/0028-the-seal-carries-its-own-colour-space.md)).
+
+| | 2.4 | 2.5 |
+|---|---|---|
+| PDF/A-1b, opaque seal | FAIL | **PASS** |
+| PDF/A-1b, transparent seal | FAIL | FAIL, and always will: §6.4 forbids `/SMask` |
+| PDF/A-2b, opaque seal | FAIL | **PASS** |
+| PDF/A-2b, transparent seal | FAIL | **PASS** |
+
+**A sealed document grows by about 2.4 KB**, the deflated profile. An invisible
+signature embeds nothing and is unchanged.
+
+A page carrying a transparent seal also gets a `/Group` naming the blending
+colour space, which ISO 19005-2 §6.2.10 requires. A page that already declares
+one is left alone.
+
+Nothing here is configurable, and that is deliberate: the previous behaviour was
+a conformant document going in and a non-conformant one coming out.
+`seal.transparent => false` is still the lever for PDF/A-1.
+
 ## From 2.3.1 to 2.4.0
 
 No public class was removed and no signature was narrowed, so an application

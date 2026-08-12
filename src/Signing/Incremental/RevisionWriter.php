@@ -11,6 +11,7 @@ use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SealPlacementException;
+use LSNepomuceno\LaravelA1PdfSign\Support\SrgbProfile;
 
 /**
  * Builds the revision appended to a document when it is signed.
@@ -66,6 +67,10 @@ final class RevisionWriter
         // below do not depend on the artwork
         // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
         $maskNumber = $number++;
+        // Allocated on the same terms as the mask: the numbers below must not
+        // depend on the artwork, and they must not depend on the colour space
+        // either.
+        $profileNumber = $number++;
         $formNumber = $number++;
 
         // Both widget builders point /AP here. An invisible signature gets an
@@ -115,7 +120,10 @@ final class RevisionWriter
 
         if ($visible) {
             $offsets[$imageNumber] = $base + strlen($body);
-            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber);
+            $body .= $this->appearance->imageObject($imageNumber, $seal, $maskNumber, $profileNumber);
+
+            $offsets[$profileNumber] = $base + strlen($body);
+            $body .= $this->appearance->profileObject($profileNumber, new SrgbProfile()->bytes());
 
             if ($seal->isTransparent()) {
                 $offsets[$maskNumber] = $base + strlen($body);
@@ -159,15 +167,25 @@ final class RevisionWriter
 
         $page = $this->reader->rawObject($pdf, $document, $pageNumber);
 
+        // A transparent seal makes the page carry transparency, and ISO 19005-2
+        // §6.2.10 then wants a group naming the blending colour space, unless
+        // the file has an OutputIntent to answer for it.
+        $group = $visible && $seal->isTransparent() ? $profileNumber : null;
+
         if ($target === null || preg_match('/\/Annots\s*\[[^\]]*\b' . $widgetNumber . '\s+\d+\s+R/', $page) !== 1) {
             $offsets[$pageNumber] = $base + strlen($body);
-            $body .= "{$pageNumber} 0 obj\n" . $this->withAnnotation($page, $widgetNumber) . "\nendobj\n";
+            $body .= "{$pageNumber} 0 obj\n"
+                . $this->withTransparencyGroup($this->withAnnotation($page, $widgetNumber), $group)
+                . "\nendobj\n";
         }
 
         foreach ($stampNumbers as $stampPage => $stampNumber) {
             $offsets[$stampPage] = $base + strlen($body);
             $body .= "{$stampPage} 0 obj\n"
-                . $this->withAnnotation($this->reader->rawObject($pdf, $document, $stampPage), $stampNumber)
+                . $this->withTransparencyGroup(
+                    $this->withAnnotation($this->reader->rawObject($pdf, $document, $stampPage), $stampNumber),
+                    $group,
+                )
                 . "\nendobj\n";
         }
 
@@ -592,6 +610,27 @@ final class RevisionWriter
         }
 
         return $this->injectBeforeClose($page, "/Annots [{$widgetNumber} 0 R]");
+    }
+
+    /**
+     * The page's transparency group, when a transparent seal put transparency
+     * on it and the page does not already declare one.
+     *
+     * A page that already has a /Group is left alone: the producer chose a
+     * blending space and it is not the signer's to overrule.
+     *
+     * @throws InvalidPdfFileException
+     */
+    private function withTransparencyGroup(string $page, ?int $profileNumber): string
+    {
+        if ($profileNumber === null || str_contains($page, '/Group')) {
+            return $page;
+        }
+
+        return $this->injectBeforeClose(
+            $page,
+            "/Group<</S/Transparency/CS[/ICCBased {$profileNumber} 0 R]>>",
+        );
     }
 
     /**

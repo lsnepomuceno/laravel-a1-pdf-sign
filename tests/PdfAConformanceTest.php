@@ -84,12 +84,12 @@ it('leaves the document without an /ID alone rather than inventing one', functio
         ->and($signed->contents)->not->toContain('/ID');
 });
 
-it('draws the seal in DeviceRGB, which is what costs PDF/A conformance', function () {
-    // Measured rather than assumed: with a seal, veraPDF fails both parts on
-    // DeviceRGB (§6.2.3.3 for PDF/A-1, §6.2.4.3 for PDF/A-2), because the
-    // colour space is allowed only where the file carries an RGB OutputIntent.
-    // Asserted here so the day the seal moves to an ICCBased space, this test
-    // is what says so.
+it('draws the seal in a colour space it carries itself', function () {
+    // §6.2.3.3 for PDF/A-1 and §6.2.4.3 for PDF/A-2 allow DeviceRGB only where
+    // the file carries an RGB OutputIntent, and adding one is the author's
+    // statement about their document rather than the signer's. An ICCBased
+    // space brings its own profile and asks the document for nothing
+    // (docs/decisions/0028-the-seal-carries-its-own-colour-space.md).
     [$pfxPath, $password] = debugCertificate();
 
     $signed = A1PdfSign::newSignature()
@@ -102,8 +102,54 @@ it('draws the seal in DeviceRGB, which is what costs PDF/A conformance', functio
     // ICCBased space, which is how it was conformant to begin with.
     $appended = substr($signed->contents, strlen(Files::read(resource('pdfa-2b.pdf'))));
 
-    expect($appended)->toContain('/ColorSpace/DeviceRGB')
-        ->and($appended)->not->toContain('/ICCBased');
+    expect($appended)->toMatch('#/ColorSpace\[/ICCBased \d+ 0 R\]#')
+        ->and($appended)->not->toContain('/ColorSpace/DeviceRGB')
+        // The profile object itself, and /N 3 is what makes it three-component.
+        ->and($appended)->toContain('<</N 3/Filter/FlateDecode');
+});
+
+it('leaves the colour space alone when there is no seal to draw', function () {
+    // An invisible signature draws nothing, so it embeds no profile: 2.4 KB
+    // added to every signed document for a colour nobody sees would be a cost
+    // with no benefit.
+    [$pfxPath, $password] = debugCertificate();
+
+    $signed = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('pdfa-2b.pdf'))
+        ->sign();
+
+    $appended = substr($signed->contents, strlen(Files::read(resource('pdfa-2b.pdf'))));
+
+    expect($appended)->not->toContain('/ICCBased');
+});
+
+it('gives the page a transparency group only when the seal is transparent', function () {
+    // ISO 19005-2 §6.2.10: a page carrying transparency needs a group naming
+    // the blending colour space, unless an OutputIntent answers for it. It is
+    // the only rule left standing between a transparent seal and PDF/A-2, and
+    // veraPDF named it by number.
+    [$pfxPath, $password] = debugCertificate();
+
+    $transparent = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('pdfa-2b.pdf'))
+        ->seal(placement: new SealPlacement(x: 60, y: 400, width: 120))
+        ->sign();
+
+    config()->set('a1-pdf-sign.seal.transparent', false);
+
+    $opaque = A1PdfSign::newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('pdfa-2b.pdf'))
+        ->seal(placement: new SealPlacement(x: 60, y: 400, width: 120))
+        ->sign();
+
+    expect($transparent->contents)->toMatch('#/Group<</S/Transparency/CS\[/ICCBased \d+ 0 R\]>>#')
+        // An opaque seal puts no transparency on the page, so the group would
+        // be a claim about the document that signing did not make true.
+        ->and(substr($opaque->contents, strlen(Files::read(resource('pdfa-2b.pdf')))))
+        ->not->toContain('/Group');
 });
 
 it('puts an /SMask in the file only when the seal is transparent', function () {

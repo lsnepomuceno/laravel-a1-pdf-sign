@@ -61,6 +61,10 @@ and it is what turns PDF/A-1b from FAIL to PASS.
 
 ### A visible seal costs conformance, in both parts
 
+**Fixed in 2.5 by [0028](0028-the-seal-carries-its-own-colour-space.md), which
+took the next step this section named. What follows is the state that record
+started from, kept because it is why the fix took the shape it did.**
+
 *§6.2.3.3 (PDF/A-1) and §6.2.4.3 (PDF/A-2): DeviceRGB may be used only if the
 file has an OutputIntent with an RGB destination profile.*
 
@@ -73,6 +77,10 @@ file, not something to add on the way past.
 make it conformant whatever the document declares. That means vendoring an sRGB
 ICC profile into an MIT package, whose licensing needs checking first, so it is
 named here as the next step rather than done quietly.
+
+*It was not vendored in the end.* `Support\SrgbProfile` builds the profile from
+IEC 61966-2-1 and ICC.1:2001-04, so the licensing question never had to be
+answered: there is no third party's binary to license.
 
 ### A transparent seal can never be PDF/A-1
 
@@ -91,13 +99,19 @@ transparency needs a `/Group` with a `/CS` when the file has no OutputIntent.
 The signer could add that group, and it would not change the verdict while
 §6.2.4.3 still fails, so it waits on the same ICC decision.
 
+*It did wait, and then it was the only rule left.* 0028 writes the group, and
+PDF/A-2 with a transparent seal now passes. Part 1 does not, and cannot.
+
 ## Consequences
 
 - **An invisible signature keeps a PDF/A document conformant, in both parts
   measured.** That is now a supported claim rather than a hope, and it is the
   recommendation for a PDF/A workflow.
-- A visible seal does not, and the reason is the colour space rather than the
-  signature.
+- A visible seal did not, and the reason was the colour space rather than the
+  signature. **That is now fixed**
+  ([0028](0028-the-seal-carries-its-own-colour-space.md)): the seal carries its
+  own `/ICCBased` profile, built rather than vendored, and every cell measured
+  here passes except PDF/A-1 with a transparent seal, which §6.4 forbids.
 - `tests/Resources/pdfa-1b.pdf` and `pdfa-2b.pdf` are committed as the
   baselines.
 - **The measurement is now a gate.** `tests/PdfAValidationTest.php` runs
@@ -122,8 +136,8 @@ The signer could add that group, and it would not change the verdict while
 
 - `tests/PdfAConformanceTest.php` keeps checking the **structure each verdict
   turned on**: the identifier is carried, the invisible field has an appearance,
-  the seal is DeviceRGB, the `/SMask` appears only when transparency is asked
-  for. Those run everywhere, including where no JRE exists.
+  the seal's colour space is its own, the `/SMask` appears only when transparency
+  is asked for. Those run everywhere, including where no JRE exists.
 
 - **veraPDF is an instrument, not a dependency**, and neither are `pdfsig`,
   `pdftoppm` and Ghostscript. Nothing in `src/` may invoke one: a package that
@@ -170,5 +184,5 @@ The signer could add that group, and it would not change the verdict while
 | Invent an `/ID` for a document that has none | Claiming an identity for a document this only appended to |
 | Change the second `/ID` string on each revision | It would be a digest no reader checks |
 | Reason about conformance instead of measuring | The invisible signature "obviously" preserved conformance, and it failed on `/ID` |
-| Vendor an sRGB ICC profile now | Licensing into an MIT package, decided quietly inside a measurement commit |
+| Vendor an sRGB ICC profile now | Licensing into an MIT package, decided quietly inside a measurement commit. [0028](0028-the-seal-carries-its-own-colour-space.md) built one instead, so nothing was vendored at all |
 | Claim the fixes cover B-LTA too | Not measured. The timestamp widget has no appearance either |
