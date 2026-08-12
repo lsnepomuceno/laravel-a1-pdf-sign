@@ -119,6 +119,7 @@ final class SealAppearance
         SealPlacement $placement,
         SealImage $seal,
         ?ObjectCipher $cipher = null,
+        ?PageGeometry $geometry = null,
     ): string {
         [$width, $height] = $this->size($placement, $seal);
 
@@ -129,6 +130,9 @@ final class SealAppearance
         return "{$number} 0 obj\n"
             . '<</Type/XObject/Subtype/Form'
             . "/BBox[0 0 {$width} {$height}]"
+            // Turned the other way, so the seal reads upright once the reader
+            // applies the page's own rotation to it.
+            . ($geometry ?? new PageGeometry())->appearanceMatrix()
             . "/Resources<</XObject<</Im0 {$imageNumber} 0 R>>>>"
             . '/Length ' . $length
             . ">>\nstream\n"
@@ -162,11 +166,14 @@ final class SealAppearance
      *
      * @return array{0: float, 1: float, 2: float, 3: float}
      */
-    public function rectangle(SealPlacement $placement, SealImage $seal): array
+    public function rectangle(SealPlacement $placement, SealImage $seal, ?PageGeometry $geometry = null): array
     {
         [$width, $height] = $this->size($placement, $seal);
 
-        return [$placement->x, $placement->y, $placement->x + $width, $placement->y + $height];
+        // The placement is where the seal appears, and on a rotated page that
+        // is not where its coordinates are (docs/decisions/0033-the-seal-honours-page-rotation.md).
+        return ($geometry ?? new PageGeometry())
+            ->toUserSpace($placement->x, $placement->y, $width, $height);
     }
 
     /**

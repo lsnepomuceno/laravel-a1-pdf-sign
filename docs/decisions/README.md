@@ -42,6 +42,7 @@ document drifts away from the code it describes.
 | [0030](0030-signing-a-document-that-is-encrypted.md) | Signing a document that is encrypted |
 | [0031](0031-certification-verified-by-a-reader.md) | Certification is verified by a reader that enforces it |
 | [0032](0032-what-signing-does-to-pdf-ua.md) | What signing does to PDF/UA, measured |
+| [0033](0033-the-seal-honours-page-rotation.md) | The seal honours the page's rotation |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its
