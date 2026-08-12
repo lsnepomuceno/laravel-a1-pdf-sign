@@ -108,6 +108,24 @@ jobs:
           sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
           verapdf --version
 
+      # pyHanko is the reader that enforces /DocMDP, which pdfsig cannot
+      # surface at all. Pinned for the same reason veraPDF is.
+      #
+      # Two distributions: installing pyHanko alone gives no command, because
+      # the CLI is packaged and versioned separately.
+      # See docs/decisions/0031-certification-verified-by-a-reader.md.
+      - name: Install pyHanko
+        env:
+          PYHANKO_VERSION: '0.36.2'
+          PYHANKO_CLI_VERSION: '0.4.2'
+        run: |
+          set -eux
+          python3 -m venv /opt/pyhanko
+          /opt/pyhanko/bin/pip install --quiet \
+            "pyHanko==${PYHANKO_VERSION}" "pyhanko-cli==${PYHANKO_CLI_VERSION}"
+          sudo ln -s /opt/pyhanko/bin/pyhanko /usr/local/bin/pyhanko
+          pyhanko --version
+
       # composer test carries --fail-on-skipped: every check has to run
       # somewhere, and a skip is how one quietly stops. The PDF/A group used to
       # skip itself when veraPDF was absent, and a job could go green having

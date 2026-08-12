@@ -125,8 +125,8 @@ progress; on `pre-push` it means you are choosing to push to `main` and saying s
 
 ### The verification tools never ship
 
-`veraPDF`, `qpdf`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are **development
-and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
+`veraPDF`, `qpdf`, `pyHanko`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are
+**development and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
 testing reaches the package a consumer installs: an architectural test enforces the first
 and `tests/DistributionTest.php` asks `git archive` what a release actually contains.
 
@@ -149,7 +149,8 @@ has to run somewhere, and a skip is how one quietly stops. If you run the suite 
 the container and veraPDF is not installed, that group will fail rather than pass silently.
 
 It is a **development and CI instrument only**: nothing in `src/` may invoke veraPDF,
-`qpdf`, `pdfsig`, `pdftoppm` or Ghostscript, and an architectural test fails if it does.
+`qpdf`, `pyHanko`, `pdfsig`, `pdftoppm` or Ghostscript, and an architectural test fails if
+it does.
 
 ### Checking the output in a real reader
 

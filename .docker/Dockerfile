@@ -67,6 +67,31 @@ RUN set -eux; \
         rm -rf /tmp/verapdf.zip /tmp/verapdf-src /tmp/verapdf-auto.xml; \
         verapdf --version
 
+# pyHanko, the reader that enforces /DocMDP.
+#
+# Certification was the one claim this package made with no outside witness:
+# pdfsig reports signatures and their coverage and says nothing about the
+# permissions a certification imposes, so a document certified at no-changes
+# and then modified read the same to it as one that was never certified.
+# pyHanko compares the revisions against the policy and refuses
+# (docs/decisions/0031-certification-verified-by-a-reader.md).
+#
+# Two distributions, pinned separately: `pip install pyHanko` installs the
+# library and no command at all, because the CLI lives in pyhanko-cli and is
+# versioned on its own.
+#
+# tzdata is not optional. pyHanko loads a Europe/Brussels zone at import time
+# for the EU trusted list, and Alpine ships no zone data, so without it every
+# invocation dies in an import with ZoneInfoNotFoundError.
+ARG PYHANKO_VERSION=0.36.2
+ARG PYHANKO_CLI_VERSION=0.4.2
+
+RUN set -eux; \
+        apk add --no-cache python3 py3-pip tzdata; \
+        pip install --break-system-packages --no-cache-dir \
+            "pyHanko==${PYHANKO_VERSION}" "pyhanko-cli==${PYHANKO_CLI_VERSION}"; \
+        pyhanko --version
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 ENV COMPOSER_ALLOW_SUPERUSER=1 \

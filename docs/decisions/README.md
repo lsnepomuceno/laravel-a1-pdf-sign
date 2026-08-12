@@ -40,15 +40,18 @@ document drifts away from the code it describes.
 | [0028](0028-the-seal-carries-its-own-colour-space.md) | The seal carries its own colour space, built rather than vendored |
 | [0029](0029-the-identity-a-brazilian-signer-is-known-by.md) | The identity a Brazilian signer is known by |
 | [0030](0030-signing-a-document-that-is-encrypted.md) | Signing a document that is encrypted |
+| [0031](0031-certification-verified-by-a-reader.md) | Certification is verified by a reader that enforces it |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its
 shape rather than only the shape.
 
-**0012 is the one to read before trusting it.** It is implemented and its
-verification is deliberately incomplete: `pdfsig` does not surface `/DocMDP`, so
-whether a reader *enforces* a certification is untested here. The record says so
-rather than rounding up.
+**0012 carried a caveat for two releases, and it is closed.** Its verification
+was deliberately incomplete, because `pdfsig` does not surface `/DocMDP` and no
+reader the project had would say whether a certification is *enforced*.
+[0031](0031-certification-verified-by-a-reader.md) found one that does, pyHanko,
+and made it a gate: a certified document modified beyond its level is now
+reported as violating its policy on every run.
 
 Rules that break the product when violated are not decisions and do not live
 here. They are in [the invariants](../spec/invariants.md).
