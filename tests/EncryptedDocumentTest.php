@@ -89,7 +89,15 @@ it('leaves the signature contents unencrypted, which is the one exemption', func
     // PKCS#7 blob starts with.
     preg_match('/\/Contents\s*<([0-9a-fA-F]+)>/', $signed, $found);
 
-    expect(substr((string) hex2bin(rtrim($found[1] ?? '', '0')), 0, 1))->toBe("\x30");
+    // Read from the front rather than decoding the whole placeholder. The
+    // previous form was hex2bin(rtrim($hex, '0')), which is invariant 5 done
+    // backwards: trimming trailing zeroes off DER is the exact thing the
+    // readers are forbidden to do, and here it also left an odd number of
+    // characters whenever the CMS happened to end in a single 0 nibble, which
+    // made hex2bin() raise. It failed on PHP 8.5 and passed on 8.4 in the same
+    // run, on the same code, because the byte it depended on is whatever the
+    // signature happened to end with.
+    expect(substr($found[1] ?? '', 0, 2))->toBe('30');
 
     unlink($path);
 });
