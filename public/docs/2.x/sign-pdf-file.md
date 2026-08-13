@@ -395,3 +395,44 @@ Encrypted documents were refused until 2.5, and the refusal was correct rather t
 | A non-standard security handler | Its key comes from somewhere this package cannot reach |
 | An encrypted document packed into object streams | Reachable, not implemented |
 | `pades-b-lt` and above, while encrypted | They append streams this does not encrypt |
+
+<hr />
+
+#### 13 - A document that is not a local file. <small>(since 2.6)</small>
+
+An application keeping contracts on `s3`, `minio` or any Flysystem disk does not have to download one first:
+
+```PHP
+$signed = A1PdfSign::newSignature()
+    ->certificate($pfxPath, $password)
+    ->pdfFromDisk('s3', 'contracts/deal.pdf')
+    ->sign();
+```
+
+The file name is carried across, so the signed document keeps a name rather than a generated one.
+
+If the bytes come from somewhere else entirely, an API response or a database column, hand them over directly:
+
+```PHP
+->pdfContents($bytes, 'deal.pdf')
+```
+
+> Both hold the whole document in memory. Signing peaks at roughly 20 MB plus twice the document, so a 200 MB file needs around 420 MB, and neither of these changes that.
+
+<hr />
+
+#### 14 - A seal of your own. <small>(since 2.6, and true before)</small>
+
+The seal is drawn by `Contracts\SealRenderer`, bound in the container, so replacing it is one line in your own service provider:
+
+```PHP
+use LSNepomuceno\LaravelA1PdfSign\Contracts\SealRenderer;
+
+$this->app->bind(SealRenderer::class, QrCodeSealRenderer::class);
+```
+
+That is the route for a corporate logo, a QR code linking to a validation page, or any layout of your own. The contract has two methods: `render()` builds a seal from the certificate, and `fromImage()` embeds artwork you already have.
+
+**`fromImage()` is also the answer to drawing the seal with Blade.** Render your view to an image however you like and hand the result over. The package stays out of turning HTML into pixels, which would be a large dependency for a signing library.
+
+This was always possible and was documented nowhere, which is the same as not existing.

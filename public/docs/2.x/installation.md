@@ -2,11 +2,25 @@
 
 * PHP: ^8.4 or ^8.5
 * Laravel: ^13
-* PHP Extensions: mbstring, dom, fileinfo, openssl, json, gd
+* PHP Extensions: mbstring, dom, fileinfo, openssl, json, bcmath, and gd or imagick
 
 Laravel 12 is **not** supported. It requires `symfony/process ^7.2` while the test stack requires `^8.1`, so the two cannot be installed together.
 
-The `openssl` **binary** is no longer required. Certificates are read through `ext-openssl`; the command line is used only as a fallback for legacy PFX files (see [Working with certificates](/docs/2.x/working-with-certificate)).
+`gd` or `imagick` is needed only to draw a visible seal. An invisible signature needs neither.
+
+### The `openssl` binary
+
+**Signing does not need it.** Certificates are read through `ext-openssl`, and the command line is a fallback for legacy PFX files only (see [Working with certificates](/docs/2.x/working-with-certificate)).
+
+**Validation does.** The CMS verdict comes from the binary, and `proc_open` has to be available to reach it, which much shared hosting disables.
+
+> `ext-openssl` being loaded says nothing about the binary being installed. They are separate things, and a minimal container commonly has the first without the second. Before 2.6 a host missing it reported every signature as **invalid** rather than saying so; it now raises `MissingBinaryException`.
+
+```Shell
+php artisan a1-pdf-sign:check
+```
+
+reports all of the above and exits non-zero when something makes signing or validation impossible, so a deployment pipeline can use it.
 
 # Install
 
