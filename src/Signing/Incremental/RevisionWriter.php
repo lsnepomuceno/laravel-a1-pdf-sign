@@ -179,6 +179,8 @@ final class RevisionWriter
                 $catalog = $this->withDocMdpPermission($catalog, $signatureNumber);
             }
 
+            $catalog = $this->withPadesExtension($catalog, $profile);
+
             $offsets[$catalogNumber] = $base + strlen($body);
             $body .= "{$catalogNumber} 0 obj\n{$catalog}\nendobj\n";
         }
@@ -442,6 +444,40 @@ final class RevisionWriter
         }
 
         return $this->injectBeforeClose($catalog, "/Perms<</DocMDP {$signatureNumber} 0 R>>");
+    }
+
+    /**
+     * The developer extension the PAdES sub-filter needs below PDF 2.0.
+     *
+     * *ISO 32000-1 §7.12: a file declares an extension in the catalog's
+     * /Extensions, under the registered prefix of whoever defined it.*
+     *
+     * `/SubFilter /ETSI.CAdES.detached` became standard in PDF 2.0. Below that
+     * it is the ETSI_PAdES extension, registered under the prefix ESIC, and
+     * this package wrote the sub-filter into documents declaring PDF 1.4 while
+     * declaring no extension at all. Every reader accepts it; the Arlington
+     * PDF Model, which checks a document against the specification's own
+     * grammar, does not, and it is right
+     * (docs/decisions/0037-what-we-write-against-the-grammar.md).
+     *
+     * **Not raised to /Version 2.0 instead.** That asserts the whole document
+     * is PDF 2.0, which is a claim about bytes this package only appended to,
+     * and the same reasoning that stopped 0025 inventing an /ID.
+     *
+     * A catalog that already declares /Extensions is left alone: merging into
+     * somebody else's declaration is guesswork, and a document that carries one
+     * has a producer with opinions about it.
+     */
+    private function withPadesExtension(string $catalog, SignatureProfile $profile): string
+    {
+        if (! str_starts_with($profile->subFilter(), 'ETSI.') || str_contains($catalog, '/Extensions')) {
+            return $catalog;
+        }
+
+        return $this->injectBeforeClose(
+            $catalog,
+            '/Extensions<</ESIC<</BaseVersion/1.7/ExtensionLevel 2>>>>',
+        );
     }
 
     /**

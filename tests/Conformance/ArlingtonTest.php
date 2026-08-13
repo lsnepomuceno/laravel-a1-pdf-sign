@@ -22,6 +22,15 @@ use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
  * Its traversal reaches the signature dictionary through `/Perms/DocMDP` rather
  * than through the widget's `/V`, so the counts are asserted per file instead
  * of as one global zero, which would claim more than the tool delivers.
+ *
+ * **The signed documents are checked with ETSI_PAdES enabled**, because they
+ * declare it: `/SubFilter /ETSI.CAdES.detached` is that extension below PDF
+ * 2.0, and the catalog now says so in `/Extensions` as ISO 32000-1 §7.12
+ * requires. Measured while doing it: `--extensions` tells the **model** which
+ * definitions to load and does **not** read the file's own `/Extensions`, so
+ * enabling it here is describing the document rather than excusing it. Running
+ * without the flag models a reader that has never heard of PAdES, which is a
+ * different question and one this package cannot answer for.
  */
 
 /**
@@ -72,7 +81,7 @@ it('agrees the unsigned input is describable before anything is done to it', fun
 })->group('arlington');
 
 it('writes objects the specification describes', function (string $sample) {
-    expect(arlingtonErrors(sample("{$sample}.pdf")))->toBe([]);
+    expect(arlingtonErrors(sample("{$sample}.pdf"), 'ETSI_PAdES'))->toBe([]);
 })->with([
     'legacy',
     'pades-b-b',
@@ -86,14 +95,18 @@ it('writes objects the specification describes', function (string $sample) {
     'xref-stream',
 ])->group('arlington');
 
-it('reports the certified document, which is the one finding it has made', function () {
-    // /SubFilter /ETSI.CAdES.detached became standard in PDF 2.0. Below that it
-    // is the ETSI_PAdES developer extension, which ISO 32000-1 §7.12 says a
-    // file declares in the catalog's /Extensions. The samples carry a
-    // %PDF-1.4 header and no /Extensions.
+it('describes the certified document too, once the extension it declares is loaded', function () {
+    expect(arlingtonErrors(sample('certified.pdf'), 'ETSI_PAdES'))->toBe([]);
+})->group('arlington');
+
+it('still reports the sub-filter to a model that has never heard of PAdES', function () {
+    // Without the extension loaded, ETSI.CAdES.detached is a value PDF 1.7 does
+    // not define, and the tool says so. That is correct and it is why the
+    // catalog now declares the extension: the disagreement is about what the
+    // model was told, not about what the file says.
     //
-    // Asserted rather than fixed, so the day it is fixed this test fails and
-    // has to be updated, which is how the PDF/UA clauses were handled.
+    // Asserted rather than ignored, so this stops being true loudly if the
+    // sub-filter or the version ever changes.
     $errors = arlingtonErrors(sample('certified.pdf'));
 
     expect($errors)->toHaveCount(1)
@@ -101,8 +114,10 @@ it('reports the certified document, which is the one finding it has made', funct
         ->and($errors[0])->toContain('ETSI.CAdES.detached');
 })->group('arlington');
 
-it('clears that finding when the extension is declared, which identifies the fix', function () {
-    // Isolated rather than guessed: enabling the extension the message names
-    // makes the error go away, and so does forcing the version to 2.0.
-    expect(arlingtonErrors(sample('certified.pdf'), 'ETSI_PAdES'))->toBe([]);
+it('declares the extension the sub-filter needs below PDF 2.0', function () {
+    // ISO 32000-1 §7.12. The catalog carries it now; TestGrammar does not read
+    // it, which is a property of the tool rather than of the document.
+    expect(LSNepomuceno\LaravelA1PdfSign\Support\Files::read(sample('certified.pdf')))
+        ->toContain('/Extensions')
+        ->toContain('/ESIC');
 })->group('arlington');

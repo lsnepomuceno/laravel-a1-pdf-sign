@@ -79,10 +79,21 @@ Isolated in both directions: forcing the version to 2.0 clears it, and enabling
 the extension clears it.
 
 **It is spec hygiene rather than breakage**: poppler, pyHanko and veraPDF accept
-these files, and so does every reader in practice. It is asserted here rather
-than fixed, so the day it is fixed this test fails and has to be updated, which
-is how the PDF/UA clauses were handled in
-[0032](0032-what-signing-does-to-pdf-ua.md).
+these files, and so does every reader in practice.
+
+*It is fixed.* The catalog now declares the extension, under the ESIC prefix as
+ISO 32000-1 §7.12 requires, rather than raising `/Version` to 2.0: raising the
+version asserts the whole document is PDF 2.0, which is a claim about bytes this
+package only appended to, and the same reasoning that stopped 0025 inventing an
+`/ID`.
+
+**Measured while fixing it, and worth knowing:** TestGrammar's `--extensions`
+flag tells the *model* which definitions to load and does **not** read the
+file's own `/Extensions`. So declaring it does not change the tool's verdict.
+The signed samples are therefore checked with `ETSI_PAdES` enabled, which
+describes what they are, and one test still runs without it and asserts the
+complaint, so the day the sub-filter or the version changes that stops being
+true loudly.
 
 That finding is what earns the instrument its place. [0026](0026-verification-tools-are-instruments.md)
 says each one has done so by finding something the suite passed, and this one
