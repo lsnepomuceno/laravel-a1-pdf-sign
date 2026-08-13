@@ -125,7 +125,7 @@ progress; on `pre-push` it means you are choosing to push to `main` and saying s
 
 ### The verification tools never ship
 
-`veraPDF`, `qpdf`, `pyHanko`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are
+`veraPDF`, `qpdf`, `pyHanko`, Arlington's `testgrammar`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are
 **development and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
 testing reaches the package a consumer installs: an architectural test enforces the first
 and `tests/Project/DistributionTest.php` asks `git archive` what a release actually contains.

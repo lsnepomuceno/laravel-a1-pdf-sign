@@ -126,6 +126,27 @@ jobs:
           sudo ln -s /opt/pyhanko/bin/pyhanko /usr/local/bin/pyhanko
           pyhanko --version
 
+      # The Arlington PDF Model, checked against the specification's own
+      # grammar. Pinned by commit: the releases carry no binaries, and the TSV
+      # model lives in the same tree, so one SHA pins tool and grammar together.
+      # See docs/decisions/0037-what-we-write-against-the-grammar.md.
+      - name: Install the Arlington PDF Model
+        env:
+          ARLINGTON_COMMIT: '9d75f6de8cdc3883d5519f83e804238329b9eb10'
+        run: |
+          set -eux
+          git clone --quiet https://github.com/pdf-association/arlington-pdf-model.git /tmp/arlington
+          cd /tmp/arlington
+          git checkout --quiet "${ARLINGTON_COMMIT}"
+          cd TestGrammar
+          cmake -B build -DPDFSDK_PDFIUM=ON -DCMAKE_BUILD_TYPE=Release .
+          cmake --build build --config Release -j"$(nproc)"
+          sudo cp bin/linux/TestGrammar /usr/local/bin/testgrammar
+          sudo mkdir -p /opt/arlington
+          sudo cp -r /tmp/arlington/tsv /opt/arlington/tsv
+          testgrammar --help > /dev/null
+          echo "ARLINGTON_TSV=/opt/arlington/tsv/latest" >> "$GITHUB_ENV"
+
       # composer test carries --fail-on-skipped: every check has to run
       # somewhere, and a skip is how one quietly stops. The PDF/A group used to
       # skip itself when veraPDF was absent, and a job could go green having

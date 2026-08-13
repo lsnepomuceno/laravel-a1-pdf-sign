@@ -286,7 +286,7 @@ yesterday's.
 
 ## The instruments are never dependencies
 
-**veraPDF, qpdf, pyHanko, `pdfsig`, `pdftoppm` and Ghostscript are development and
+**veraPDF, qpdf, pyHanko, Arlington's `testgrammar`, `pdfsig`, `pdftoppm` and Ghostscript are development and
 validation tooling, and none of them may reach production.**
 
 Nothing in `src/` may invoke one. A package that shells out to a JVM, or to
