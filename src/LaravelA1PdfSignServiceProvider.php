@@ -7,7 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
-use LSNepomuceno\LaravelA1PdfSign\Commands\{SignPdfCommand, ValidatePdfSignatureCommand};
+use LSNepomuceno\LaravelA1PdfSign\Commands\{CheckEnvironmentCommand, SignPdfCommand, ValidatePdfSignatureCommand};
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
@@ -65,6 +65,7 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
             ], 'a1-pdf-sign-config');
 
             $this->commands([
+                CheckEnvironmentCommand::class,
                 SignPdfCommand::class,
                 ValidatePdfSignatureCommand::class,
             ]);
