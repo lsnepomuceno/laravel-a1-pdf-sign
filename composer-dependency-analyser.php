@@ -28,6 +28,26 @@ return (new Configuration())
     )
 
     /*
+     * src/Testing/A1PdfSignFake.php calls PHPUnit\Framework\Assert, which is
+     * how a first-party fake reports a failed expectation. Laravel does the
+     * same in Illuminate\Support\Testing\Fakes without requiring PHPUnit
+     * either: the class is only ever reached from a test suite, where the
+     * assertion library is present by definition.
+     *
+     * It stays out of `require` deliberately. Shipping a test framework to
+     * production to support a testing helper would be a worse trade than this
+     * exception.
+     *
+     * tests/ is covered for the same reason one level down: Pest brings PHPUnit
+     * transitively, so every suite that can run these tests already has it.
+     */
+    ->ignoreErrorsOnPackageAndPaths(
+        'phpunit/phpunit',
+        [__DIR__ . '/src/Testing', __DIR__ . '/tests'],
+        [ErrorType::SHADOW_DEPENDENCY],
+    )
+
+    /*
      * The suite installs laravel/framework, which provides every Illuminate
      * namespace, so the analyser attributes those symbols there rather than to
      * the split packages this library actually requires.

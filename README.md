@@ -136,6 +136,29 @@ already have.
 like and hand the result over; the package stays out of the business of turning HTML into pixels, which would be a
 large dependency for a signing library.
 
+## Testing an application that signs
+
+Your own suite should not need a PKCS#12 bundle, nor should it build a real CMS for a test that merely passes
+through the signing call:
+
+```php
+$signing = A1PdfSign::fake();
+
+// … the application runs …
+
+$signing->assertSigned();
+$signing->assertSignedTimes(1);
+$signing->assertSignedWithProfile(SignatureProfile::PadesBLT);
+$signing->assertCertified(CertificationLevel::NoChanges);
+$signing->assertSealed();
+$signing->assertNothingSigned();
+```
+
+It replaces the signer and the certificate reader in the container, so `certificate()` accepts any path and nothing
+is parsed, rendered or signed. The result is still a `SignedPdf`, so code calling `->contents`, `->size()` or
+`->save()` keeps working.
+
+
 ## Certificates
 
 ```php
