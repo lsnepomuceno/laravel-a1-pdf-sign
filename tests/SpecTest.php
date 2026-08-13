@@ -194,3 +194,136 @@ it('every documentation file is reachable from the index', function () {
 
     expect($orphans)->toBe([]);
 });
+
+/**
+ * Every symbol of this package cited anywhere in it, with where it was cited.
+ *
+ * Paths are checked above. Symbols were not, and the comments here lean on them
+ * hard: the invariants are explained in docblocks, decision records are cited
+ * from the code, and several comments exist precisely to stop somebody
+ * reintroducing a defect. A rename moves the code and leaves every one of those
+ * pointing at nothing, with no test failing.
+ *
+ * **Restricted to this package's own namespace on purpose.** Prose legitimately
+ * names other people's classes, PHP functions and PDF syntax that looks like
+ * neither: `Illuminate\Process\Factory`, `substr_replace()`, `/ByteRange`,
+ * and `ddn/sapp`, which a comment must be able to name precisely because it is
+ * the thing deliberately absent. Checking only `LSNepomuceno\LaravelA1PdfSign`
+ * is where a rename does the damage, is mechanically decidable, and needs no
+ * allowlist for anyone to maintain.
+ *
+ * @return array<string, string> Symbol to the file that cites it.
+ */
+function specSymbolReferences(string $contents, string $from): array
+{
+    $found = [];
+
+    // Only what a comment says. A `namespace` or `use` line is code, already
+    // answered by the autoloader and by PHPStan, and a namespace is not a class
+    // at all: scanning the whole file reported every declaration in `src/`.
+    if (str_ends_with($from, '.php')) {
+        $contents = specComments($contents);
+    }
+
+    // The fully qualified form, with or without a leading backslash, and
+    // whatever follows a `::`.
+    preg_match_all(
+        '/\\\\?(LSNepomuceno\\\\LaravelA1PdfSign(?:\\\\[A-Za-z_][A-Za-z0-9_]*)+)(?:::([A-Za-z_][A-Za-z0-9_]*))?/',
+        $contents,
+        $matches,
+        PREG_SET_ORDER,
+    );
+
+    foreach ($matches as $match) {
+        $member = $match[2] ?? '';
+
+        // ::class is a magic constant, true of any class that resolves, so the
+        // class alone is what there is to check.
+        $symbol = $match[1] . ($member === '' || $member === 'class' ? '' : '::' . $member);
+
+        $found[$symbol] = $from;
+    }
+
+    return $found;
+}
+
+/**
+ * The comment and docblock text of a PHP file, and nothing else.
+ */
+function specComments(string $contents): string
+{
+    $text = '';
+
+    foreach (token_get_all($contents) as $token) {
+        if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+            $text .= $token[1] . "\n";
+        }
+    }
+
+    return $text;
+}
+
+/**
+ * Whether a cited symbol exists.
+ */
+function specSymbolResolves(string $symbol): bool
+{
+    if (! str_contains($symbol, '::')) {
+        return class_exists($symbol) || interface_exists($symbol) || enum_exists($symbol) || trait_exists($symbol);
+    }
+
+    [$class, $member] = explode('::', $symbol, 2);
+
+    if (! class_exists($class) && ! interface_exists($class) && ! enum_exists($class) && ! trait_exists($class)) {
+        return false;
+    }
+
+    return method_exists($class, $member)
+        || defined("{$class}::{$member}")
+        || property_exists($class, $member);
+}
+
+it('resolves every symbol of this package cited anywhere in it', function () {
+    $missing = [];
+
+    foreach (specScannedFiles(packageRoot()) as $file) {
+        // docs/history/ records what the package used to be, so it names
+        // classes that were deliberately removed. UPGRADE.md maps every one of
+        // them to its replacement and has the same job.
+        if (str_contains($file, '/docs/history/') || str_ends_with($file, '/UPGRADE.md')) {
+            continue;
+        }
+
+        foreach (specSymbolReferences(specContents($file), $file) as $symbol => $from) {
+            if (! specSymbolResolves($symbol)) {
+                $missing[] = str_replace(packageRoot() . '/', '', $from) . ": {$symbol}";
+            }
+        }
+    }
+
+    sort($missing);
+
+    expect(array_values(array_unique($missing)))->toBe([]);
+});
+
+it('finds a symbol reference that has stopped resolving', function () {
+    // The check has to be able to fail, and the citation forms it must catch
+    // are the ones the comments here actually use.
+    expect(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner'))->toBeTrue()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner::sign'))->toBeTrue()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\RenamedAwayLongAgo'))->toBeFalse()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner::methodThatWent'))->toBeFalse();
+});
+
+it('reads a symbol out of prose the way a comment writes it', function () {
+    $cited = specSymbolReferences(
+        'See \LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner and '
+        . 'LSNepomuceno\LaravelA1PdfSign\Support\Bytes::overwrite() for the rest.',
+        'somewhere',
+    );
+
+    expect(array_keys($cited))->toBe([
+        'LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner',
+        'LSNepomuceno\LaravelA1PdfSign\Support\Bytes::overwrite',
+    ]);
+});
