@@ -45,6 +45,7 @@ document drifts away from the code it describes.
 | [0033](0033-the-seal-honours-page-rotation.md) | The seal honours the page's rotation |
 | [0034](0034-signing-owns-the-document.md) | Signing takes ownership of the document |
 | [0035](0035-the-audit-trail-is-opt-in.md) | The audit trail is opt-in, and its context is an allowlist |
+| [0036](0036-the-signed-artefacts-are-reproducible.md) | The signed artefacts are reproducible, and their coherence is a gate |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

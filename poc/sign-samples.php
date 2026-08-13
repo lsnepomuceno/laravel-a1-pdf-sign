@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Produces one signed sample per PAdES profile, for validation in Adobe Reader
  * or ITI Validar.
@@ -32,7 +34,28 @@ if (! is_dir($output)) {
     mkdir($output, 0o755, true);
 }
 
-[$pfx, $password] = DebugCertificate::make();
+// The committed certificate, when there is one. Minting a fresh identity on
+// every run is what let samples/ and tests/Resources/ drift apart: eleven PDFs
+// and a certificate were copied over, and a twelfth file outside samples/ that
+// depended on the same certificate was not, so it stayed signed by an identity
+// the repository no longer held. Nothing failed
+// (docs/decisions/0036-the-signed-artefacts-are-reproducible.md).
+$committed = __DIR__ . '/../samples/certificate.pfx';
+$password = DebugCertificate::PASSWORD;
+
+if (is_file($committed)) {
+    $pfx = (string) file_get_contents($committed);
+
+    echo "reusing samples/certificate.pfx\n";
+} else {
+    // Only to bootstrap a checkout that has none. It expires, and the day it
+    // does is the day every signed artefact is regenerated together, which is
+    // the trade this reuse makes explicit rather than hiding.
+    [$pfx, $password] = DebugCertificate::make(daysValid: 3650);
+
+    echo "no committed certificate; minted one valid for ten years\n";
+}
+
 file_put_contents("{$output}/certificate.pfx", $pfx);
 
 $pfxPath = "{$output}/certificate.pfx";
@@ -282,3 +305,41 @@ printf(
     $packedReport->count(),
     $packedReport->isValid() ? 'true' : 'false',
 );
+
+// ---------------------------------------------------------------------------
+// Writing the artefacts where they live.
+//
+// samples/README.md used to say "copy what you need over the files here", and
+// that manual step is where the drift entered: nobody copies a file they did
+// not know depended on the certificate. --write copies every committed signed
+// artefact, in samples/ and in tests/Resources/, or none of them.
+// ---------------------------------------------------------------------------
+if (! in_array('--write', $argv, true)) {
+    echo "\nWrote to .output/. Pass --write to update samples/ and tests/Resources/ in place.\n";
+
+    exit(0);
+}
+
+$root = dirname(__DIR__);
+
+$copies = [
+    "{$output}/certificate.pfx" => "{$root}/samples/certificate.pfx",
+    "{$output}/certificate.pem" => "{$root}/samples/certificate.pem",
+];
+
+foreach (glob("{$output}/*.pdf") ?: [] as $produced) {
+    $name = basename($produced);
+
+    if (is_file("{$root}/samples/{$name}")) {
+        $copies[$produced] = "{$root}/samples/{$name}";
+    }
+}
+
+foreach ($copies as $from => $to) {
+    copy($from, $to);
+    printf("wrote %s\n", str_replace("{$root}/", '', $to));
+}
+
+echo "\nNot written here, and they need pyHanko: tests/Resources/foreign-signed.pdf\n";
+echo "and certified-then-modified.pdf. See tests/ForeignSignatureTest.php and\n";
+echo "tests/CertificationEnforcementTest.php for the exact commands.\n";
