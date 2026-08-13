@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Rebuilds the two PDF 1.5 fixtures, with the /Resources qpdf was repairing.
  *
  * ISO 32000-1 §7.7.3.3 requires /Resources somewhere in the page tree, and
  * neither fixture had it, so qpdf warned and repaired both. That warning
  * travelled into every sample derived from them, which is why
- * tests/StructureTest.php filtered its verdict down to errors: a compromise
+ * tests/Conformance/StructureTest.php filtered its verdict down to errors: a compromise
  * that switched the gate off for warnings everywhere else too.
  *
  * Object numbering, sizes and structure are preserved deliberately. Tests pin

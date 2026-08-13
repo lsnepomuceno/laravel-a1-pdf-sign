@@ -185,7 +185,7 @@ it('reads a corrupted PNG or answers null, and does nothing else', function () {
     // (docs/decisions/0023-a-seal-that-can-be-transparent.md).
     mt_srand(20260811);
 
-    $png = Files::read(dirname(__DIR__) . '/src/Resources/img/sign-seal.png');
+    $png = Files::read(packageRoot() . '/src/Resources/img/sign-seal.png');
     $reader = new PngReader();
     $unexpected = [];
 

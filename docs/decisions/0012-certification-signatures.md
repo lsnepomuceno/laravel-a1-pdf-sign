@@ -162,7 +162,7 @@ output:
 | The same, one page resized in an appended revision | "incompatible with the current document modification policy", INVALID |
 | Certified at `form-filling`, signed again | "compatible with the current document modification policy", VALID |
 
-`tests/CertificationEnforcementTest.php` blocks on all three
+`tests/Certification/CertificationEnforcementTest.php` blocks on all three
 ([0031](0031-certification-verified-by-a-reader.md)). The claim this record
 carried for two releases is now checked on every run rather than deferred to
 whoever owned a copy of Acrobat.
@@ -199,5 +199,5 @@ being tested is actually exercisable, and building that is the whole difficulty.
   be signed, and the refusal is scoped to the level that means it.
 - `Contracts\PdfSigner::sign()` gained a trailing optional parameter and
   `Data\SignatureReport` gained a property, which changes the shape
-  `toArray()` returns. `tests/DataTest.php` failed on that and had to be
+  `toArray()` returns. `tests/Support/DataTest.php` failed on that and had to be
   updated deliberately, which is the gate working.

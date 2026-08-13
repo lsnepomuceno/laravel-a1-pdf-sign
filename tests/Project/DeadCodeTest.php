@@ -22,7 +22,7 @@ use SplFileInfo;
  *   second toolchain beside Pint for one check.
  *
  * So it is written here, which `docs/spec/conventions.md` allows once there is
- * no platform answer, and which `tests/ArchTest.php` and `tests/SpecTest.php`
+ * no platform answer, and which `tests/Project/ArchTest.php` and `tests/Project/SpecTest.php`
  * already do by walking the tree with `token_get_all()`.
  *
  * **It under-reports on purpose.** A gate with no baseline that cries wolf is a
@@ -43,7 +43,7 @@ function deadCodeScannedFiles(): array
 
     foreach (['/src', '/tests'] as $directory) {
         /** @var SplFileInfo $file */
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . $directory)) as $file) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(packageRoot() . $directory)) as $file) {
             if ($file->getExtension() === 'php') {
                 $files[] = $file->getPathname();
             }
@@ -80,7 +80,7 @@ function unusedVariablesIn(string $path): array
         }
 
         foreach (deadCodeUnusedInScope($tokens, $open, $close) as $line => $name) {
-            $found[] = str_replace(dirname(__DIR__) . '/', '', $path) . ":{$line} {$name}";
+            $found[] = str_replace(packageRoot() . '/', '', $path) . ":{$line} {$name}";
         }
     }
 
@@ -382,7 +382,7 @@ it('does not read a property default as an assignment', function () {
 });
 
 it('does not read a parameter default as an assignment', function () {
-    // The shape that produced five false positives on tests/ServiceTest.php:
+    // The shape that produced five false positives on tests/Project/ServiceTest.php:
     // an anonymous class inside a closure, whose methods carry defaults. The
     // parameter list belongs to the nested declaration, not to the scope being
     // walked.

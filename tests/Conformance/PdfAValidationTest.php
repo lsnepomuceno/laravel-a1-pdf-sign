@@ -9,7 +9,7 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 /**
  * PDF/A conformance, measured rather than reasoned about.
  *
- * `tests/PdfAConformanceTest.php` asserts the structures each verdict turned
+ * `tests/Conformance/PdfAConformanceTest.php` asserts the structures each verdict turned
  * on, which is what the rest of the suite can check. This file asks veraPDF,
  * the reference validator, and is the only place a conformance claim is
  * actually established.

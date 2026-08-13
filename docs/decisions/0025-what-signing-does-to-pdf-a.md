@@ -114,7 +114,7 @@ PDF/A-2 with a transparent seal now passes. Part 1 does not, and cannot.
   here passes except PDF/A-1 with a transparent seal, which §6.4 forbids.
 - `tests/Resources/pdfa-1b.pdf` and `pdfa-2b.pdf` are committed as the
   baselines.
-- **The measurement is now a gate.** `tests/PdfAValidationTest.php` runs
+- **The measurement is now a gate.** `tests/Conformance/PdfAValidationTest.php` runs
   veraPDF itself, in the `pdfa` group. It **blocks**: veraPDF is deterministic
   and runs offline once installed, so a failure is this package's rather than
   somebody else's outage, which is what separates it from the timestamp group.
@@ -134,7 +134,7 @@ PDF/A-2 with a transparent seal now passes. Part 1 does not, and cannot.
   changes its verdicts between builds cannot be the thing a gate is measured
   against.
 
-- `tests/PdfAConformanceTest.php` keeps checking the **structure each verdict
+- `tests/Conformance/PdfAConformanceTest.php` keeps checking the **structure each verdict
   turned on**: the identifier is carried, the invisible field has an appearance,
   the seal's colour space is its own, the `/SMask` appears only when transparency
   is asked for. Those run everywhere, including where no JRE exists.
@@ -143,7 +143,7 @@ PDF/A-2 with a transparent seal now passes. Part 1 does not, and cannot.
   `pdftoppm` and Ghostscript. Nothing in `src/` may invoke one: a package that
   shells out to a JVM to answer a runtime question would be a different package,
   and the consuming application would inherit an installation requirement nobody
-  wrote down. *Enforced by* `tests/ArchTest.php`, tokenised so the comments that
+  wrote down. *Enforced by* `tests/Project/ArchTest.php`, tokenised so the comments that
   explain the rule do not trip it.
 
   It is installed by the `pdfa` compose service alone, behind a build argument,

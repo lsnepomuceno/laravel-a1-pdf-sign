@@ -8,7 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 /**
  * PDF/UA conformance, measured rather than reasoned about.
  *
- * Same discipline as `tests/PdfAValidationTest.php`, and for the same reason:
+ * Same discipline as `tests/Conformance/PdfAValidationTest.php`, and for the same reason:
  * either a validator says yes or nobody knows
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
  *

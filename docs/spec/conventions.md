@@ -22,7 +22,7 @@ A private reimplementation of any of it is code this project has to maintain,
 test and explain, in exchange for nothing.
 
 This is a rule, not a preference. It is checked at review, and part of it is
-checked by `tests/ArchTest.php`.
+checked by `tests/Project/ArchTest.php`.
 
 ---
 
@@ -72,7 +72,7 @@ The first row is the one that matters. If a change swaps a byte-level `substr`
 for `Str::substr`, it will pass every test in this suite on ASCII fixtures and
 corrupt real documents in production.
 
-*Enforced by* `tests/ArchTest.php`, which fails when `Illuminate\Support\Str` is
+*Enforced by* `tests/Project/ArchTest.php`, which fails when `Illuminate\Support\Str` is
 used inside `src/Signing` or `src/Validation` at all: those namespaces are where
 the byte work lives, and the rule is easier to keep as "not here" than as "here,
 but only these methods".
@@ -125,7 +125,7 @@ sibling arrives later and arrives as a constant beside the first one.
 
 ## Enums that are not configuration may be int-backed
 
-`tests/ArchTest.php` requires enums in `Enums\` to be string-backed, so a
+`tests/Project/ArchTest.php` requires enums in `Enums\` to be string-backed, so a
 configuration file can name a case in plain text. That reason does not reach an
 enum nobody configures, like an ASN.1 tag whose values are fixed by
 ISO/IEC 8825-1 and are natural integers. Those are exempt by name in the arch
@@ -148,7 +148,7 @@ the next person finds a decision rather than an oversight.
 
 # 3. A docblock documents the thing under it
 
-Two failures, both of which shipped, both now checked by `tests/ArchTest.php`
+Two failures, both of which shipped, both now checked by `tests/Project/ArchTest.php`
 rather than left to review.
 
 ## Never leave two docblocks in a row
@@ -202,7 +202,7 @@ Turning it on changed no behaviour, and the whole suite passed unmodified,
 which says the code was already written as though it were on.
 
 *Enforced by* `pint.json`, which writes the declaration, and by
-`tests/ArchTest.php` twice: an arch expectation over `src/`, and a file walk for
+`tests/Project/ArchTest.php` twice: an arch expectation over `src/`, and a file walk for
 `tests/` and `config/`, where arch expectations cannot reach because those files
 declare no classes. `poc/` is out of scope, as it is for Pint and PHPStan.
 
@@ -222,7 +222,7 @@ This is not hypothetical and it is not other people's mistake. A comment in
 `Signing\IncrementalSigner` was written citing a decision record numbered 0034,
 about holding the document once, while the fix it described was still being
 measured. The record was never written, the reference stayed, and the only
-reason it did not ship is that `tests/SpecTest.php` refused the commit.
+reason it did not ship is that `tests/Project/SpecTest.php` refused the commit.
 
 **The first draft of this very section quoted that path in full, to illustrate
 the rule, and the gate refused that too.** Which is the right outcome: a scanner
@@ -230,7 +230,7 @@ cannot tell an example of a bad reference from a bad reference, and a rule whose
 own text has to be exempted is a rule with a hole in it. Describe the missing
 file; do not spell it.
 
-*Enforced by* `tests/SpecTest.php`, which walks every `.php`, `.md`, `.yml` and
+*Enforced by* `tests/Project/SpecTest.php`, which walks every `.php`, `.md`, `.yml` and
 `.yaml` file in the package and resolves every documentation path any of them
 cites. It is a gate rather than a review point, and it is the reason this rule
 can be stated so flatly.

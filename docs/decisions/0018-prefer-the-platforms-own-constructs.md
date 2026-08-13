@@ -57,7 +57,7 @@ for the framework helper is a defect, and it is a defect that **passes the whole
 test suite**, because the fixtures are ASCII and the failure needs a multi-byte
 sequence in the payload to show up.
 
-So the carve-out is enforced bluntly: `tests/ArchTest.php` fails when
+So the carve-out is enforced bluntly: `tests/Project/ArchTest.php` fails when
 `Illuminate\Support\Str` is used anywhere in `src/Signing` or `src/Validation`.
 Those two namespaces are where every byte-exact operation lives. "Not here at
 all" is a rule that survives review; "here, but only these five methods" is not.
@@ -84,7 +84,7 @@ are natural integers. Those are exempted by name, the way `sha1` is exempted for
 
 ## Consequences
 
-- `tests/ArchTest.php` gains two rules: no `Illuminate\Support\Str` in
+- `tests/Project/ArchTest.php` gains two rules: no `Illuminate\Support\Str` in
   `src/Signing` or `src/Validation`, and the string-backed requirement now names
   its exemptions instead of applying to every enum.
 

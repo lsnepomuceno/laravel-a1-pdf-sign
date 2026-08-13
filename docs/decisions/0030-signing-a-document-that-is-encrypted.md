@@ -61,7 +61,7 @@ judgement.
 RC4 does appear once, in the handler, to recompute the `/U` check value for
 revision 4's password check (algorithm 6). It is written out rather than taken
 from OpenSSL because OpenSSL 3 moved RC4 to the legacy provider and a password
-check should not depend on how the host configured that. `tests/ArchTest.php`
+check should not depend on how the host configured that. `tests/Project/ArchTest.php`
 exempts that one class by name and explains why.
 
 ### The trailer has to repeat `/Encrypt`
@@ -105,7 +105,7 @@ The fixtures are **qpdf's output**, and qpdf reads the signed result back. That
 direction is the one that matters: this package's reader agreeing with this
 package's writer would prove nothing about either.
 
-`tests/EncryptedDocumentTest.php` gates that a wrong password is refused, that
+`tests/Signing/EncryptedDocumentTest.php` gates that a wrong password is refused, that
 RC4 is refused, that qpdf finds no complaint about a signed AES-128 or AES-256
 document, that `/Contents` survives as readable DER, that the field name does
 not survive as readable text, and that a sealed encrypted document is still

@@ -105,7 +105,7 @@ them into one bundle rather than handing the path to OpenSSL.
   `GLOB_BRACE`. That constant is a GNU extension and PHP leaves it **undefined
   on musl**, so the method was a fatal error on `php:8.4-alpine` for the whole
   release while the suite stayed green: CI runs on Ubuntu, where the constant
-  exists. It is now one `glob()` per extension, and `tests/ArchTest.php` fails
+  exists. It is now one `glob()` per extension, and `tests/Project/ArchTest.php` fails
   on any platform-optional constant appearing in `src/`, since the behavioural
   test can only ever check the platform it happens to run on.
 

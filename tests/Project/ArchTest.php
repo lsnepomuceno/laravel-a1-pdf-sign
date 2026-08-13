@@ -71,7 +71,7 @@ arch('no trace of SAPP')
 it('keeps every exception throwable', function () {
     $wrong = [];
 
-    $files = glob(dirname(__DIR__) . '/src/Exceptions/*.php');
+    $files = glob(packageRoot() . '/src/Exceptions/*.php');
 
     foreach ($files === false ? [] : $files as $file) {
         $name = 'LSNepomuceno\\LaravelA1PdfSign\\Exceptions\\' . basename($file, '.php');
@@ -179,7 +179,7 @@ it('uses no constant the host platform may not define', function () {
     $found = [];
 
     /** @var SplFileInfo $file */
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . '/src')) as $file) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(packageRoot() . '/src')) as $file) {
         if ($file->getExtension() !== 'php') {
             continue;
         }
@@ -188,7 +188,7 @@ it('uses no constant the host platform may not define', function () {
         // the constant it is warning about without tripping the gate.
         foreach (token_get_all((string) file_get_contents($file->getPathname())) as $token) {
             if (is_array($token) && $token[0] === T_STRING && in_array($token[1], $optional, true)) {
-                $found[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) . ": {$token[1]}";
+                $found[] = str_replace(packageRoot() . '/', '', $file->getPathname()) . ": {$token[1]}";
             }
         }
     }
@@ -215,7 +215,7 @@ it('keeps the verification tools out of the package', function () {
     $found = [];
 
     /** @var SplFileInfo $file */
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . '/src')) as $file) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(packageRoot() . '/src')) as $file) {
         if ($file->getExtension() !== 'php') {
             continue;
         }
@@ -230,7 +230,7 @@ it('keeps the verification tools out of the package', function () {
 
             foreach ($tools as $tool) {
                 if (stripos($token[1], $tool) !== false) {
-                    $found[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) . ": {$tool}";
+                    $found[] = str_replace(packageRoot() . '/', '', $file->getPathname()) . ": {$tool}";
                 }
             }
         }
@@ -264,7 +264,7 @@ function phpFilesUnder(string $directory): Generator
     /** @var SplFileInfo $file */
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory)) as $file) {
         if ($file->getExtension() === 'php') {
-            yield str_replace(dirname(__DIR__) . '/', '', $file->getPathname()) => (string) file_get_contents($file->getPathname());
+            yield str_replace(packageRoot() . '/', '', $file->getPathname()) => (string) file_get_contents($file->getPathname());
         }
     }
 }
@@ -280,7 +280,7 @@ it('never leaves a docblock documenting another docblock', function (string $dir
     // of them describing `latest()` while sitting above `timestamps()`.
     $found = [];
 
-    foreach (phpFilesUnder(dirname(__DIR__) . '/' . $directory) as $path => $contents) {
+    foreach (phpFilesUnder(packageRoot() . '/' . $directory) as $path => $contents) {
         $lines = explode("\n", $contents);
 
         foreach ($lines as $number => $line) {
@@ -298,7 +298,7 @@ it('documents parameters that exist', function () {
     // problem: the signature moved and the prose did not.
     $found = [];
 
-    foreach (phpFilesUnder(dirname(__DIR__) . '/src') as $path => $contents) {
+    foreach (phpFilesUnder(packageRoot() . '/src') as $path => $contents) {
         preg_match_all(
             '#/\*\*(.*?)\*/\s*(?:\#\[[^\]]*\]\s*)*(?:(?:public|private|protected|final|static|abstract)\s+)*function\s+(\w+)\s*\((.*?)\)\s*[:{]#s',
             $contents,
@@ -334,7 +334,7 @@ it('documents parameters that exist', function () {
  * worth a human's time and only the first can be checked at all.
  */
 it('names every entry point on the front page', function () {
-    $readme = (string) file_get_contents(dirname(__DIR__) . '/README.md');
+    $readme = (string) file_get_contents(packageRoot() . '/README.md');
     $missing = [];
 
     foreach (new ReflectionClass(LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign::class)->getMethods() as $method) {
@@ -376,7 +376,7 @@ it('declares strict types in every file, including the ones with no class in the
 
     foreach (['/src', '/tests', '/config'] as $directory) {
         /** @var SplFileInfo $file */
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__) . $directory)) as $file) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(packageRoot() . $directory)) as $file) {
             if ($file->getExtension() !== 'php') {
                 continue;
             }
@@ -384,7 +384,7 @@ it('declares strict types in every file, including the ones with no class in the
             $contents = (string) file_get_contents($file->getPathname());
 
             if (! str_contains($contents, 'declare(strict_types=1);')) {
-                $missing[] = str_replace(dirname(__DIR__) . '/', '', $file->getPathname());
+                $missing[] = str_replace(packageRoot() . '/', '', $file->getPathname());
             }
         }
     }
