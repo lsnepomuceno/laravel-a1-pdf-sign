@@ -12,7 +12,17 @@ Regenerate them after any change to `src/Signing/`:
 docker compose -f .docker/compose.yaml run --rm php php poc/sign-samples.php
 ```
 
-The script writes to `.output/`; copy what you need over the files here.
+The script writes to `.output/`. Pass `--write` to update this directory and
+`tests/Resources/` in place:
+
+```bash
+docker compose -f .docker/compose.yaml run --rm php php poc/sign-samples.php --write
+```
+
+**It signs with the certificate committed here rather than minting a new one.**
+That is deliberate: a fresh identity per run is what once left a signed fixture
+outside this directory pointing at a certificate the repository no longer held,
+with nothing failing (docs/decisions/0036-the-signed-artefacts-are-reproducible.md).
 
 ## The certificate is untrusted, and that is expected
 
