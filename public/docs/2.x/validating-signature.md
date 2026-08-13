@@ -255,3 +255,44 @@ Our validator shares its assumptions with the code that produced the signature, 
 ```Shell
 pdfsig path/to/signed.pdf
 ```
+
+<hr />
+
+#### 14 - When validation cannot answer at all. <small>(since 2.6)</small>
+
+Validation shells out to `openssl`, and until 2.6 an environment that could not run it reported **every signature as invalid**. Not an error: a verdict, which a caller could not tell from a tampered document.
+
+```PHP
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\{MissingBinaryException, ProcessUnavailableException};
+
+try {
+    $report = A1PdfSign::validate($path);
+} catch (MissingBinaryException $e) {
+    // the openssl binary is not on the PATH
+} catch (ProcessUnavailableException $e) {
+    // proc_open is disabled, as on much shared hosting
+}
+```
+
+**`ext-openssl` being loaded is a different thing from the binary being installed.** A signature that genuinely does not verify still returns a report with `verified` false, unchanged.
+
+`php artisan a1-pdf-sign:check` answers this before you sign anything.
+
+<hr />
+
+#### 15 - Catching this package's failures as a group. <small>(since 2.6)</small>
+
+Every exception implements `Exceptions\A1PdfSignException`, so an application no longer has to name sixteen classes or catch `\Exception` and swallow everything the framework throws with them:
+
+```PHP
+use LSNepomuceno\LaravelA1PdfSign\Exceptions\A1PdfSignException;
+
+// bootstrap/app.php
+->withExceptions(function (Exceptions $exceptions) {
+    $exceptions->report(function (A1PdfSignException $e) {
+        // anything this package considers its own failure
+    });
+})
+```
+
+The classes stay granular beneath it. **`InvalidCertificatePasswordException`** is the one worth catching on its own, since a wrong password is the failure a production application meets most, and it extends `InvalidCertificateContentException`, the class it used to arrive as, so an existing catch still matches.

@@ -49,4 +49,40 @@ php artisan pdf:validate-signature '/example/full/path/to/my/signed-file.pdf'
 
 It reports every signature in the document, the signer's common name and whether each one verified, not only the first. Documents carrying several signatures are listed in full.
 
-Both commands map a `Throwable` to a failure exit code, so they compose in a shell pipeline.
+<hr />
+
+#### Checking the environment: <small>(since 2.6)</small>
+##### Command signature:
+```Shell
+a1-pdf-sign:check
+                {--tsa : Also reach the configured timestamp authority}
+```
+
+##### Example:
+```Shell
+php artisan a1-pdf-sign:check
+```
+
+```
+  [ok] ext-openssl            PKCS#12 reading and CMS building
+  [ok] ext-bcmath             required by tc-lib-pdf through tc-lib-barcode
+  [ok] proc_open              validation shells out; often in disable_functions
+  [ok] openssl binary         validation and legacy PFX. Separate from ext-openssl
+  [ok] ext-gd or ext-imagick  only needed to draw a visible seal
+  [ok] temporary directory    every shell-out writes one
+  [ok] memory_limit           signing peaks at roughly 20 MB plus twice the document
+
+This environment can sign and validate.
+```
+
+**`ext-openssl` being loaded says nothing about the `openssl` binary being installed.** They are separate things, a minimal container commonly has the first without the second, and validation needs the second. Until 2.6 a host missing it reported every signature as invalid rather than saying so.
+
+It exits non-zero only for what makes signing or validation impossible, so a deployment pipeline can use it. A host with no image library is reported and not failed: that only matters if you draw a visible seal.
+
+**It does not touch the network unless asked.** `--tsa` opts in, and goes through the same transport contract everything else does.
+
+Nothing sensitive is printed, so the output is safe to paste into an issue.
+
+<hr />
+
+All three commands map a `Throwable` to a failure exit code, so they compose in a shell pipeline.

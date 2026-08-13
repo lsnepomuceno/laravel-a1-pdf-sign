@@ -23,4 +23,6 @@ $signed->save('path/to/signed.pdf');
 * [Usage](/docs/2.x/usage)
 * [Signature profiles](/docs/2.x/signature-profiles)
 * [ICP-Brasil](/docs/2.x/icp-brasil)
+* [Testing your application](/docs/2.x/testing)
+* [Auditing](/docs/2.x/auditing)
 * [Tests](/docs/2.x/tests)

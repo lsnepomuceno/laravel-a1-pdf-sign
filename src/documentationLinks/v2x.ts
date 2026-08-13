@@ -80,6 +80,22 @@ export default <Doc>{
                     url: "icp-brasil",
                     footerActions: {
                         previousLink: "validating-signature",
+                        nextLink: "testing",
+                    },
+                },
+                {
+                    title: "Testing your application",
+                    url: "testing",
+                    footerActions: {
+                        previousLink: "icp-brasil",
+                        nextLink: "auditing",
+                    },
+                },
+                {
+                    title: "Auditing",
+                    url: "auditing",
+                    footerActions: {
+                        previousLink: "testing",
                         nextLink: "commands",
                     },
                 },
@@ -94,7 +110,7 @@ export default <Doc>{
             url: "commands",
             icon: "fa-terminal",
             footerActions: {
-                previousLink: "icp-brasil",
+                previousLink: "auditing",
                 nextLink: "not-laravel-or-lumen",
             },
         },

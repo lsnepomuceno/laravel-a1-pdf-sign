@@ -1,3 +1,150 @@
+# 2.6.0
+
+## Three answers that were wrong, and silent about it
+
+Each of these produced a result rather than an error, which is the worst shape a defect can take in a package whose job is to answer a question about a document.
+
+### A missing `openssl` binary made every signature report as invalid
+
+Validation shells out. `Validation\SignatureVerifier` caught every throwable and returned `false`, on reasoning that was correct for the case it named: a non-zero exit from `openssl smime -verify` means the signature does not verify. The catch was wider than the reasoning.
+
+Measured on `samples/pades-b-b.pdf`, changing nothing but the environment:
+
+| Environment | Before | Now |
+|---|---|---|
+| `openssl` on `PATH` | valid | valid |
+| binary removed | **invalid** | `MissingBinaryException` |
+| `proc_open` disabled | **invalid** | `ProcessUnavailableException` |
+
+A caller could not tell that apart from a tampered document, and the natural response to "invalid" is to reject something legitimate.
+
+**`ext-openssl` being loaded says nothing about the command-line tool being installed.** A minimal container commonly has the first without the second, and that distinction is what costs people an afternoon.
+
+```Shell
+php artisan a1-pdf-sign:check
+```
+
+answers the same question before anything is signed.
+
+### Signature metadata was written as raw UTF-8
+
+`/Name`, `/Reason`, `/Location` and `/ContactInfo` are text strings, and ISO 32000-1 §7.9.2.2 allows two forms: PDFDocEncoding, or UTF-16BE with a byte order mark. Raw UTF-8 is neither.
+
+A conforming reader found no mark, decoded as PDFDocEncoding, and showed the two bytes of `ã` as two characters. **`João` displayed as `JoÃ£o`**, in a document that verified perfectly, which is why nothing caught it: every assertion was about the signature verifying, and it did.
+
+ASCII output is byte-identical to 2.5. Anything else is now a hex string with the mark.
+
+### The seal ignored page rotation
+
+`/Rotate` turns a page clockwise for display and leaves its coordinate system alone. `grep -rn "Rotate" src/` returned nothing: the key was read nowhere, so on a page carrying `/Rotate 90`, which is how most scanners express landscape, the seal landed elsewhere and read sideways.
+
+The rectangle is mapped into user space and the appearance carries a matrix turning it back. Confirmed by rendering with poppler rather than by arithmetic: asked for at 7-21% across and 23-33% down, rendered at 7-21% and 24-33%.
+
+### Validation could not read a signature this package did not write
+
+The `/ByteRange` pattern required the exact bytes this package emits. A document from another producer, which writes `/ByteRange [0 9875 15069 565]` with a space, found no signatures and raised as unsigned.
+
+Every validation test signed with this package first, so the defect was structurally invisible.
+
+<hr>
+
+## Signing a 200 MB document
+
+Peak memory was roughly 20 MB plus **four times** the document. It is now 20 MB plus **two**.
+
+| Document | Before | Now |
+|---|---|---|
+| 25 MB | 95 MB | 70 MB |
+| 100 MB | 320 MB | 220 MB |
+| 200 MB | 620 MB | **420 MB** |
+
+**One breaking change comes with it.** `Contracts\PdfSigner::sign()` takes the document by reference, so it can release it once the revision exists. PHP cannot pass an expression by reference:
+
+```PHP
+$signer->sign(Files::read($path), $certificate, $info);   // fatal
+$contents = Files::read($path);
+$signer->sign($contents, $certificate, $info);            // fine
+```
+
+`A1PdfSign::newSignature()` and the one-shot helpers pass a property and are unaffected, so this reaches only an application calling the contract directly.
+
+<hr>
+
+## Testing an application that signs
+
+```PHP
+$signing = A1PdfSign::fake();
+
+// … your application runs …
+
+$signing->assertSigned();
+$signing->assertSignedWithProfile(SignatureProfile::PadesBLT);
+$signing->assertCertified(CertificationLevel::NoChanges);
+$signing->assertSealed();
+```
+
+**No PKCS#12 bundle in your repository, and no CMS built** for a test that merely passes through the signing call. It replaces the signer and the certificate reader in the container, so `certificate()` accepts any path and nothing is parsed, rendered or signed.
+
+[Testing your application →](/docs/2.x/testing)
+
+<hr>
+
+## Catching failures as a group
+
+Every exception now implements `Exceptions\A1PdfSignException`:
+
+```PHP
+$exceptions->report(function (A1PdfSignException $e) { … });
+```
+
+The classes stay granular beneath it. **`InvalidCertificatePasswordException` is new**, for the failure a production application meets most, and it extends the class a wrong password used to arrive as, so existing catches still match.
+
+The distinction is evidence rather than a guess: OpenSSL answers a wrong password with a MAC verify failure and a broken file with an ASN.1 error, and the MAC is computed with a key derived from the password.
+
+<hr>
+
+## Auditing what was signed
+
+Off by default, because a package that logs unasked fills somebody's disk.
+
+```PHP
+$this->app->bind(SigningLog::class, fn () => new SigningLog(Log::channel('audit')));
+```
+
+**No password, key, document or file path can appear in a line**, whatever is passed: the context is filtered against the keys that may appear rather than the keys that may not. A denylist is how the next property added to a data object leaks. A path is excluded too, since it is enough to find the bundle it names.
+
+[Auditing →](/docs/2.x/auditing)
+
+<hr>
+
+## Smaller, and worth knowing
+
+**A document does not have to be a local file.**
+
+```PHP
+->pdfFromDisk('s3', 'contracts/deal.pdf')
+```
+
+**The seal renderer is swappable**, and always was. `Contracts\SealRenderer` is bound in the container, so one line in your own service provider replaces it with a QR code, a corporate logo or any layout of your own. `fromImage()` is the route for artwork produced elsewhere, Blade included.
+
+**Timestamp and revocation requests go through the framework's HTTP client**, so `Http::fake()` intercepts them, your proxy and middleware apply, and a transient failure retries instead of failing the signature. A network failure raises `SignatureTransportException` rather than an exception named after processes.
+
+**`psr/log` is a new runtime dependency.**
+
+**Signed documents declare the ETSI_PAdES extension** their sub-filter needs below PDF 2.0, so the bytes of every signed document change.
+
+<hr>
+
+## Measured rather than claimed
+
+**PDF/UA.** An invisible signature keeps an accessible document conformant; a visible seal costs it two clauses, ISO 14289-1 7.18.1 and 7.18.4. Measured with veraPDF, and the failures are asserted clause by clause so an improvement breaks the test rather than passing quietly.
+
+**Certification is enforced, not merely written.** pyHanko compares the appended revisions against the `/DocMDP` policy and reaches a verdict, which closes a caveat 0012 carried for two releases: a document certified at no-changes and then modified is now reported as violating its policy on every run.
+
+**What this package writes is checked against the specification's own grammar.** The Arlington PDF Model is the PDF Association's machine-readable ISO 32000, and it found a real disagreement in its first five minutes, which is what earned it a place.
+
+<hr>
+
 # 2.5.0
 
 ## A visible seal no longer costs PDF/A conformance
