@@ -5,7 +5,7 @@ at a different rate, and mixing them in one document is what let the previous
 one drift: `ARCHITECTURE-V2.md` described a `TcLibPdfSigner` that was never
 built, and cited a §12 that never had a section.
 
-`tests/SpecTest.php` fails when a reference into any of these stops resolving.
+`tests/Project/SpecTest.php` fails when a reference into any of these stops resolving.
 
 ## Living: must be true of the code today
 

@@ -12,7 +12,7 @@ The invariants are imported rather than summarised, so they are in context for e
 
 The v1 surface, the global helper functions plus `src/Sign/*` and `src/Entities/*`, is **gone**, not deprecated. `UPGRADE.md` maps every removed API to its replacement.
 
-Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a reference into it stops resolving:
+Documentation is split by lifecycle, and `tests/Project/SpecTest.php` fails when a reference into it stops resolving:
 
 | Read | For |
 |---|---|
@@ -26,7 +26,7 @@ Documentation is split by lifecycle, and `tests/SpecTest.php` fails when a refer
 
 `ARCHITECTURE.md` is the index. When you change behaviour that a decision record justifies, update that record's outcome section too: a record whose outcome is never written back is how the previous document drifted away from the code.
 
-**A behaviour change is not finished until every surface that describes it says the same thing.** `CONTRIBUTING.md` enumerates them, and the list is enumerated rather than summarised because "and any other relevant documentation" is exactly what let three of them go stale at once: `samples/` sat a release behind, the documentation site stopped at 2.3.1 while 2.4 shipped, and the README never named two facade methods that had been public for a release. Three of those surfaces now have gates (`tests/SamplesTest.php`, and two rules in `tests/ArchTest.php` covering docblocks and the README's coverage of the facade); the rest are review.
+**A behaviour change is not finished until every surface that describes it says the same thing.** `CONTRIBUTING.md` enumerates them, and the list is enumerated rather than summarised because "and any other relevant documentation" is exactly what let three of them go stale at once: `samples/` sat a release behind, the documentation site stopped at 2.3.1 while 2.4 shipped, and the README never named two facade methods that had been public for a release. Three of those surfaces now have gates (`tests/Conformance/SamplesTest.php`, and two rules in `tests/Project/ArchTest.php` covering docblocks and the README's coverage of the facade); the rest are review.
 
 **The documentation site lives on the `docs` branch, not here.** Nothing in a pull request against `main` can check it, and no test on `main` will ever fail because of it. It is updated in its own pull request, on the day a version is tagged, and it deliberately describes only what is installable: a feature merged and not yet tagged does not belong on it.
 
@@ -42,7 +42,7 @@ composer test:cov       # line coverage (needs pcov or xdebug)
 composer test:types     # type coverage, gated at 100%
 composer test:mutate    # mutation testing over Certificates, Signing and Validation
 
-vendor/bin/pest tests/SigningTest.php                   # single file
+vendor/bin/pest tests/Signing/SigningTest.php                   # single file
 vendor/bin/pest --filter="writes the CAdES sub-filter"   # single test
 vendor/bin/pest --exclude-group=network                  # skip live TSA tests
 vendor/bin/pest --parallel                               # 16 processes here; mutation needs it
@@ -135,12 +135,12 @@ DocTimeStamps are classified separately (`isTimestamp`) and excluded from `isVal
 
 - **PHPStan `level: max`, no baseline.** The baseline was deleted, not shrunk (§7, decision 13); the gate is "no errors", not "no new errors". Only Pest's untypeable fluent API is ignored, scoped to `tests/*`.
 - **Type coverage gated at 100%.**
-- **Dead code is refused.** PHPStan already reports a private method nobody calls (`method.unused`) and a property only ever written (`property.onlyWritten`). A local variable assigned and never read is what it misses, so `tests/DeadCodeTest.php` walks the tree with `token_get_all()`: no ecosystem tool fits here, and the reasons are in `docs/spec/quality-policy.md`. It under-reports on purpose. **Unused public methods are deliberately not checked**: the API exists for consumers whose code is not in this repository.
+- **Dead code is refused.** PHPStan already reports a private method nobody calls (`method.unused`) and a property only ever written (`property.onlyWritten`). A local variable assigned and never read is what it misses, so `tests/Project/DeadCodeTest.php` walks the tree with `token_get_all()`: no ecosystem tool fits here, and the reasons are in `docs/spec/quality-policy.md`. It under-reports on purpose. **Unused public methods are deliberately not checked**: the API exists for consumers whose code is not in this repository.
 - **Mutation testing** covers `src/Certificates`, `src/Signing` and `src/Validation`, nightly rather than on pull requests. The floors live in `.github/workflows/mutation.yml` and are explained in `docs/spec/quality-policy.md`. They are not repeated here, because a number kept in three places drifts in two of them. Raise a floor only after measuring; never set a target ahead of the measurement.
 - **Do not split mutation runs with `--shard`.** It divides the test suite, and every mutation needs the whole suite: a mutation killed by a test in another shard is reported as uncovered. Split by mutated path instead.
 - `composer-dependency-analyser.php` catches unused and shadow dependencies.
 
-Patches are expected to come with tests (`CONTRIBUTING.md`). `tests/ArchTest.php` enforces structural rules, so read it before adding a class.
+Patches are expected to come with tests (`CONTRIBUTING.md`). `tests/Project/ArchTest.php` enforces structural rules, so read it before adding a class.
 
 ## Commits
 
@@ -156,7 +156,7 @@ This is not advice that a green check absolves you of. GitHub carries the same r
 
 The two that decide whether a piece of code should exist at all are in `docs/spec/conventions.md`, and they are mandatory rather than preferences:
 
-- **Laravel first.** This package only runs inside Laravel, so before writing a helper, check whether the framework already has it and use that. Write the bespoke version only after establishing there is none, put it in `src/Support/`, and say in the docblock what was missing. **Except on bytes:** `Str::substr()` and `Str::length()` are multibyte-aware, so over PDF or DER they return the wrong offsets and corrupt a signature while passing the whole suite. `tests/ArchTest.php` fails on any use of `Illuminate\Support\Str` inside `src/Signing` or `src/Validation`.
+- **Laravel first.** This package only runs inside Laravel, so before writing a helper, check whether the framework already has it and use that. Write the bespoke version only after establishing there is none, put it in `src/Support/`, and say in the docblock what was missing. **Except on bytes:** `Str::substr()` and `Str::length()` are multibyte-aware, so over PDF or DER they return the wrong offsets and corrupt a signature while passing the whole suite. `tests/Project/ArchTest.php` fails on any use of `Illuminate\Support\Str` inside `src/Signing` or `src/Validation`.
 - **Enums, not class constants.** A closed set of values is an enum; a constant is for a lone fact, like one cipher or one reserved width. The test is "could a second value of this kind ever be right?". If yes, it is an enum now.
 
 Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.md`.
@@ -178,9 +178,9 @@ Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.m
 - PER-CS via Pint; grouped `use` imports with braces are used throughout.
 - `final readonly` classes by default; fluent setters returning `self`; named arguments at call sites.
 - Modern PHP is expected: typed class constants, `#[\SensitiveParameter]` on every password argument, `#[\Override]`, enums instead of class constants.
-- **Every file declares `strict_types=1`.** Mandatory in `src/`, `tests/` and `config/`, written by Pint and enforced twice in `tests/ArchTest.php`: an arch expectation over `src/`, and a file walk for the files that declare no class. `poc/` is out of scope. It was deliberately off until 2026-08-12, and turning it on changed no behaviour.
+- **Every file declares `strict_types=1`.** Mandatory in `src/`, `tests/` and `config/`, written by Pint and enforced twice in `tests/Project/ArchTest.php`: an arch expectation over `src/`, and a file walk for the files that declare no class. `poc/` is out of scope. It was deliberately off until 2026-08-12, and turning it on changed no behaviour.
 - **No parentheses around `new` when chaining.** The floor is PHP 8.4, which allows `new Reader()->parse($der)`, so `(new Reader())->parse($der)` is the pre-8.4 workaround and PhpStorm reports it as a removable wrapper. Pint has no fixer for this, so it is a review point rather than a gate. The parentheses stay where the expression is not a chain: `new self(new Encrypter($key, self::CIPHER))` is already the plain form.
-- **Never cite a file that does not exist, and write it first.** A comment, docblock or document may only name a path that resolves at the moment it is written. When a change wants a decision record or a spec section, **create that file before the code that references it**, in the same change: the reverse order leaves the code documenting an argument nobody made. `tests/SpecTest.php` walks every `.php`, `.md` and `.yml` in the package and fails on a path that does not resolve, so this is a gate rather than a review point. It checks paths, not symbols.
+- **Never cite a file that does not exist, and write it first.** A comment, docblock or document may only name a path that resolves at the moment it is written. When a change wants a decision record or a spec section, **create that file before the code that references it**, in the same change: the reverse order leaves the code documenting an argument nobody made. `tests/Project/SpecTest.php` walks every `.php`, `.md` and `.yml` in the package and fails on a path that does not resolve, so this is a gate rather than a review point. It checks paths, not symbols.
 - `@throws` docblocks are maintained on every method that can throw, so keep them accurate when changing exception paths.
 - Nullable config-backed arguments mean "use the configured default" rather than forcing every call site to repeat an infrastructure decision.
 
@@ -188,7 +188,7 @@ Both are justified in `docs/decisions/0018-prefer-the-platforms-own-constructs.m
 
 - `*.pdf`, `*.pfx` and `dist/` are gitignored, so never commit generated certificates or signed output. `dist/` is a build of the separate docs site (https://laravel-a1-pdf-sign.netlify.app).
 - Do not define `K_PATH_FONTS` globally: tc-lib-pdf and TCPDF 6 read it with different formats, and defining it kills TCPDF silently.
-- **Every verification tool is development and CI only, and none may reach production** (`docs/decisions/0026-verification-tools-are-instruments.md`). veraPDF, qpdf, pyHanko, `pdfsig`, `pdftoppm` and Ghostscript are instruments: nothing in `src/` may invoke one (`tests/ArchTest.php`), and nothing built for testing may ship (`tests/DistributionTest.php` asks `git archive` what a release contains).
-- **Structure is checked by qpdf**, in the everyday image, comparatively: signing must not introduce a complaint the input did not already have. **Corrupted input is guarded** from a fixed seed over every reader that parses bytes the application did not write, in `tests/RobustnessTest.php`.
-- **PDF/A conformance is measured with veraPDF**, installed in the development image and in CI so it runs everywhere the suite runs. It blocks, unlike the network group. **PDF/UA is measured by the same binary**, in the `pdfua` group: an invisible signature keeps conformance, a sealed one costs ISO 14289-1 7.18.1 and 7.18.4 (`docs/decisions/0032-what-signing-does-to-pdf-ua.md`). Those tests assert the failures clause by clause, which is how writing `/Tabs` broke them into being updated rather than passing quietly on a claim that had stopped being true. **Nothing skips:** `composer test` carries `--fail-on-skipped`, because every check has to run somewhere and a skip is how one quietly stops. veraPDF, pyHanko, `pdfsig`, `pdftoppm` and Ghostscript are **development and CI instruments only**: nothing in `src/` may invoke one, and `tests/ArchTest.php` fails if it does.
+- **Every verification tool is development and CI only, and none may reach production** (`docs/decisions/0026-verification-tools-are-instruments.md`). veraPDF, qpdf, pyHanko, `pdfsig`, `pdftoppm` and Ghostscript are instruments: nothing in `src/` may invoke one (`tests/Project/ArchTest.php`), and nothing built for testing may ship (`tests/Project/DistributionTest.php` asks `git archive` what a release contains).
+- **Structure is checked by qpdf**, in the everyday image, comparatively: signing must not introduce a complaint the input did not already have. **Corrupted input is guarded** from a fixed seed over every reader that parses bytes the application did not write, in `tests/Support/RobustnessTest.php`.
+- **PDF/A conformance is measured with veraPDF**, installed in the development image and in CI so it runs everywhere the suite runs. It blocks, unlike the network group. **PDF/UA is measured by the same binary**, in the `pdfua` group: an invisible signature keeps conformance, a sealed one costs ISO 14289-1 7.18.1 and 7.18.4 (`docs/decisions/0032-what-signing-does-to-pdf-ua.md`). Those tests assert the failures clause by clause, which is how writing `/Tabs` broke them into being updated rather than passing quietly on a claim that had stopped being true. **Nothing skips:** `composer test` carries `--fail-on-skipped`, because every check has to run somewhere and a skip is how one quietly stops. veraPDF, pyHanko, `pdfsig`, `pdftoppm` and Ghostscript are **development and CI instruments only**: nothing in `src/` may invoke one, and `tests/Project/ArchTest.php` fails if it does.
 - Independent verification is done with poppler's `pdfsig`; it has caught bugs the suite passed straight through. `samples/` holds one signed PDF per profile plus a six-signature document. Regenerate them with `poc/sign-samples.php` and re-check them after any change to `src/Signing/`.

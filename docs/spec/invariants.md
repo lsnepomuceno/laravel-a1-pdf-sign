@@ -26,7 +26,7 @@ from that standard. In practice: keep ISO 32000-1 open, not `vendor/ddn/sapp`.
 use without contaminating the consumer, but it is ruled out: it is a legacy
 project and we would inherit its maintenance.
 
-*Enforced by* `tests/ArchTest.php` (`no trace of SAPP`) and
+*Enforced by* `tests/Project/ArchTest.php` (`no trace of SAPP`) and
 `composer-dependency-analyser.php`.
 
 ---
@@ -86,7 +86,7 @@ window looking *backwards* from the `/ByteRange` found them. pyHanko writes
 `/Contents` first, which puts `/SubFilter` after it. Order inside a dictionary
 carries no meaning, so both are correct and only one was being read.
 
-*Enforced by* `tests/ForeignSignatureTest.php`, which validates a document
+*Enforced by* `tests/Validation/ForeignSignatureTest.php`, which validates a document
 signed by pyHanko rather than by this package.
 
 ---
@@ -125,7 +125,7 @@ Two places legitimately reach a process, both through the runner:
 `Certificates\OpenSslCliCertificateReader` (legacy PFX under OpenSSL 3.x) and
 `Validation\SignatureVerifier`.
 
-*Enforced by* `tests/ArchTest.php` (`only the shell helper opens processes`).
+*Enforced by* `tests/Project/ArchTest.php` (`only the shell helper opens processes`).
 
 ---
 

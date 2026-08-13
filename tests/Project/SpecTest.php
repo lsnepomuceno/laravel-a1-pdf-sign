@@ -115,11 +115,6 @@ function specContents(string $path): string
     return $contents;
 }
 
-function packageRoot(): string
-{
-    return dirname(__DIR__);
-}
-
 it('resolves every documentation file cited anywhere in the package', function () {
     $missing = [];
 

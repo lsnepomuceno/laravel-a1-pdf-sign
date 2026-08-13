@@ -8,7 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 /**
  * Certification, checked by a reader that enforces it rather than by us.
  *
- * `tests/CertificationTest.php` asserts what this package **writes**: that
+ * `tests/Certification/CertificationTest.php` asserts what this package **writes**: that
  * `certify()` emits the /DocMDP transform, that /Perms names the signature
  * that made it, that a second certification is refused. Necessary, and nowhere
  * near sufficient. A reader that ignored every one of those would pass all of

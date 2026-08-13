@@ -57,7 +57,7 @@ an advisory:
   ([0029](docs/decisions/0029-the-identity-a-brazilian-signer-is-known-by.md)).
 - **Test-only classes** under `Testing\` generate throwaway certificates and a
   local timestamp authority. They are excluded from release archives, which
-  `tests/DistributionTest.php` checks.
+  `tests/Project/DistributionTest.php` checks.
 
 ## Handling of secrets
 

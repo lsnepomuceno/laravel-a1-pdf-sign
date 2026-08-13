@@ -54,17 +54,17 @@ Some are gated, some are not, and the ones that are not are where drift has actu
 
 | Surface | When it changes | Gate |
 |---|---|---|
-| **`README.md`** | any public API, and anything a new user should know | `tests/ArchTest.php` fails when a facade method is missing from it |
+| **`README.md`** | any public API, and anything a new user should know | `tests/Project/ArchTest.php` fails when a facade method is missing from it |
 | **`UPGRADE.md`** | anything a consumer will notice, under `## Unreleased` | none: review |
-| **`docs/decisions/`** | a decision changes, or a record's outcome turns out differently | `tests/SpecTest.php` checks references resolve |
+| **`docs/decisions/`** | a decision changes, or a record's outcome turns out differently | `tests/Project/SpecTest.php` checks references resolve |
 | **`docs/spec/invariants.md`** | a rule that breaks the product when violated | as above |
 | **`docs/spec/conventions.md`** | how code here is written | as above |
 | **`docs/spec/public-api.md`** | the exposed surface | as above |
 | **`docs/spec/quality-policy.md`** | a gate moves, or a floor does | as above |
 | **`ARCHITECTURE.md`** | the shape of the package, since it is the index | none: review |
 | **`CLAUDE.md`** | anything an agent working here has to know before touching `src/` | none: review |
-| **Class docblocks** | the class stops doing what its docblock says | two mechanical rules in `tests/ArchTest.php` |
-| **`samples/`** | anything under `src/Signing/`, regenerated with `poc/sign-samples.php` | `tests/SamplesTest.php` |
+| **Class docblocks** | the class stops doing what its docblock says | two mechanical rules in `tests/Project/ArchTest.php` |
+| **`samples/`** | anything under `src/Signing/`, regenerated with `poc/sign-samples.php` | `tests/Conformance/SamplesTest.php` |
 | **The `docs` branch** | any public behaviour, once it is released | **none, and it is a separate pull request** |
 | **The release notes** | every tag, on GitHub and in the site's `release-notes.md` | none: review |
 
@@ -94,7 +94,7 @@ $ composer test:cov    # line coverage (needs pcov or xdebug)
 $ composer test:mutate # mutation testing (slow: runs nightly in CI, not on PRs)
 ```
 
-Tests are written with [Pest](https://pestphp.com). `tests/ArchTest.php` holds
+Tests are written with [Pest](https://pestphp.com). `tests/Project/ArchTest.php` holds
 architectural rules that run with the rest of the suite. Tests in the `network` group reach a
 live timestamp authority and fail without internet; skip them with
 `vendor/bin/pest --exclude-group=network`.
@@ -128,7 +128,7 @@ progress; on `pre-push` it means you are choosing to push to `main` and saying s
 `veraPDF`, `qpdf`, `pyHanko`, poppler's `pdfsig` and `pdftoppm`, and Ghostscript are
 **development and validation instruments only**. Nothing in `src/` may invoke one, and nothing built for
 testing reaches the package a consumer installs: an architectural test enforces the first
-and `tests/DistributionTest.php` asks `git archive` what a release actually contains.
+and `tests/Project/DistributionTest.php` asks `git archive` what a release actually contains.
 
 `qpdf` is in the development image and its checks run with the rest of the suite. It is
 strict where poppler forgives, which is the point: a cross-reference table with slightly

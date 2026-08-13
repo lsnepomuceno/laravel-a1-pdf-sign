@@ -16,11 +16,11 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
  * it disagrees where poppler forgives.
  *
  * **A development and validation instrument only.** qpdf is never invoked by
- * `src/`, and `tests/ArchTest.php` fails if that changes: a consuming
+ * `src/`, and `tests/Project/ArchTest.php` fails if that changes: a consuming
  * application installs a signing library, not a toolchain.
  *
  * `qpdfCheck()` and `qpdfComplaintsAbout()` live in tests/Pest.php, because
- * tests/EncryptedDocumentTest.php needs them too and a helper defined inside
+ * tests/Signing/EncryptedDocumentTest.php needs them too and a helper defined inside
  * one test file is invisible to the others under --parallel.
  *
  * See docs/spec/quality-policy.md.
@@ -148,7 +148,7 @@ it('reports nothing at all about any committed sample', function () {
     // ignore warnings on every other sample too, which is how a compromise in
     // one place turns off a gate everywhere. `poc/rebuild-stream-fixtures.php`
     // regenerates them, and the verdict is now the whole verdict.
-    $samples = glob(dirname(__DIR__) . '/samples/*.pdf');
+    $samples = glob(packageRoot() . '/samples/*.pdf');
 
     foreach ($samples === false ? [] : $samples as $sample) {
         expect(qpdfComplaintsAbout($sample))->toBe([]);

@@ -17,8 +17,8 @@ The gates a change has to pass, and why each one is set where it is.
 | Formatting | `laravel/pint`, `per` preset | `pint --test` |
 | Static analysis | PHPStan 2 + Larastan 3 + strict-rules + deprecation-rules | `level: max`, **no baseline** |
 | Tests | Pest 5 | green on PHP 8.4 and 8.5 against Laravel 13 |
-| Architecture | Pest Arch, `tests/ArchTest.php` | rules as tests |
-| Specification | `tests/SpecTest.php` | every cited section resolves |
+| Architecture | Pest Arch, `tests/Project/ArchTest.php` | rules as tests |
+| Specification | `tests/Project/SpecTest.php` | every cited section resolves |
 | Type coverage | `pest-plugin-type-coverage` | `--min=100` |
 | Line coverage | PCOV | informational, no gate |
 | Mutation | `pest-plugin-mutate` | per-namespace `--min`, nightly |
@@ -52,8 +52,8 @@ extension is incompatible with the installed Symfony, and
 `slevomat/coding-standard` arrives through PHPCS, a second toolchain beside
 Pint for one check.
 
-So `tests/DeadCodeTest.php` walks the tree with `token_get_all()`, the way
-`tests/ArchTest.php` and `tests/SpecTest.php` already do. **It under-reports on
+So `tests/Project/DeadCodeTest.php` walks the tree with `token_get_all()`, the way
+`tests/Project/ArchTest.php` and `tests/Project/SpecTest.php` already do. **It under-reports on
 purpose**: it flags only a plain `$x = …` whose variable is named exactly once
 in the whole function body. A destructuring target, a `foreach` value, a
 parameter default and anything inside a nested closure are left alone. A gate
@@ -192,7 +192,7 @@ Helpers shared across test files must live in `tests/Pest.php`. A helper defined
 inside one test file is invisible to the others under `--parallel`, which fails
 as `Call to undefined function`.
 
-Patches are expected to come with tests. `tests/ArchTest.php` enforces the
+Patches are expected to come with tests. `tests/Project/ArchTest.php` enforces the
 structural rules, so read it before adding a class.
 
 Independent verification is done with poppler's `pdfsig`; it has caught bugs the
@@ -300,8 +300,8 @@ else. That list had already drifted: `phpstan.neon`, `pint.json`,
 `composer-dependency-analyser.php` and `package-lock.json` were all being
 distributed, each added later than the rule.
 
-*Enforced by* `tests/ArchTest.php` for the first half and
-`tests/DistributionTest.php` for the second, which asks `git archive` what a
+*Enforced by* `tests/Project/ArchTest.php` for the first half and
+`tests/Project/DistributionTest.php` for the second, which asks `git archive` what a
 release actually contains rather than trusting the list.
 
 Rationale, and what each instrument has caught:

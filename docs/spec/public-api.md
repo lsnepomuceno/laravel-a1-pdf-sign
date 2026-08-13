@@ -80,7 +80,7 @@ $exceptions->report(function (A1PdfSignException $e) { … });
 ```
 
 **The interface is surface**, and adding a class that does not implement it is a
-hole in a promise rather than an oversight. `tests/ExceptionsTest.php` builds its
+hole in a promise rather than an oversight. `tests/Support/ExceptionsTest.php` builds its
 dataset from the directory, so a new exception is covered the moment the file
 exists.
 

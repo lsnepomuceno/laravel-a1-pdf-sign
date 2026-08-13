@@ -94,7 +94,7 @@ the bytes of every signed document.
 
 **The separation paid for itself immediately.** Because the tests named the
 clauses rather than asserting "it fails", writing `/Tabs` broke
-`tests/PdfUaValidationTest.php` and forced it to be updated to a PASS. Had the
+`tests/Conformance/PdfUaValidationTest.php` and forced it to be updated to a PASS. Had the
 expectation been "this fails", the improvement would have gone unnoticed and
 the file would have kept asserting something that had stopped being true.
 
@@ -106,7 +106,7 @@ than quietly keep passing.
 
 ## Consequences
 
-- `tests/PdfUaValidationTest.php` blocks, in the `pdfua` group. veraPDF is
+- `tests/Conformance/PdfUaValidationTest.php` blocks, in the `pdfua` group. veraPDF is
   deterministic and runs offline once installed, so a failure is this package's
   rather than somebody else's outage.
 - **Nothing skips.** `composer test` carries `--fail-on-skipped`.

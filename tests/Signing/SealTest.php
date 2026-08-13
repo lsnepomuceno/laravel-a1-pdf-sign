@@ -192,7 +192,7 @@ it('gives each signature its own seal, independent of the ones before it', funct
         ->certificate($pfxPath, $password)
         ->pdf($path)
         ->info(name: 'Second signer')
-        ->sealFrom(__DIR__ . '/../src/Resources/img/sign-seal.png', new SealPlacement(x: 30, y: 60, width: 60))
+        ->sealFrom(packageRoot() . '/src/Resources/img/sign-seal.png', new SealPlacement(x: 30, y: 60, width: 60))
         ->sign();
 
     $contents = (string) $second->contents;
@@ -290,7 +290,7 @@ it('moves the text where the layout puts it', function () {
 it('takes the caller own image as the seal, which sealFrom promised all along', function () {
     // sealFrom() wrote the path onto the placement and nothing ever read it, so
     // the caller's artwork was silently replaced by a render of the certificate.
-    $supplied = app(SealRenderer::class)->fromImage(__DIR__ . '/../src/Resources/img/sign-seal.png');
+    $supplied = app(SealRenderer::class)->fromImage(packageRoot() . '/src/Resources/img/sign-seal.png');
     $rendered = app(SealRenderer::class)->render(testCertificate());
 
     expect($supplied->width)->toBe(590)
@@ -306,10 +306,10 @@ it('raises when the seal image is not there', function () {
 });
 
 it('can still write text over a supplied image', function () {
-    $plain = app(SealRenderer::class)->fromImage(__DIR__ . '/../src/Resources/img/sign-seal.png');
+    $plain = app(SealRenderer::class)->fromImage(packageRoot() . '/src/Resources/img/sign-seal.png');
 
     $annotated = app(SealRenderer::class)->fromImage(
-        __DIR__ . '/../src/Resources/img/sign-seal.png',
+        packageRoot() . '/src/Resources/img/sign-seal.png',
         LSNepomuceno\LaravelA1PdfSign\Data\SealLayout::saying(['Countersigned']),
     );
 

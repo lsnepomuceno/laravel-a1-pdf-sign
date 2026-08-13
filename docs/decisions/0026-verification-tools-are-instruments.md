@@ -34,13 +34,13 @@ A package that shells out to a JVM, or to poppler, to answer a question at
 runtime would be a different package. The consuming application would inherit an
 installation requirement nobody wrote down, and discover it in production.
 
-**Nothing in `src/` may invoke one.** `tests/ArchTest.php` fails on any literal
+**Nothing in `src/` may invoke one.** `tests/Project/ArchTest.php` fails on any literal
 naming `verapdf`, `qpdf`, `pdfsig`, `pdftoppm` or `ghostscript` in the package,
 tokenised so the comments explaining the rule do not trip it, which the first
 version did.
 
 **Nor do they ship.** Everything built for testing is `export-ignore`d.
-`tests/DistributionTest.php` asks `git archive` what a release actually
+`tests/Project/DistributionTest.php` asks `git archive` what a release actually
 contains, in both directions: nothing built for testing goes out, and the
 package still does.
 

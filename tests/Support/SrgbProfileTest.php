@@ -8,7 +8,7 @@ use LSNepomuceno\LaravelA1PdfSign\Support\SrgbProfile;
  * The profile is built from published numbers rather than copied, so the thing
  * to check is that the arithmetic lands where the published profile lands.
  *
- * veraPDF answers whether a reader accepts it (tests/PdfAValidationTest.php).
+ * veraPDF answers whether a reader accepts it (tests/Conformance/PdfAValidationTest.php).
  * It cannot answer whether the colours are right: a structurally valid profile
  * describing the wrong primaries would pass conformance and render a seal in
  * the wrong colour, which is the failure this file exists to catch

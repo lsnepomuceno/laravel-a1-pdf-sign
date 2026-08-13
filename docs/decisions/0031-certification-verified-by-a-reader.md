@@ -74,13 +74,13 @@ for the signing side only.
 
 ## Consequences
 
-- `tests/CertificationEnforcementTest.php` blocks. pyHanko is deterministic and
+- `tests/Certification/CertificationEnforcementTest.php` blocks. pyHanko is deterministic and
   runs offline, so a failure is this package's rather than somebody else's
   outage, which is what separates it from the `network` group.
-- `tests/ForeignSignatureTest.php` validates a committed pyHanko-signed
+- `tests/Validation/ForeignSignatureTest.php` validates a committed pyHanko-signed
   document, and needs nothing installed to run.
 - **The instrument does not ship and cannot be reached from `src/`**
-  ([0026](0026-verification-tools-are-instruments.md)). `tests/ArchTest.php`
+  ([0026](0026-verification-tools-are-instruments.md)). `tests/Project/ArchTest.php`
   gains `pyhanko` in its list of banned literals.
 - Both distributions are pinned: `pyHanko` and `pyhanko-cli` are versioned
   separately, and installing the first alone gives no command at all.

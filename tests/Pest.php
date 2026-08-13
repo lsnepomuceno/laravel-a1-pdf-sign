@@ -98,6 +98,20 @@ function sample(string $name): string
 }
 
 /**
+ * The root of the package.
+ *
+ * Here rather than in the file that first needed it, because several test files
+ * walk the tree and a helper defined inside one is invisible to the others
+ * under --parallel, which fails as `Call to undefined function`. It also
+ * survives tests/ being organised into directories, which `dirname(__DIR__)`
+ * did not.
+ */
+function packageRoot(): string
+{
+    return dirname(__DIR__);
+}
+
+/**
  * The password of the committed sample certificate, as samples/README.md
  * documents it.
  *
@@ -157,7 +171,7 @@ function reversedPages(int $count = 3): array
  * helper defined inside one is invisible to the others under --parallel.
  *
  * **A development and validation instrument only.** qpdf is never invoked by
- * `src/`, and `tests/ArchTest.php` fails if that changes: a consuming
+ * `src/`, and `tests/Project/ArchTest.php` fails if that changes: a consuming
  * application installs a signing library, not a toolchain.
  */
 function qpdfCheck(string $path, #[SensitiveParameter] string $password = ''): string
@@ -241,7 +255,7 @@ function veraPdfVerdict(string $path, string $flavour): string
  * (docs/decisions/0031-certification-verified-by-a-reader.md).
  *
  * **A development and validation instrument only.** Nothing in src/ may invoke
- * it, and tests/ArchTest.php fails if it does.
+ * it, and tests/Project/ArchTest.php fails if it does.
  *
  * Revocation checking is off. Every document these tests produce is signed
  * offline by a throwaway certificate that chains to nothing and publishes no

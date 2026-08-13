@@ -44,7 +44,7 @@ A structurally valid profile describing the *wrong* primaries would pass every
 conformance check and render the seal in the wrong colour. veraPDF cannot catch
 that: it validates the container, not the colours.
 
-So `tests/SrgbProfileTest.php` asserts the computed colorants against the values
+So `tests/Support/SrgbProfileTest.php` asserts the computed colorants against the values
 every sRGB profile in circulation carries:
 
 | | Computed | Published |

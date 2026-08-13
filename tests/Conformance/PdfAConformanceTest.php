@@ -185,7 +185,7 @@ it('gives a page that receives a widget the tab order accessibility requires', f
     // (docs/decisions/0032-what-signing-does-to-pdf-ua.md).
     //
     // Here as well as in the veraPDF group because this one runs where no JRE
-    // exists, which is the division tests/PdfAValidationTest.php describes.
+    // exists, which is the division tests/Conformance/PdfAValidationTest.php describes.
     [$pfxPath, $password] = debugCertificate();
 
     $signed = A1PdfSign::newSignature()

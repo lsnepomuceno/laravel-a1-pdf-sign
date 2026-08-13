@@ -52,7 +52,7 @@ different retention, and mixing them produces neither.
   is a `SigningLog` with no logger, and the arity of `IncrementalSigner` grows by
   one defaulted parameter, which is how 0021 and 2.2 taught this codebase to add
   a dependency without breaking a hand-built signer.
-- `tests/AuditLogTest.php` asserts, for every event, that no password, no key
+- `tests/Support/AuditLogTest.php` asserts, for every event, that no password, no key
   and no path appears in any line. That test is the reason the allowlist can be
   trusted rather than merely intended.
 - Validation logs its verdict, including failure. A failed validation is the

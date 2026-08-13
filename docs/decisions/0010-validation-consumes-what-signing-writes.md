@@ -74,7 +74,7 @@ document, a store of zeroes for one that carries the structure with nothing in
 it.
 
 The SHA-1 here is an identifier the PDF specification fixes, not a digest chosen
-for security, which is why `tests/ArchTest.php` exempts one class from the weak
+for security, which is why `tests/Project/ArchTest.php` exempts one class from the weak
 hashing rule rather than loosening it.
 
 **Use it. Done.** `Validation\ChainBuilder` orders the certificates a signature

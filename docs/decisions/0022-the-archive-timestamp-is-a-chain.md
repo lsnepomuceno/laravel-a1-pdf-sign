@@ -100,7 +100,7 @@ What the network tests assert:
   that is the point of the exercise, since the authority's certificate is what
   the *next* archive timestamp has to be able to check.
 
-  Gated offline by `tests/ArchiveRefreshTest.php`. Two pieces of test-only
+  Gated offline by `tests/Timestamps/ArchiveRefreshTest.php`. Two pieces of test-only
   machinery were needed and neither is a stub of the thing under test:
   `DebugCertificate::makeRevocable()` issues a certificate that names its own
   distribution point, because `collectValidationMaterial()` reads the endpoints
