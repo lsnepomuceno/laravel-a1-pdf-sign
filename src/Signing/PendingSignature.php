@@ -6,6 +6,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Signing;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
@@ -192,6 +193,38 @@ final class PendingSignature
         $this->pdfContents = Files::read($pdfPath);
         $this->pdfPath = $pdfPath;
         $this->fileName = pathinfo($pdfPath, PATHINFO_BASENAME);
+        $this->documentPassword = $password;
+
+        return $this;
+    }
+
+    /**
+     * The document from a Laravel disk, rather than from a local path.
+     *
+     * An application keeping contracts on `s3` or `minio` appeared to have to
+     * download to a temporary file first. It never did: `pdfContents()` takes
+     * the bytes, and `Storage::disk('s3')->get(...)` returns them. This is that
+     * call with the file name carried across, so the signed document keeps a
+     * name rather than an ordered UUID.
+     *
+     * **It holds the whole document in memory**, the same as `pdfContents()`,
+     * so it does not help a very large one. Streaming is a different change
+     * (issue #285 measured it) and pretending otherwise here would be worse
+     * than the silence this replaces.
+     *
+     * @throws FileNotFoundException
+     */
+    public function pdfFromDisk(string $disk, string $path, #[SensitiveParameter] string $password = ''): self
+    {
+        $contents = Storage::disk($disk)->get($path);
+
+        if ($contents === null) {
+            throw new FileNotFoundException("{$disk}:{$path}");
+        }
+
+        $this->pdfContents = $contents;
+        $this->pdfPath = null;
+        $this->fileName = basename($path);
         $this->documentPassword = $password;
 
         return $this;

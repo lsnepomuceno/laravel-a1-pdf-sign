@@ -47,6 +47,25 @@ src/
 config/a1-pdf-sign.php
 ```
 
+## The contracts a consumer may replace
+
+Five contracts are bound in the service provider, and two of them are
+deliberately swappable by a consuming application:
+
+| | |
+|---|---|
+| `Contracts\SealRenderer` | replace to draw a different seal: a logo, a QR code, any layout |
+| `Contracts\SignatureTransport` | replace to own the TSA, OCSP and CRL calls, which is the SSRF surface (invariant 9) |
+
+**Writing that down makes their signatures public API**, which is the cost and
+is worth paying: they were already published contracts, and a consumer who
+cannot find out they may be replaced has an extension point that does not
+exist.
+
+`SealRenderer::fromImage()` is how artwork produced elsewhere gets in, Blade
+included. The package does not turn HTML into pixels
+([0004](../decisions/0004-in-memory-seal.md)).
+
 ## Exceptions
 
 One class per failure mode (0008), and **every one of them implements

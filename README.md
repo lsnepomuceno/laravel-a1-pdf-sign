@@ -85,6 +85,22 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 > needs. That is [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430), open since 2021, and it is the single most
 > important behaviour in this package.
 
+### The document does not have to be a local file
+
+An application keeping contracts on `s3`, `minio` or any Flysystem disk does not have to download one first:
+
+```php
+A1PdfSign::newSignature()
+    ->certificate($pfx, $password)
+    ->pdfFromDisk('s3', 'contracts/deal.pdf')
+    ->sign();
+
+// or hand over the bytes yourself, from anywhere at all
+->pdfContents($bytes, 'deal.pdf')
+```
+
+Both hold the whole document in memory, so neither helps with a very large one.
+
 [Signing a document →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/sign-pdf-file)
 
 ## What it does
@@ -102,6 +118,23 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 | **ICP-Brasil identity** | CPF, CNPJ and the rest, read from the certificate rather than parsed out of a name |
 | **PDF/A** | a signed document stays conformant, measured with veraPDF rather than assumed |
 | **PDF/UA** | measured too: an invisible signature keeps an accessible document conformant, a visible seal does not |
+
+## Bringing your own seal
+
+The seal is drawn by `Contracts\SealRenderer`, bound in the container, so replacing it is one line in your own
+service provider:
+
+```php
+$this->app->bind(SealRenderer::class, QrCodeSealRenderer::class);
+```
+
+That is the route for a corporate logo, a QR code linking to a validation page, or any layout of your own. The
+contract has two methods: `render()` builds a seal from the certificate, and `fromImage()` embeds artwork you
+already have.
+
+**`fromImage()` is also the answer to "can I draw the seal with Blade".** Render your view to an image however you
+like and hand the result over; the package stays out of the business of turning HTML into pixels, which would be a
+large dependency for a signing library.
 
 ## Testing an application that signs
 
@@ -124,6 +157,7 @@ $signing->assertNothingSigned();
 It replaces the signer and the certificate reader in the container, so `certificate()` accepts any path and nothing
 is parsed, rendered or signed. The result is still a `SignedPdf`, so code calling `->contents`, `->size()` or
 `->save()` keeps working.
+
 
 ## Certificates
 

@@ -266,6 +266,22 @@ it, or throw the documented exception. Never a `TypeError`, never a fatal.
 `COMPOSER_NO_AUDIT`, so advisories were silently unchecked; for a signing
 package a known vulnerability in the tree is worth blocking on.
 
+**And they are refused before they arrive.** `roave/security-advisories` sits in
+`require-dev` as a wall of `conflict` constraints, so `composer update` fails on
+the machine of whoever runs it rather than on the next CI run. The two are
+complementary and neither replaces the other: the conflicts cannot audit what is
+already in a lock file, and the audit cannot stop the update that put it there.
+
+It installs no code, so it adds nothing to what a consumer receives, and it goes
+in `require-dev` and never in `require`: in `require` it would impose its
+conflicts on every consuming application, which is their decision about their
+own tree.
+
+It is pinned to `dev-latest`, which this repository otherwise distrusts, and
+that is right here: the whole value is tracking advisories as they are
+published, and a pinned copy of a list of known vulnerabilities is a list of
+yesterday's.
+
 ---
 
 ## The instruments are never dependencies
