@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace LSNepomuceno\LaravelA1PdfSign\Facades;
 
+use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
+use LSNepomuceno\LaravelA1PdfSign\Testing\A1PdfSignFake;
 
 /**
  * @method static \LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf signFromFile(string $pfxPath, string $password, string $pdfPath, ?bool $usePathEnv = null)
@@ -27,5 +29,33 @@ final class A1PdfSign extends Facade
     protected static function getFacadeAccessor(): string
     {
         return A1PdfSignContract::class;
+    }
+
+    /**
+     * Signs nothing, and records what would have been signed.
+     *
+     * For a consuming application testing its own signing flow, so it needs no
+     * PKCS#12 bundle in its repository and builds no CMS for a test that only
+     * happens to touch the code path.
+     *
+     * ```php
+     * $signing = A1PdfSign::fake();
+     *
+     * // … the application runs …
+     *
+     * $signing->assertSigned();
+     * $signing->assertSignedWithProfile(SignatureProfile::PadesBLT);
+     * ```
+     *
+     * It replaces `Contracts\PdfSigner` rather than this facade's own binding,
+     * because the builder is the documented way in and it depends on that
+     * contract: faking only the facade would leave
+     * `newSignature()->…->sign()` reaching the real signer.
+     */
+    public static function fake(): A1PdfSignFake
+    {
+        // The facade's application is the container, and the accessor returns
+        // it typed as the interface, which install() narrows.
+        return A1PdfSignFake::install(Container::getInstance());
     }
 }
