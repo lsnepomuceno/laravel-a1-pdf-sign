@@ -1,5 +1,90 @@
 # Upgrading
 
+## From 2.5.0 to 2.6.0
+
+**Three defects produced wrong output or a wrong answer in shipped code**, and
+one change to a published contract needs a call site updated. Everything else is
+additive.
+
+### A wrong answer, and it was silent
+
+**A missing `openssl` binary made every signature report as invalid.** Not an
+error: a verdict. Validation shells out, and `Validation\SignatureVerifier`
+caught every throwable and returned false, so `openssl: not found`, `proc_open`
+in `disable_functions` and an unwritable temporary directory all arrived as
+"this signature does not verify".
+
+Measured on `samples/pades-b-b.pdf`, changing nothing but the environment: with
+the binary present, valid; with it removed, invalid.
+
+It now raises `MissingBinaryException` or `ProcessUnavailableException`. **If
+your application catches nothing around validation, it will now see an
+exception where it previously saw a false negative**, which is the point:
+`ext-openssl` being loaded says nothing about the command-line tool being
+installed, and a minimal container commonly has the first without the second.
+
+`php artisan a1-pdf-sign:check` answers the same question before anything is
+signed.
+
+### Signature metadata was written as raw UTF-8
+
+`/Name`, `/Reason`, `/Location` and `/ContactInfo` are text strings
+(ISO 32000-1 §7.9.2.2), which must be PDFDocEncoding or UTF-16BE with a byte
+order mark. Raw UTF-8 is neither, so a conforming reader decoded `João` as
+`JoÃ£o` in a document that verified perfectly.
+
+Anything outside ASCII is now written as a hex string with the mark. **ASCII
+output is byte-identical to 2.5**, so a document signed with an unaccented name
+does not move.
+
+### The seal ignored page rotation
+
+`/Rotate` was read nowhere in the package, so on a page carrying `/Rotate 90`,
+which is how most scanners express landscape, the seal landed somewhere else
+and read sideways. It can now fall where the caller asked, confirmed by
+rendering with poppler rather than by arithmetic alone.
+
+### `Contracts\PdfSigner::sign()` takes the document by reference
+
+**The only breaking change**, and only for a caller using the contract
+directly. PHP cannot pass an expression by reference:
+
+```php
+$signer->sign(Files::read($path), $certificate, $info);   // fatal
+$contents = Files::read($path);
+$signer->sign($contents, $certificate, $info);            // fine
+```
+
+`A1PdfSign::newSignature()` and the one-shot helpers are unaffected: they pass a
+property.
+
+It buys memory. Signing peaked at roughly 20 MB plus **four** times the
+document and now peaks at 20 MB plus **two**: a 200 MB architectural plan needs
+about 420 MB rather than 620.
+
+### Worth knowing, and not breaking
+
+- **Every exception implements `Exceptions\A1PdfSignException`**, so they can be
+  caught as a group. `InvalidCertificatePasswordException` is new and extends
+  the class a wrong password used to arrive as, so existing catches still match.
+- **`A1PdfSign::fake()`** for testing an application that signs, with no
+  certificate and no CMS.
+- **`->pdfFromDisk('s3', 'contracts/deal.pdf')`**, and `SealRenderer` is
+  documented as swappable, which it always was.
+- **An optional PSR-3 audit trail**, off by default, whose context is an
+  allowlist: no password, key, document or file path can appear in a line.
+- **`psr/log` is a new runtime dependency.**
+- **Signed documents declare the ETSI_PAdES extension** their sub-filter needs
+  below PDF 2.0, so the bytes of every signed document change again.
+
+### Measured, not claimed
+
+An invisible signature now keeps a **PDF/UA** document conformant; a visible
+seal costs it two clauses. Certification is verified by pyHanko, which enforces
+`/DocMDP` rather than reporting it, and what this package writes is checked
+against the Arlington PDF Model, the specification's own machine-readable
+grammar.
+
 ## From 2.4.0 to 2.5.0
 
 Held back deliberately: releases were coming out faster than the features in
