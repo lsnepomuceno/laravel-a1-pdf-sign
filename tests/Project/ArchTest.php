@@ -199,7 +199,7 @@ it('uses no constant the host platform may not define', function () {
 /**
  * veraPDF is a measuring instrument, not a dependency.
  *
- * So are qpdf, poppler, Ghostscript and pyHanko. Every one of them is installed for
+ * So are qpdf, poppler, Ghostscript, pyHanko and Arlington's TestGrammar. Every one of them is installed for
  * development and CI, to establish verdicts the suite cannot establish for
  * itself, and **none of them may reach production**
  * (docs/decisions/0025-what-signing-does-to-pdf-a.md).
@@ -211,7 +211,7 @@ it('uses no constant the host platform may not define', function () {
  * since 2.0 and has never been called by it.
  */
 it('keeps the verification tools out of the package', function () {
-    $tools = ['verapdf', 'veraPDF', 'pdfsig', 'pdftoppm', 'qpdf', 'ghostscript', 'pyhanko'];
+    $tools = ['verapdf', 'veraPDF', 'pdfsig', 'pdftoppm', 'qpdf', 'ghostscript', 'pyhanko', 'testgrammar', 'arlington'];
     $found = [];
 
     /** @var SplFileInfo $file */

@@ -67,6 +67,55 @@ RUN set -eux; \
         rm -rf /tmp/verapdf.zip /tmp/verapdf-src /tmp/verapdf-auto.xml; \
         verapdf --version
 
+# The Arlington PDF Model, the PDF Association's machine-readable grammar of
+# ISO 32000, and TestGrammar which checks a file against it.
+#
+# It asks what nothing else here asks. qpdf asks whether the syntax closes and
+# the offsets line up; veraPDF asks about PDF/A and PDF/UA. This asks whether
+# each object is the object the specification describes: right key, right type,
+# right version, right permitted values. For a revision writer that assembles
+# dictionaries by string concatenation, that is the check nobody was running
+# (docs/decisions/0037-what-we-write-against-the-specifications-grammar.md).
+#
+# Pinned by commit rather than by tag: the releases carry no binaries, and the
+# TSV model files live in the same tree, so one SHA pins the tool and the
+# grammar together.
+#
+# Two patches, both to code the project vendors rather than writes, and both
+# recorded here rather than carried as files:
+#
+#   sarge.h uses uint32_t without including <cstdint>, which glibc pulls in
+#   transitively and musl does not, so -include cstdint supplies it.
+#
+#   pdfium's logging.h reinterpret_casts NULL, which GCC 15 rejects outright
+#   and -fpermissive does not downgrade. The line is dead code after abort().
+#
+# The pdfium backend, not PDFix: PDFix ships a proprietary libpdfix.so, and the
+# QPDF backend is marked not working by its own README.
+ARG ARLINGTON_COMMIT=9d75f6de8cdc3883d5519f83e804238329b9eb10
+
+RUN set -eux; \
+        apk add --no-cache --virtual .arlington-build build-base cmake linux-headers; \
+        git clone --quiet https://github.com/pdf-association/arlington-pdf-model.git /tmp/arlington; \
+        cd /tmp/arlington; \
+        git checkout --quiet "${ARLINGTON_COMMIT}"; \
+        sed -i \
+            's|reinterpret_cast<volatile char\*>(NULL)|reinterpret_cast<volatile char*>(static_cast<uintptr_t>(0))|' \
+            TestGrammar/pdfium/third_party/logging.h; \
+        cd TestGrammar; \
+        cmake -B build -DPDFSDK_PDFIUM=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-include cstdint" . ; \
+        cmake --build build --config Release -j"$(nproc)"; \
+        mkdir -p /opt/arlington; \
+        cp bin/linux/TestGrammar /usr/local/bin/testgrammar; \
+        cp -r /tmp/arlington/tsv /opt/arlington/tsv; \
+        rm -rf /tmp/arlington; \
+        apk del .arlington-build; \
+        testgrammar --help > /dev/null
+
+# The model is versioned, and `latest` is the current specification. Pointing
+# at the parent finds no FileTrailer.tsv and reports it as a missing model.
+ENV ARLINGTON_TSV=/opt/arlington/tsv/latest
+
 # pyHanko, the reader that enforces /DocMDP.
 #
 # Certification was the one claim this package made with no outside witness:
