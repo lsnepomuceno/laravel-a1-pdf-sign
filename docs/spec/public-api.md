@@ -39,7 +39,8 @@ src/
 ├── Seal/InterventionSealRenderer.php
 ├── Support/                              # Files, ProcessRunner, TemporaryFile,
 │                                         # PdfFilters, PngReader, SrgbProfile
-├── Commands/                             # pdf:sign, pdf:validate-signature
+├── Commands/                             # pdf:sign, pdf:validate-signature,
+│                                         # a1-pdf-sign:check
 ├── Exceptions/                           # one class per failure mode, all sharing
 │                                         # the A1PdfSignException interface
 └── Testing/                              # test-only: certificates, a local timestamp
