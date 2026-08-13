@@ -14,6 +14,7 @@ use LSNepomuceno\LaravelA1PdfSign\Data\SignatureInfo;
 use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
 use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
+use LSNepomuceno\LaravelA1PdfSign\Enums\SigningEvent;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FieldLockException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException;
@@ -29,6 +30,7 @@ use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\FieldLockReader;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\RevisionWriter;
 use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
 use LSNepomuceno\LaravelA1PdfSign\Support\Bytes;
+use LSNepomuceno\LaravelA1PdfSign\Support\SigningLog;
 
 /**
  * Signs by appending a revision, leaving the original bytes untouched.
@@ -70,6 +72,10 @@ final readonly class IncrementalSigner implements PdfSigner
         // Appended, so the arity a hand-built signer relies on does not move
         // (docs/decisions/0021-locking-fields-and-honouring-locks.md).
         private FieldLockReader $locks = new FieldLockReader(new DocumentReader()),
+        // Appended for the same reason, and null by default: a package that
+        // logs unasked fills somebody's disk
+        // (docs/decisions/0035-the-audit-trail-is-opt-in.md).
+        private SigningLog $log = new SigningLog(),
     ) {}
 
     public function sign(
@@ -163,6 +169,13 @@ final readonly class IncrementalSigner implements PdfSigner
         if ($profile->needsArchiveTimestamp()) {
             $signed = $this->archiveTimestamp->append($signed);
         }
+
+        $this->log->record(SigningEvent::SignatureApplied, [
+            'profile' => $profile->value,
+            'field' => $fieldName,
+            'certification' => $certification?->value,
+            'signer' => $certificate->commonName(),
+        ]);
 
         return new SignedPdf($signed);
     }

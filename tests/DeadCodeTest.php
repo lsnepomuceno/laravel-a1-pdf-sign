@@ -165,6 +165,17 @@ function deadCodeUnusedInScope(array $tokens, int $open, int $close): array
             continue;
         }
 
+        // A property declared with a default reads exactly like an assignment,
+        // and a nested class puts one inside the scope being walked:
+        // `public array $lines = [];` was reported once this file's own
+        // recording logger existed. Modifiers introducing a method are left
+        // alone, since the branch above already handles those.
+        if (is_array($token) && in_array($token[0], [T_PUBLIC, T_PRIVATE, T_PROTECTED, T_VAR, T_READONLY], true)) {
+            $index = deadCodeSkipDeclaration($tokens, $index, $close);
+
+            continue;
+        }
+
         if (! is_array($token) || $token[0] !== T_VARIABLE || $token[1] === '$this') {
             continue;
         }
@@ -191,6 +202,39 @@ function deadCodeUnusedInScope(array $tokens, int $open, int $close): array
     }
 
     return $unused;
+}
+
+/**
+ * The end of a property declaration, or the modifier itself when it introduces
+ * a method.
+ *
+ * @param  array<int, array{0: int, 1: string, 2: int}|string>  $tokens
+ */
+function deadCodeSkipDeclaration(array $tokens, int $index, int $close): int
+{
+    for ($next = $index + 1; $next < $close; $next++) {
+        $token = $tokens[$next];
+
+        if (is_array($token) && in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+            continue;
+        }
+
+        // `public function …` and `public static function …`: the function
+        // branch owns those.
+        if (is_array($token) && in_array($token[0], [T_FUNCTION, T_FN, T_STATIC, T_READONLY], true)) {
+            return $index;
+        }
+
+        break;
+    }
+
+    for ($next = $index + 1; $next < $close; $next++) {
+        if ($tokens[$next] === ';') {
+            return $next;
+        }
+    }
+
+    return $index;
 }
 
 /**
@@ -300,6 +344,35 @@ it('leaves alone the shapes that look unused and are not', function () {
             };
 
             return $first . $second . $value . $callback() . $closure();
+        }
+        PHP);
+
+    expect(unusedVariablesIn($path))->toBe([]);
+
+    unlink($path);
+});
+
+it('does not read a property default as an assignment', function () {
+    // The shape that showed up the moment a test wrote its own recording
+    // logger: a nested class declaring a property with a default, inside the
+    // function scope being walked.
+    $path = LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign::tempPath(true, '.php');
+
+    file_put_contents($path, <<<'PHP'
+        <?php
+        function makesARecorder(): object
+        {
+            return new class
+            {
+                public array $lines = [];
+
+                private string $name = 'unread by anything here';
+
+                public function add(string $line): void
+                {
+                    $this->lines[] = $line;
+                }
+            };
         }
         PHP);
 
