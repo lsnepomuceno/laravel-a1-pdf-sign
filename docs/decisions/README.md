@@ -47,6 +47,7 @@ document drifts away from the code it describes.
 | [0035](0035-the-audit-trail-is-opt-in.md) | The audit trail is opt-in, and its context is an allowlist |
 | [0036](0036-the-signed-artefacts-are-reproducible.md) | The signed artefacts are reproducible, and their coherence is a gate |
 | [0037](0037-what-we-write-against-the-grammar.md) | What we write, against the specification's own grammar |
+| [0038](0038-the-envelope-is-versioned.md) | The envelope is versioned, so material sealed by signet-pdf still opens |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its
