@@ -113,6 +113,14 @@ jobs:
         # them is higher than the pair each floor was originally set from, so
         # the floors were sitting six to twelve points low and had stopped
         # being able to fail.
+        #
+        # **Every measurement below predates two fixes and none of them has
+        # been reproduced since.** The runs they came from installed none of
+        # the verification tools, so the tests needing them skipped and every
+        # mutation those would have killed counted as surviving; and they
+        # carried --parallel, which generates no mutations at all. Treat them
+        # as provenance, not as numbers, until a serial run with the full
+        # toolchain has replaced them.
         include:
           - namespace: Certificates   # 68.13 / 68.13 / 68.13 / 73.48
             min: 64
@@ -145,6 +153,98 @@ jobs:
           coverage: pcov
           tools: composer:v2
 
+      # The four installs below are main_action.yml's, verbatim, and they are
+      # here for a sharper reason than going green.
+      #
+      # **A test that cannot run cannot kill a mutation.** An absent tool does
+      # not merely skip: every mutation that test would have caught is reported
+      # as surviving, so the score is understated and the floors above are
+      # measured against a suite quietly smaller than the one a pull request
+      # runs. It is the argument this file already makes against --shard, one
+      # step further out.
+      #
+      # Kept verbatim so a diff against main_action.yml shows drift. The pins
+      # have to move together: a validator or a grammar that differs between the
+      # two workflows makes their verdicts incomparable.
+
+      - name: Install qpdf
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf
+
+      # veraPDF is the reference PDF/A validator and the only thing that can
+      # establish a conformance verdict. Pinned rather than tracking "latest":
+      # a validator that changes its verdicts between builds cannot be the
+      # thing a gate is measured against.
+      # See docs/decisions/0025-what-signing-does-to-pdf-a.md.
+      - name: Install veraPDF
+        env:
+          VERAPDF_VERSION: '1.30.2'
+        run: |
+          set -eux
+          curl -sSL -o /tmp/verapdf.zip \
+            "https://software.verapdf.org/releases/${VERAPDF_VERSION%.*}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-src
+          cat > /tmp/verapdf-auto.xml <<'XML'
+          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+          <AutomatedInstallation langpack="eng">
+          <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
+          <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
+          <installpath>/opt/verapdf</installpath>
+          </com.izforge.izpack.panels.target.TargetPanel>
+          <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
+          <pack index="0" name="veraPDF GUI" selected="true"/>
+          <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
+          <pack index="3" name="veraPDF Corpus and Tests" selected="false"/>
+          <pack index="4" name="veraPDF Documentation" selected="false"/>
+          <pack index="5" name="veraPDF Sample Plugins" selected="false"/>
+          </com.izforge.izpack.panels.packs.PacksPanel>
+          <com.izforge.izpack.panels.install.InstallPanel id="install"/>
+          <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
+          </AutomatedInstallation>
+          XML
+          java -jar /tmp/verapdf-src/verapdf-greenfield-*/verapdf-izpack-installer-*.jar /tmp/verapdf-auto.xml
+          sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
+          verapdf --version
+
+      # pyHanko is the reader that enforces /DocMDP, which pdfsig cannot
+      # surface at all. Pinned for the same reason veraPDF is.
+      #
+      # Two distributions: installing pyHanko alone gives no command, because
+      # the CLI is packaged and versioned separately.
+      # See docs/decisions/0031-certification-verified-by-a-reader.md.
+      - name: Install pyHanko
+        env:
+          PYHANKO_VERSION: '0.36.2'
+          PYHANKO_CLI_VERSION: '0.4.2'
+        run: |
+          set -eux
+          python3 -m venv /opt/pyhanko
+          /opt/pyhanko/bin/pip install --quiet \
+            "pyHanko==${PYHANKO_VERSION}" "pyhanko-cli==${PYHANKO_CLI_VERSION}"
+          sudo ln -s /opt/pyhanko/bin/pyhanko /usr/local/bin/pyhanko
+          pyhanko --version
+
+      # The Arlington PDF Model, checked against the specification's own
+      # grammar. Pinned by commit: the releases carry no binaries, and the TSV
+      # model lives in the same tree, so one SHA pins tool and grammar together.
+      # See docs/decisions/0037-what-we-write-against-the-grammar.md.
+      - name: Install the Arlington PDF Model
+        env:
+          ARLINGTON_COMMIT: '9d75f6de8cdc3883d5519f83e804238329b9eb10'
+        run: |
+          set -eux
+          git clone --quiet https://github.com/pdf-association/arlington-pdf-model.git /tmp/arlington
+          cd /tmp/arlington
+          git checkout --quiet "${ARLINGTON_COMMIT}"
+          cd TestGrammar
+          cmake -B build -DPDFSDK_PDFIUM=ON -DCMAKE_BUILD_TYPE=Release .
+          cmake --build build --config Release -j"$(nproc)"
+          sudo cp bin/linux/TestGrammar /usr/local/bin/testgrammar
+          sudo mkdir -p /opt/arlington
+          sudo cp -r /tmp/arlington/tsv /opt/arlington/tsv
+          testgrammar --help > /dev/null
+          echo "ARLINGTON_TSV=/opt/arlington/tsv/latest" >> "$GITHUB_ENV"
+
+
       - name: Install dependencies
         run: composer update --prefer-dist --prefer-stable --no-interaction --no-progress
 
@@ -160,7 +260,6 @@ jobs:
           vendor/bin/pest --mutate
           --path=src/${{ matrix.namespace }}
           --exclude-group=network
-          --parallel
           --min=${{ matrix.min }}
           | tee mutation.log
 
