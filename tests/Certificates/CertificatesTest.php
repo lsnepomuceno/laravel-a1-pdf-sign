@@ -10,6 +10,7 @@ use LSNepomuceno\LaravelA1PdfSign\Certificates\OpenSslCliCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
+use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidCertificateContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidX509PrivateKeyException;
@@ -67,6 +68,50 @@ it('seals and opens a certificate through the vault', function () {
 
     expect($opened->original)->toBe($certificate->original)
         ->and($opened->password)->toBe($password);
+});
+
+it('opens a certificate whose stored PEM was base64 encoded', function () {
+    // $isBase64 is a documented parameter of open() and nothing exercised it,
+    // so the whole branch was free to be wrong.
+    [$pfx, $password] = DebugCertificate::make();
+
+    $certificate = app(NativeCertificateReader::class)->read($pfx, $password);
+
+    $vault = CertificateVault::create();
+    $sealed = new EncryptedCertificate(
+        certificate: $vault->encrypter()->encryptString(base64_encode($certificate->original)),
+        password: $vault->encrypter()->encryptString($password),
+        hash: $vault->key(),
+    );
+
+    $opened = CertificateVault::withKey($sealed->hash)->open(
+        app(CertificateParser::class),
+        $sealed->certificate,
+        $sealed->password,
+        isBase64: true,
+    );
+
+    expect($opened->original)->toBe($certificate->original);
+});
+
+it('keeps a stored PEM that is not base64 when it is asked to decode one', function () {
+    // A caller being wrong about which form they stored must not lose the
+    // certificate. The strict decode fails and the raw value is kept.
+    [$pfx, $password] = DebugCertificate::make();
+
+    $certificate = app(NativeCertificateReader::class)->read($pfx, $password);
+
+    $vault = CertificateVault::create();
+    $sealed = $vault->seal($certificate, $password);
+
+    $opened = CertificateVault::withKey($sealed->hash)->open(
+        app(CertificateParser::class),
+        $sealed->certificate,
+        $sealed->password,
+        isBase64: true,
+    );
+
+    expect($opened->original)->toBe($certificate->original);
 });
 
 it('deletes a temporary file even when the callback throws', function () {

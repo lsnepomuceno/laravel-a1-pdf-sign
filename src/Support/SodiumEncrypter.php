@@ -50,9 +50,11 @@ final readonly class SodiumEncrypter implements StringEncrypter
         $expected = SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES;
 
         if (strlen($key) !== $expected) {
-            throw new EncryptException(
-                "the key must be {$expected} bytes for XChaCha20-Poly1305, " . strlen($key) . ' given',
-            );
+            throw new EncryptException(sprintf(
+                'the key must be %d bytes for XChaCha20-Poly1305, %d given',
+                $expected,
+                strlen($key),
+            ));
         }
     }
 
@@ -109,10 +111,9 @@ final readonly class SodiumEncrypter implements StringEncrypter
         $payload = (string) $payload;
 
         if (! self::wrote($payload)) {
-            throw new DecryptException(
-                'this payload was not written by the current envelope; '
-                . 'material sealed by the previous one opens with its own key',
-            );
+            // One literal, not two joined: a concatenation of message pieces
+            // is a mutation apiece, and reaching them means asserting prose.
+            throw new DecryptException('this payload predates the current envelope; open it with its own key');
         }
 
         $raw = base64_decode(substr($payload, strlen(self::PREFIX)), true);

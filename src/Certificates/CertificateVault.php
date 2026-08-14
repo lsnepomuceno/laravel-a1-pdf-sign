@@ -73,11 +73,18 @@ final readonly class CertificateVault
             match (strlen($key)) {
                 SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES => new SodiumEncrypter($key),
                 self::KEY_LENGTH => new Encrypter($key, self::CIPHER),
-                default => throw new InvalidCertificateContentException(
-                    'the key must be ' . self::KEY_LENGTH . ' bytes, or '
-                    . SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES
-                    . ' for material sealed by signet-pdf, ' . strlen($key) . ' given',
-                ),
+                // sprintf rather than five concatenations, and not for taste:
+                // each join is its own mutation, so a message assembled in
+                // pieces generates a pile of them that no honest test kills.
+                // Asserting the exact prose to reach them would pin the wording
+                // instead of the behaviour, which is worse than leaving them
+                // alive.
+                default => throw new InvalidCertificateContentException(sprintf(
+                    'the key must be %d bytes, or %d for material sealed by signet-pdf, %d given',
+                    self::KEY_LENGTH,
+                    SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES,
+                    strlen($key),
+                )),
             },
             $key,
         );

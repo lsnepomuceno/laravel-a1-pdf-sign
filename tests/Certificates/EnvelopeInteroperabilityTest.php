@@ -80,7 +80,7 @@ it('sends each envelope to the reader that understands it', function () {
     expect(fn() => $sodium->decryptString(
         new Encrypter(Encrypter::generateKey(CertificateVault::CIPHER), CertificateVault::CIPHER)
             ->encryptString('x'),
-    ))->toThrow(DecryptException::class, 'not written by the current envelope');
+    ))->toThrow(DecryptException::class, 'predates the current envelope');
 });
 
 it('picks the vault encrypter from the length of the key', function () {
