@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use LSNepomuceno\LaravelA1PdfSign\Adapters\IlluminateEncrypter;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\Signet\Certificates\{CertificateParser, CertificateVault, PemCertificateReader, ReaderFactory};
 use LSNepomuceno\Signet\Contracts\CertificateReader;
@@ -102,7 +103,12 @@ final readonly class A1PdfSignManager implements A1PdfSign
 
         // The hash it returns is required by decryptCertificate(); without it
         // the pair cannot be read back.
-        return CertificateVault::create()->seal(
+        //
+        // `using()` rather than `create()`: the engine's own default seals
+        // with XChaCha20-Poly1305 under a 32-byte key, and this package seals
+        // with Laravel's encrypter so that material written by 2.x and by 3.0
+        // share one envelope.
+        return CertificateVault::using(IlluminateEncrypter::generate())->seal(
             $this->readAnyEncoding($bytes, $password, $usePathEnv),
             $password,
         );
