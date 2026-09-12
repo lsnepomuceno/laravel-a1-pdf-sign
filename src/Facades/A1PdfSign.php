@@ -20,6 +20,9 @@ use LSNepomuceno\LaravelA1PdfSign\Testing\A1PdfSignFake;
  * @method static \LSNepomuceno\Signet\Data\SignedPdf extendArchive(string $pdfPath)
  * @method static \LSNepomuceno\Signet\IcpBrasil\Data\Report icpBrasil(string $pfxPath, string $password = '')
  * @method static \LSNepomuceno\Signet\Signing\PendingSignature newSignature()
+ * @method static \LSNepomuceno\Signet\Contracts\PdfSource fromDisk(string $disk, string $path)
+ * @method static \LSNepomuceno\Signet\Contracts\PdfSource fromUpload(\Illuminate\Http\UploadedFile $file)
+ * @method static \LSNepomuceno\Signet\Contracts\PdfDestination toDisk(string $disk, ?string $path = null)
  * @method static string tempPath(bool $tempFile = false, string $fileExt = '.pfx')
  *
  * @see \LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager
