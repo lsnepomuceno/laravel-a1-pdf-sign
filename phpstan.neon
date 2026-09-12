@@ -29,6 +29,3 @@ parameters:
         -
             identifier: property.nonObject
             path: tests/*
-        -
-            identifier: property.notFound
-            path: tests/*
