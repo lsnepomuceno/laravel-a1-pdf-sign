@@ -87,7 +87,8 @@
             "@lint --test",
             "@analyse",
             "@deps",
-            "@test"
+            "@test",
+            "@test:types"
         ],
         "deps": "vendor/bin/composer-dependency-analyser",
         "lint": "vendor/bin/pint",
@@ -97,7 +98,7 @@
     },
     "scripts-descriptions": {
         "analyse": "Run PHPStan static analysis.",
-        "check": "Run everything the CI runs: style, static analysis and tests.",
+        "check": "Run every gate CI runs: Pint, PHPStan, the dependency analyser, the suite and type coverage.",
         "deps": "Report unused and shadow dependencies.",
         "lint": "Fix code style with Pint (append --test to only check).",
         "test": "Run the test suite. A skipped test fails it: every check has to run somewhere, and a skip is how one stops.",

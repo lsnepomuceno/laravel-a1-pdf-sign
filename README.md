@@ -368,7 +368,15 @@ $report->messages();   // one line per finding, naming the field
 php artisan pdf:sign contract.pdf certificate.pfx "password" signed.pdf
 php artisan pdf:sign contract.pdf certificate.pem "" signed.pdf --key=private.key
 php artisan pdf:validate-signature signed.pdf
+
+php artisan pdf:fields template.pdf
+php artisan pdf:add-field template.pdf Manager placed.pdf --x=60 --y=400 --width=120 --height=40
+php artisan pdf:extend archived.pdf
+
+php artisan a1-pdf-sign:check
 ```
+
+`pdf:add-field` places an empty field for somebody else to sign later, and leaves it invisible when no rectangle is given. `pdf:extend` renews a B-LTA document before its archive timestamp ages out, which is the one operation here that a scheduler calls rather than a request.
 
 [Commands →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/commands)
 
