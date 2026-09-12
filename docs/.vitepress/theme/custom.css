@@ -1,0 +1,135 @@
+/*
+ * The whole visual identity, as tokens.
+ *
+ * The page is ink on paper and the accent is red, which is the colour the
+ * document format itself is read in. Restraint is the point: the red carries
+ * links, buttons and the active item, and everything that is prose stays
+ * monochrome, so a page of documentation does not read like a page of
+ * warnings.
+ *
+ * The reds are Primer's own scale rather than an invented one, so they sit
+ * beside the greys already used here and clear the contrast ratio in both
+ * themes: #cf222e on white is 6.2:1, #ff7b72 on #0d1117 is 7.3:1.
+ *
+ * Every value below is a variable the default theme already reads, so nothing
+ * here depends on the markup of a component a VitePress release may change.
+ */
+
+:root {
+  --vp-font-family-base:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --vp-font-family-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Primer light: canvas, canvas subtle, inset. */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f6f8fa;
+  --vp-c-bg-soft: #f6f8fa;
+  --vp-c-bg-elv: #ffffff;
+
+  --vp-c-divider: #d0d7de;
+  --vp-c-border: #d0d7de;
+  --vp-c-gutter: #d0d7de;
+
+  --vp-c-text-1: #1f2328;
+  --vp-c-text-2: #656d76;
+  --vp-c-text-3: #8c959f;
+
+  /* Primer red: 500, 600, 700. Deepening rather than brightening on hover. */
+  --vp-c-brand-1: #cf222e;
+  --vp-c-brand-2: #a40e26;
+  --vp-c-brand-3: #82071e;
+  --vp-c-brand-soft: rgba(207, 34, 46, 0.1);
+
+  --vp-button-brand-bg: #cf222e;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-border: #cf222e;
+  --vp-button-brand-hover-bg: #a40e26;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-border: #a40e26;
+  --vp-button-brand-active-bg: #82071e;
+  --vp-button-brand-active-border: #82071e;
+
+  --vp-code-block-bg: #f6f8fa;
+}
+
+.dark {
+  /* Primer dark: canvas default, canvas subtle, canvas inset. */
+  --vp-c-bg: #0d1117;
+  --vp-c-bg-alt: #161b22;
+  --vp-c-bg-soft: #161b22;
+  --vp-c-bg-elv: #161b22;
+
+  --vp-c-divider: #30363d;
+  --vp-c-border: #30363d;
+  --vp-c-gutter: #30363d;
+
+  --vp-c-text-1: #e6edf3;
+  --vp-c-text-2: #8b949e;
+  --vp-c-text-3: #6e7681;
+
+  /* Lifted rather than deepened: on a dark canvas the darker red disappears. */
+  --vp-c-brand-1: #ff7b72;
+  --vp-c-brand-2: #ffa198;
+  --vp-c-brand-3: #f85149;
+  --vp-c-brand-soft: rgba(248, 81, 73, 0.16);
+
+  --vp-button-brand-bg: #da3633;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-border: #da3633;
+  --vp-button-brand-hover-bg: #f85149;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-border: #f85149;
+  --vp-button-brand-active-bg: #b62324;
+  --vp-button-brand-active-border: #b62324;
+
+  --vp-code-block-bg: #161b22;
+}
+
+/*
+ * The home hero. The name is the one place the accent is allowed to be the
+ * loudest thing on the screen, and it is a flat colour rather than a gradient
+ * so it stays a token the rest of the design controls.
+ */
+:root {
+  --vp-home-hero-name-color: var(--vp-c-brand-1);
+  --vp-home-hero-image-background-image: none;
+  --vp-home-hero-image-filter: none;
+}
+
+/* A decision record is a long read, so it gets a measure it can be read at. */
+.vp-doc {
+  line-height: 1.7;
+}
+
+.vp-doc h2 {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+/*
+ * The search box takes the room the navigation is not using.
+ *
+ * The default is a fixed-width button sitting against the menu, which on a wide
+ * screen leaves a long empty stretch between the title and the first nav item.
+ * Growing it fills that stretch and stops where the menu starts, so the width
+ * is decided by what is beside it rather than by a number.
+ *
+ * These three rules name classes rather than tokens, which is the one place
+ * this file reaches into the theme's own markup. Kept to a single block so a
+ * VitePress release that renames them breaks here, visibly, and nowhere else.
+ */
+.VPNavBarSearch {
+  flex-grow: 1;
+  justify-content: stretch;
+  padding-right: 16px;
+}
+
+.VPNavBarSearch #local-search,
+.VPNavBarSearch .DocSearch-Button {
+  width: 100%;
+}
+
+.VPNavBarSearch .DocSearch-Button-Container {
+  flex-grow: 1;
+  justify-content: flex-start;
+}

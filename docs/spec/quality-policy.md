@@ -92,7 +92,7 @@ about the request, which signet-pdf builds.
 A test. `tests/Project/ArchTest.php` is worth reading before adding a class,
 since three of its rules constrain where things live.
 
-For a change to behaviour, every surface in
-[CONTRIBUTING.md](../../CONTRIBUTING.md) that describes that behaviour. The
+For a change to behaviour, every surface `CONTRIBUTING.md` enumerates that
+describes that behaviour. The
 list is enumerated rather than summarised because "and any other relevant
 documentation" is exactly what let three of them go stale at once.
