@@ -48,6 +48,7 @@ document drifts away from the code it describes.
 | [0036](0036-the-signed-artefacts-are-reproducible.md) | The signed artefacts are reproducible, and their coherence is a gate |
 | [0037](0037-what-we-write-against-the-grammar.md) | What we write, against the specification's own grammar |
 | [0038](0038-the-envelope-is-versioned.md) | The envelope is versioned, so material sealed by signet-pdf still opens |
+| [0039](0039-the-core-lives-in-signet-pdf.md) | The core lives in signet-pdf, and this package is the Laravel adapter |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its
