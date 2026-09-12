@@ -5,51 +5,44 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Contracts\Config\Repository as Config;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateParser;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\CertificateVault;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\ReaderFactory;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureValidator;
-use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
-use LSNepomuceno\LaravelA1PdfSign\Signing\ArchiveExtender;
-use LSNepomuceno\LaravelA1PdfSign\Signing\Incremental\SignatureFieldReader;
-use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
-use LSNepomuceno\LaravelA1PdfSign\Support\Files;
-use LSNepomuceno\LaravelA1PdfSign\Support\Pem;
-use LSNepomuceno\LaravelA1PdfSign\Validation\IcpBrasilValidator;
-use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
+use LSNepomuceno\Signet\Certificates\{CertificateParser, CertificateVault, PemCertificateReader, ReaderFactory};
+use LSNepomuceno\Signet\Contracts\CertificateReader;
+use LSNepomuceno\Signet\Data\{Certificate, EncryptedCertificate, SignatureReport, SignedPdf};
+use LSNepomuceno\Signet\Exceptions\FileNotFoundException;
+use LSNepomuceno\Signet\IcpBrasil\Data\Report;
+use LSNepomuceno\Signet\Signet;
+use LSNepomuceno\Signet\Signing\PendingSignature;
+use LSNepomuceno\Signet\Support\Files;
+use LSNepomuceno\Signet\Validation\TrustStore;
 use SensitiveParameter;
 
 /**
- * Default implementation of the package's entry point.
+ * The entry point, and the whole of what this package adds to signet-pdf.
  *
- * Every argument the v1 helpers took as a required boolean is nullable here:
- * null means "use the configured default", so callers stop repeating
- * infrastructure decisions at every call site.
+ * Everything that reads or writes a byte delegates to `Signet`, which is
+ * resolved from the container already carrying the Laravel adapters. What is
+ * implemented here is what only a Laravel application can ask for: an upload,
+ * and a temporary directory the application configures
+ * (docs/decisions/0039-the-core-lives-in-signet-pdf.md).
+ *
+ * Every argument that was a required boolean in v1 is nullable: null means
+ * "use the configured default", so call sites stop repeating infrastructure
+ * decisions.
  */
 final readonly class A1PdfSignManager implements A1PdfSign
 {
     public function __construct(
         private Config $config,
-        private CertificateParser $parser,
-        private Container $container,
-        private ReaderFactory $readers,
+        private Signet $signet,
     ) {}
 
     public function newSignature(): PendingSignature
     {
-        return $this->container->make(PendingSignature::class);
+        return $this->signet->newSignature();
     }
 
     public function signFromFile(
@@ -59,17 +52,9 @@ final readonly class A1PdfSignManager implements A1PdfSign
         string $pdfPath,
         ?bool $usePathEnv = null,
     ): SignedPdf {
-        return $this->newSignature()
-                ->usingCertificate($this->read(Files::read($pfxPath), $password, $usePathEnv))
-                ->pdf($pdfPath)
-                ->sign();
+        return $this->signet->signFromFile($pfxPath, $password, $pdfPath, $usePathEnv);
     }
 
-    /**
-     * Delegates to the builder rather than reading here: PEM needs no
-     * conversion, so there is no reader selection to make and nothing this
-     * method could add over certificatePem().
-     */
     public function signFromPem(
         string $pemPath,
         #[SensitiveParameter]
@@ -77,12 +62,17 @@ final readonly class A1PdfSignManager implements A1PdfSign
         string $pdfPath,
         ?string $privateKeyPath = null,
     ): SignedPdf {
-        return $this->newSignature()
-                ->certificatePem($pemPath, $privateKeyPath, $password)
-                ->pdf($pdfPath)
-                ->sign();
+        return $this->signet->signFromPem($pemPath, $password, $pdfPath, $privateKeyPath);
     }
 
+    /**
+     * The one signing entry point signet-pdf cannot offer, because it takes a
+     * framework type.
+     *
+     * The upload is read into memory rather than written to a temporary file:
+     * a PKCS#12 bundle carries a private key, and the fewer places it is
+     * written the better.
+     */
     public function signFromUpload(
         UploadedFile $uploadedPfx,
         #[SensitiveParameter]
@@ -91,11 +81,15 @@ final readonly class A1PdfSignManager implements A1PdfSign
         ?bool $usePathEnv = null,
     ): SignedPdf {
         return $this->newSignature()
-                ->usingCertificate($this->read(self::uploadedBytes($uploadedPfx), $password, $usePathEnv))
-                ->pdf($pdfPath)
-                ->sign();
+            ->usingCertificate($this->read(self::uploadedBytes($uploadedPfx), $password, $usePathEnv))
+            ->pdf($pdfPath)
+            ->sign();
     }
 
+    /**
+     * Accepts an upload as well as a path, which is why it does not delegate:
+     * `Signet::encryptCertificate()` reads from disk.
+     */
     public function encryptCertificate(
         UploadedFile|string $uploadedOrPfxPath,
         #[SensitiveParameter]
@@ -114,12 +108,6 @@ final readonly class A1PdfSignManager implements A1PdfSign
         );
     }
 
-    /**
-     * encryptCertificate() stores the PEM bundle, so this parses it directly.
-     * The v1 helper wrote it to a .pfx and fed it to `openssl pkcs12 -in`,
-     * which expects binary PKCS#12 and always failed. See
-     * docs/history/v2-modernization.md.
-     */
     public function decryptCertificate(
         #[SensitiveParameter]
         string $hashKey,
@@ -129,70 +117,39 @@ final readonly class A1PdfSignManager implements A1PdfSign
         bool $isBase64 = false,
         ?bool $usePathEnv = null,
     ): Certificate {
-        return CertificateVault::withKey($hashKey)->open(
-            $this->parser,
-            $encryptedCertificate,
-            $password,
-            $isBase64,
-        );
+        return $this->signet->decryptCertificate($hashKey, $encryptedCertificate, $password, $isBase64);
     }
 
     public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport
     {
-        return $this->container->make(SignatureValidator::class)->validateFile($pdfPath, $trust);
+        return $this->signet->validate($pdfPath, $trust);
     }
 
     public function signatureFields(string $pdfPath): array
     {
-        return $this->container->make(SignatureFieldReader::class)->read(Files::read($pdfPath));
+        return $this->signet->signatureFields($pdfPath);
     }
 
     public function extendArchive(string $pdfPath): SignedPdf
     {
-        return $this->container->make(ArchiveExtender::class)->extend(
-            Files::read($pdfPath),
-            basename($pdfPath),
-        );
+        return $this->signet->extendArchive($pdfPath);
     }
 
     public function icpBrasil(
         string $pfxPath,
         #[SensitiveParameter]
         string $password = '',
-    ): IcpBrasilReport {
-        $bytes = Files::read($pfxPath);
-
-        // PEM needs no reader and no password: the identity is a public field
-        // of the certificate, and demanding a private key to read one would be
-        // asking for the wrong thing. Gated on content rather than on the
-        // extension, since PEM ships as .pem and .crt alike.
-        $bundle = Pem::hasCertificate($bytes)
-            ? $bytes
-            : $this->container->make(CertificateReader::class)->read($bytes, $password)->original;
-
-        $certificate = Pem::certificates($bundle)[0] ?? '';
-
-        return $this->container->make(IcpBrasilValidator::class)->validate(
-            $certificate,
-            $this->commonName($certificate),
-        );
+    ): Report {
+        return $this->signet->icpBrasil($pfxPath, $password);
     }
 
     /**
-     * The subject common name, for the cross-check against the CPF in the
-     * extension.
+     * The configured temporary directory, created if it is not there.
+     *
+     * signet-pdf has `TempDirectory` for the same job, and this stays because
+     * it answers to `a1-pdf-sign.temp_path` and to Laravel's own filesystem
+     * helpers, which is what a queued job on a fresh container needs.
      */
-    private function commonName(string $certificate): ?string
-    {
-        $parsed = openssl_x509_parse($certificate, false);
-
-        $name = is_array($parsed) && is_array($parsed['subject'] ?? null)
-            ? ($parsed['subject']['commonName'] ?? null)
-            : null;
-
-        return is_string($name) ? $name : null;
-    }
-
     public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string
     {
         $configured = $this->config->get('a1-pdf-sign.temp_path');
@@ -214,7 +171,25 @@ final readonly class A1PdfSignManager implements A1PdfSign
         string $password,
         ?bool $usePathEnv,
     ): Certificate {
-        return $this->readers->make(usePathEnv: $usePathEnv)->read($pfxContents, $password);
+        return $this->readers($usePathEnv)->read($pfxContents, $password);
+    }
+
+    /**
+     * A reader honouring a per-call override.
+     *
+     * `Signet::certificateReader()` takes no arguments, since the standalone
+     * package configures the choice once. Here the override is part of the
+     * published contract, so the factory is built rather than the accessor
+     * used, with the configured values as its defaults.
+     */
+    private function readers(?bool $usePathEnv): CertificateReader
+    {
+        return new ReaderFactory(
+            new CertificateParser(),
+            $this->signet->processes(),
+            $this->signet->config->certificate,
+            $this->signet->temp(),
+        )->make(usePathEnv: $usePathEnv);
     }
 
     /**
@@ -233,12 +208,11 @@ final readonly class A1PdfSignManager implements A1PdfSign
         ?bool $usePathEnv,
     ): Certificate {
         if (PemCertificateReader::looksLikePem($contents)) {
-            return $this->container->make(PemCertificateReader::class)->read($contents, $password);
+            return new PemCertificateReader(new CertificateParser())->read($contents, $password);
         }
 
         return $this->read($contents, $password, $usePathEnv);
     }
-
 
     /**
      * UploadedFile::get() returns false when the temporary upload is gone.

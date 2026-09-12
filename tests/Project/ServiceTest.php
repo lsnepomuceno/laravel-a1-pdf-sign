@@ -6,16 +6,16 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
-use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilIdentity;
-use LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignatureField;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
-use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
+use LSNepomuceno\Signet\Data\Certificate;
+use LSNepomuceno\Signet\Data\EncryptedCertificate;
+use LSNepomuceno\Signet\Data\SignatureField;
+use LSNepomuceno\Signet\Data\SignatureReport;
+use LSNepomuceno\Signet\Data\SignedPdf;
+use LSNepomuceno\Signet\IcpBrasil\Data\Identity;
+use LSNepomuceno\Signet\IcpBrasil\Data\Report;
+use LSNepomuceno\Signet\Signing\PendingSignature;
+use LSNepomuceno\Signet\Validation\TrustStore;
 
 it('binds the contract to the default manager as a singleton', function () {
     expect(app(A1PdfSignContract::class))->toBeInstanceOf(A1PdfSignManager::class)
@@ -135,10 +135,10 @@ it('lets the container swap the implementation', function () {
             return new SignedPdf('faked');
         }
 
-        public function icpBrasil(string $pfxPath, #[SensitiveParameter] string $password = ''): IcpBrasilReport
+        public function icpBrasil(string $pfxPath, #[SensitiveParameter] string $password = ''): Report
         {
-            return new IcpBrasilReport(
-                IcpBrasilIdentity::none(),
+            return new Report(
+                Identity::none(),
             );
         }
 

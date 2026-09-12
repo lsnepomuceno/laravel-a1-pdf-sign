@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
-use LSNepomuceno\LaravelA1PdfSign\Enums\CertificationLevel;
-use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\Signet\Data\SealPlacement;
+use LSNepomuceno\Signet\Enums\CertificationLevel;
+use LSNepomuceno\Signet\Enums\SignatureProfile;
 use PHPUnit\Framework\AssertionFailedError;
 
 /**

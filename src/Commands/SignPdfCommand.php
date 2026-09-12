@@ -6,11 +6,11 @@ namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
-use LSNepomuceno\LaravelA1PdfSign\Support\Files;
+use LSNepomuceno\Signet\Certificates\PemCertificateReader;
+use LSNepomuceno\Signet\Data\SignedPdf;
+use LSNepomuceno\Signet\Exceptions\InvalidPemContentException;
+use LSNepomuceno\Signet\Support\Files;
 
 class SignPdfCommand extends Command
 {

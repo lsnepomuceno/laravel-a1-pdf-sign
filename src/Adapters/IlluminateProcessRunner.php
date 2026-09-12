@@ -2,36 +2,34 @@
 
 declare(strict_types=1);
 
-namespace LSNepomuceno\LaravelA1PdfSign\Support;
+namespace LSNepomuceno\LaravelA1PdfSign\Adapters;
 
 use Illuminate\Process\Factory;
 use LogicException;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\{MissingBinaryException,
+use LSNepomuceno\Signet\Contracts\ProcessRunner;
+use LSNepomuceno\Signet\Exceptions\{MissingBinaryException,
     ProcessRunTimeException,
     ProcessUnavailableException};
 
 /**
- * The package's single point of shell-out.
+ * signet-pdf's shell-out, run through Laravel's process factory.
  *
- * An arch rule asserts nothing else in src/ touches the process factory or the
- * exec family, so every external command is auditable here. Only the legacy
- * certificate reader and the signature validator still need it; see
- * docs/decisions/0001-openssl-native-with-cli-fallback.md.
+ * **This is the adapter the whole split turns on.** signet-pdf ships
+ * `Support\SymfonyProcessRunner`, which builds a Symfony `Process` inline, and
+ * a class instantiated inline cannot be faked. Leaving the engine on its own
+ * default would keep invariant 8 written and make it dead: `Process::fake()`
+ * would quietly stop covering `Certificates\OpenSslCliCertificateReader` and
+ * `Validation\OpenSslCliSignatureVerifier`, and no consumer's suite would
+ * report it (docs/decisions/0039-the-core-lives-in-signet-pdf.md).
  *
- * It runs through Laravel's process factory rather than Symfony's Process
- * directly: the behaviour is identical (the factory builds the same object)
- * but a host application can fake it in its own tests, which is impossible
- * when the class is instantiated inline.
- *
- * **Being unable to run is not the same as running and failing**, and this is
- * the only place that can tell them apart. Downstream, `SignatureVerifier`
- * reads a non-zero exit as "this signature does not verify", which is correct
- * for a real verdict and catastrophic for an environment problem: a missing
- * binary used to make every signature report as invalid, silently. So the two
- * conditions that mean "no verdict was reached" raise their own exceptions
- * before the command is ever built.
+ * The behaviour is otherwise the engine's, including the distinction that
+ * matters most: **being unable to run is not the same as running and failing.**
+ * Downstream, verification reads a non-zero exit as "this signature does not
+ * verify", which is correct for a real verdict and catastrophic for an
+ * environment problem, so the two conditions that mean "no verdict was
+ * reached" raise before the command is built.
  */
-final readonly class ProcessRunner
+final readonly class IlluminateProcessRunner implements ProcessRunner
 {
     public function __construct(private Factory $factory) {}
 
@@ -41,6 +39,7 @@ final readonly class ProcessRunner
      * @throws ProcessUnavailableException When PHP cannot start a process.
      * @throws MissingBinaryException When the command's binary is not on PATH.
      */
+    #[\Override]
     public function run(string $command, bool $usePathEnv = false): string
     {
         $this->guardProcessesAreAvailable();
@@ -91,7 +90,7 @@ final readonly class ProcessRunner
     private function guardBinaryExists(string $command): void
     {
         // A faked factory runs nothing, so whether the binary exists is not a
-        // question about the host and asking it would defeat Process::fake(),
+        // question about the host, and asking it would defeat Process::fake(),
         // which this class exists to keep working.
         if ($this->factory->isRecording()) {
             return;
@@ -99,7 +98,7 @@ final readonly class ProcessRunner
 
         $binary = $this->binaryOf($command);
 
-        // A command built by this package always begins with a bare program
+        // A command built by the engine always begins with a bare program
         // name. Anything else, a path or an empty string, is left to the
         // process layer rather than guessed at here.
         if ($binary === null) {

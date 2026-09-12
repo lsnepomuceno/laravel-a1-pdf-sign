@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
+use LSNepomuceno\Signet\Contracts\ProcessRunner;
 
 /**
  * What a consumer actually receives from Packagist.
