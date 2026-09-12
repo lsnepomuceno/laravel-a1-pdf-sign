@@ -1,6 +1,13 @@
 name: CI
 
-# Pull requests targeting main, and main itself after a merge.
+# Pull requests targeting main or the 3.0 integration branch, and main itself
+# after a merge.
+#
+# `feat/v3` is there for the length of the 3.0 line (#313). The work arrives as
+# pull requests against that branch rather than against main, and without this
+# none of them is tested: a workflow filtered to main simply does not run, and
+# the pull request that finally merges the branch would be the first time CI
+# saw any of it.
 #
 # The second is not the duplication it looks like. A pull request is tested
 # against its own branch, not against main with it merged, so two branches that
@@ -13,7 +20,7 @@ name: CI
 # built.
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, feat/v3 ]
   push:
     branches: [ main ]
 
