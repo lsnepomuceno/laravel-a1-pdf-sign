@@ -6,7 +6,7 @@ namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
-use LSNepomuceno\LaravelA1PdfSign\Adapters\IlluminateProcessRunner;
+use LSNepomuceno\LaravelA1PdfSign\Adapters\{IlluminateProcessRunner, IlluminateSignatureTransport};
 use LSNepomuceno\LaravelA1PdfSign\Commands\{CheckEnvironmentCommand, SignPdfCommand, ValidatePdfSignatureCommand};
 use LSNepomuceno\LaravelA1PdfSign\Config\SignetConfigFactory;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
@@ -30,6 +30,10 @@ class LaravelA1PdfSignServiceProvider extends ServiceProvider
             static fn(Application $app): Signet => new Signet(
                 config: $app->make(SignetConfigFactory::class)->make(),
                 processes: $app->make(IlluminateProcessRunner::class),
+                transport: new IlluminateSignatureTransport(
+                    $app->make(\Illuminate\Http\Client\Factory::class),
+                    $app->make(SignetConfigFactory::class)->make()->signing,
+                ),
             ),
         );
 
