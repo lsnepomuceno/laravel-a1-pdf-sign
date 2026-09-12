@@ -11,7 +11,7 @@ built, and cited a §12 that never had a section.
 
 | | |
 |---|---|
-| [docs/spec/invariants.md](docs/spec/invariants.md) | Rules that break the product or the project when violated. **Read before touching `src/Signing`, `src/Validation` or the dependency list.** |
+| [docs/spec/invariants.md](docs/spec/invariants.md) | Rules that break the product or the project when violated. **Read before touching `src/Adapters`, `src/Io` or the dependency list.** |
 | [docs/spec/public-api.md](docs/spec/public-api.md) | What the package exposes, and what changing it costs. |
 | [docs/spec/quality-policy.md](docs/spec/quality-policy.md) | The gates a change has to pass, and why each sits where it does. |
 | [docs/spec/conventions.md](docs/spec/conventions.md) | How the code is written: reach for the framework before writing a helper, and use an enum where a set of values exists. |
@@ -32,9 +32,18 @@ drifts away from the code it describes.
 |---|---|
 | [docs/history/v2-modernization.md](docs/history/v2-modernization.md) | Where v1 stood, what the v2 plan proposed, how the roadmap was executed, and where the result diverged. |
 | [docs/history/decision-log.md](docs/history/decision-log.md) | Questions that were put and when they were answered, including the ones the plan left open. |
+| [docs/history/the-core-left.md](docs/history/the-core-left.md) | What the extraction to signet-pdf actually cost, against what 0039 predicted. |
 
 ## For consumers, not contributors
 
 [UPGRADE.md](UPGRADE.md) maps every removed or changed API to its replacement.
-[README.md](README.md) is the usage documentation, mirrored at
-<https://laravel-a1-pdf-sign.netlify.app>.
+[README.md](README.md) is the usage documentation.
+
+## The engine is not here
+
+Everything that signs, validates, reads a certificate or renders a seal is in
+[`lsnepomuceno/signet-pdf`](https://github.com/lsnepomuceno/signet-pdf), which
+has its own invariants, decisions and gates. A defect in any of those belongs
+there; a defect in the wiring, the config file, an artisan command, a disk
+source or the fake belongs here
+([0039](docs/decisions/0039-the-core-lives-in-signet-pdf.md)).
