@@ -121,3 +121,47 @@ it('hands back a document the calling code can use', function () {
         ->and($signed->size())->toBeGreaterThan(0)
         ->and($signed->save(A1PdfSign::tempPath(true, '.pdf')))->toBeFile();
 });
+
+it('records a two-phase signature, where the key never enters the process', function () {
+    $signing = A1PdfSign::fake();
+
+    $prepared = A1PdfSign::newSignature()
+        ->certificatePublic(LSNepomuceno\Signet\Testing\DebugCertificate::makePem(false)[0])
+        ->pdfContents('%PDF-1.4 a contract %%EOF')
+        ->prepare();
+
+    $signing->assertPrepared();
+
+    app(LSNepomuceno\Signet\Signet::class)->complete($prepared, 'a detached CMS');
+
+    $signing->assertCompleted('a detached CMS');
+});
+
+it('gates the profiles that need an authority, with no authority', function () {
+    // The seam invariant 9 turns on, used the way a consuming application
+    // would: substitute the transport and B-T becomes testable offline.
+    // The authority signs its own tokens, so it needs the process runner:
+    // it shells out to `openssl ts -reply` exactly as a real one would.
+    $authority = new LSNepomuceno\Signet\Testing\LocalTimestampAuthority(
+        app(LSNepomuceno\Signet\Contracts\ProcessRunner::class),
+    );
+
+    app()->instance(LSNepomuceno\Signet\Contracts\SignatureTransport::class, $authority);
+
+    config()->set('a1-pdf-sign.signature.timestamp.url', 'https://tsa.test/tsr');
+
+    [$pfxPath, $password] = debugCertificate();
+
+    $signed = new LSNepomuceno\Signet\Signet(
+        config: app(LSNepomuceno\LaravelA1PdfSign\Config\SignetConfigFactory::class)->make(),
+        transport: $authority,
+    )->newSignature()
+        ->certificate($pfxPath, $password)
+        ->pdf(resource('test.pdf'))
+        ->profile(SignatureProfile::PadesBT)
+        ->sign();
+
+    // A real RFC 3161 token, produced locally: the profile is gated rather
+    // than reported.
+    expect($signed->contents)->toContain('/ETSI.CAdES.detached');
+});

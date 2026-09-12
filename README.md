@@ -159,9 +159,28 @@ $signing->assertSealed();
 $signing->assertNothingSigned();
 ```
 
-It replaces the signer and the certificate reader in the container, so `certificate()` accepts any path and nothing
-is parsed, rendered or signed. The result is still a `SignedPdf`, so code calling `->contents`, `->size()` or
-`->save()` keeps working.
+It replaces the engine in the container, not just one binding, so `certificate()` accepts any path and nothing is
+parsed, rendered or signed. The result is still a `SignedPdf`, so code calling `->contents`, `->size()` or
+`->save()` keeps working. Two-phase signing records too: `assertPrepared()` and `assertCompleted()`.
+
+### The three other seams
+
+The fake covers signing. The rest of what the package touches is replaced with Laravel's own tools, which is most of
+the reason this package exists rather than just [signet-pdf](https://github.com/lsnepomuceno/signet-pdf):
+
+```php
+Process::fake();               // the openssl shell-out, for validation and legacy PFX files
+Http::fake();                  // the timestamp authority, OCSP and CRL
+Http::preventStrayRequests();  // proves a pades-b-b signature reaches no network at all
+Storage::fake('s3');           // signing from a disk and writing back to one
+```
+
+For the profiles above `pades-b-b`, substituting the transport with `Signet\Testing\LocalTimestampAuthority` gates
+them offline with real RFC 3161 tokens, rather than reporting them against a live authority:
+
+```php
+app()->instance(SignatureTransport::class, new LocalTimestampAuthority(app(ProcessRunner::class)));
+```
 
 
 ## Certificates
