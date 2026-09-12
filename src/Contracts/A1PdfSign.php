@@ -6,7 +6,13 @@ namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use Illuminate\Http\UploadedFile;
 use LSNepomuceno\Signet\Contracts\{PdfDestination, PdfSource};
-use LSNepomuceno\Signet\Data\{Certificate, EncryptedCertificate, SignatureField, SignatureReport, SignedPdf};
+use LSNepomuceno\Signet\Data\{Certificate,
+    EncryptedCertificate,
+    PreparedSignature,
+    SealPlacement,
+    SignatureField,
+    SignatureReport,
+    SignedPdf};
 use LSNepomuceno\Signet\IcpBrasil\Data\Report;
 use LSNepomuceno\Signet\Signing\PendingSignature;
 use LSNepomuceno\Signet\Validation\TrustStore;
@@ -95,7 +101,11 @@ interface A1PdfSign
      *
      * @throws \Throwable
      */
-    public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport;
+    public function validate(
+        string|PdfSource $pdfPath,
+        ?TrustStore $trust = null,
+        string $documentPassword = '',
+    ): SignatureReport;
 
     /**
      * The signature fields a document carries, filled or empty.
@@ -104,14 +114,14 @@ interface A1PdfSign
      *
      * @throws \Throwable
      */
-    public function signatureFields(string $pdfPath): array;
+    public function signatureFields(string|PdfSource $pdfPath): array;
 
     /**
      * Appends a fresh archive timestamp to an already signed document.
      *
      * @throws \Throwable
      */
-    public function extendArchive(string $pdfPath): SignedPdf;
+    public function extendArchive(string|PdfSource $pdfPath, string $documentPassword = ''): SignedPdf;
 
     /**
      * What a Brazilian signer is known by, read out of the certificate.
@@ -119,6 +129,38 @@ interface A1PdfSign
      * @throws \Throwable
      */
     public function icpBrasil(string $pfxPath, string $password = ''): Report;
+
+    /**
+     * Finishes a signature whose CMS was produced elsewhere.
+     *
+     * The other half of `newSignature()->…->prepare()`: the document is
+     * digested here, the digest is signed by something that holds the private
+     * key (an HSM, a remote service, a smartcard), and the detached CMS comes
+     * back to be written in. **The private key never enters this process.**
+     *
+     * @throws \Throwable
+     */
+    public function complete(
+        PreparedSignature $prepared,
+        string $cms,
+        ?Certificate $certificate = null,
+        string $documentPassword = '',
+    ): SignedPdf;
+
+    /**
+     * Adds an empty signature field for somebody else to fill later.
+     *
+     * A null placement leaves it invisible, which is the safe default: a
+     * rectangle is only meaningful against a page whose size the caller knows.
+     *
+     * @throws \Throwable
+     */
+    public function addSignatureField(
+        string|PdfSource $pdfPath,
+        string $name,
+        ?SealPlacement $placement = null,
+        string $documentPassword = '',
+    ): SignedPdf;
 
     /**
      * A document on a Laravel disk, as a source the builder accepts.

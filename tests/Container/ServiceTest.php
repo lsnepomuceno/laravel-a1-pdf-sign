@@ -10,6 +10,8 @@ use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
 use LSNepomuceno\Signet\Contracts\{PdfDestination, PdfSource};
 use LSNepomuceno\Signet\Data\Certificate;
 use LSNepomuceno\Signet\Data\EncryptedCertificate;
+use LSNepomuceno\Signet\Data\PreparedSignature;
+use LSNepomuceno\Signet\Data\SealPlacement;
 use LSNepomuceno\Signet\Data\SignatureField;
 use LSNepomuceno\Signet\Data\SignatureReport;
 use LSNepomuceno\Signet\Data\SignedPdf;
@@ -122,18 +124,36 @@ it('lets the container swap the implementation', function () {
         /**
          * @return list<SignatureField>
          */
-        public function signatureFields(string $pdfPath): array
+        public function signatureFields(string|PdfSource $pdfPath): array
         {
             return [];
         }
 
-        public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport
+        public function validate(string|PdfSource $pdfPath, ?TrustStore $trust = null, string $documentPassword = ''): SignatureReport
         {
             return new SignatureReport([]);
         }
 
-        public function extendArchive(string $pdfPath): SignedPdf
+        public function extendArchive(string|PdfSource $pdfPath, string $documentPassword = ''): SignedPdf
         {
+            return new SignedPdf('faked');
+        }
+
+        public function complete(
+            PreparedSignature $prepared,
+            string $cms,
+            ?Certificate $certificate = null,
+            string $documentPassword = '',
+        ): SignedPdf {
+            return new SignedPdf('faked');
+        }
+
+        public function addSignatureField(
+            string|PdfSource $pdfPath,
+            string $name,
+            ?SealPlacement $placement = null,
+            string $documentPassword = '',
+        ): SignedPdf {
             return new SignedPdf('faked');
         }
 

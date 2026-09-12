@@ -13,7 +13,12 @@ use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\LaravelA1PdfSign\Io\{DiskDestination, DiskSource, UploadedFileSource};
 use LSNepomuceno\Signet\Certificates\{CertificateParser, CertificateVault, PemCertificateReader, ReaderFactory};
 use LSNepomuceno\Signet\Contracts\{CertificateReader, PdfDestination, PdfSource};
-use LSNepomuceno\Signet\Data\{Certificate, EncryptedCertificate, SignatureReport, SignedPdf};
+use LSNepomuceno\Signet\Data\{Certificate,
+    EncryptedCertificate,
+    PreparedSignature,
+    SealPlacement,
+    SignatureReport,
+    SignedPdf};
 use LSNepomuceno\Signet\Exceptions\FileNotFoundException;
 use LSNepomuceno\Signet\IcpBrasil\Data\Report;
 use LSNepomuceno\Signet\Signet;
@@ -127,19 +132,46 @@ final readonly class A1PdfSignManager implements A1PdfSign
         return $this->signet->decryptCertificate($hashKey, $encryptedCertificate, $password, $isBase64);
     }
 
-    public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport
-    {
-        return $this->signet->validate($pdfPath, $trust);
+    public function validate(
+        string|PdfSource $pdfPath,
+        ?TrustStore $trust = null,
+        #[SensitiveParameter]
+        string $documentPassword = '',
+    ): SignatureReport {
+        return $this->signet->validate($pdfPath, $trust, $documentPassword);
     }
 
-    public function signatureFields(string $pdfPath): array
+    public function signatureFields(string|PdfSource $pdfPath): array
     {
         return $this->signet->signatureFields($pdfPath);
     }
 
-    public function extendArchive(string $pdfPath): SignedPdf
-    {
-        return $this->signet->extendArchive($pdfPath);
+    public function extendArchive(
+        string|PdfSource $pdfPath,
+        #[SensitiveParameter]
+        string $documentPassword = '',
+    ): SignedPdf {
+        return $this->signet->extendArchive($pdfPath, $documentPassword);
+    }
+
+    public function complete(
+        PreparedSignature $prepared,
+        string $cms,
+        ?Certificate $certificate = null,
+        #[SensitiveParameter]
+        string $documentPassword = '',
+    ): SignedPdf {
+        return $this->signet->complete($prepared, $cms, $certificate, $documentPassword);
+    }
+
+    public function addSignatureField(
+        string|PdfSource $pdfPath,
+        string $name,
+        ?SealPlacement $placement = null,
+        #[SensitiveParameter]
+        string $documentPassword = '',
+    ): SignedPdf {
+        return $this->signet->addSignatureField($pdfPath, $name, $placement, $documentPassword);
     }
 
     public function icpBrasil(

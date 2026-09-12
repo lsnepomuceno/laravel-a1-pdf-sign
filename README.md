@@ -281,6 +281,33 @@ A1PdfSign::newSignature()
 A field that is missing or already signed raises rather than falling back to appending. That fallback is the failure
 this prevents: a signature that is valid and in the wrong place, with the template's field still empty.
 
+### Placing the field in the first place
+
+`addSignatureField()` is the other half, for when nobody has laid the template out for you:
+
+```php
+A1PdfSign::addSignatureField($pdf, 'Manager')                                    // invisible
+A1PdfSign::addSignatureField($pdf, 'Manager', new SealPlacement(60, 400, 120, 40)); // placed
+```
+
+## Signing where the key is somewhere else
+
+For a private key that never enters the process, in an HSM, a remote service or a smartcard, signing splits in two:
+
+```php
+$prepared = A1PdfSign::newSignature()
+    ->certificatePublic($certificatePem)   // the public half is enough to reserve the space
+    ->pdf($contract)
+    ->prepare();
+
+$cms = $yourHsm->sign($prepared->digestValue);   // the only step that touches the key
+
+$signed = A1PdfSign::complete($prepared, $cms);
+```
+
+`$prepared` carries no key and no secret, so it survives a queue. That is usually the point: the digest goes to a
+worker with access to the signing device, and the document comes back finished.
+
 ## Certification and locks
 
 ```php
