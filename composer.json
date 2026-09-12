@@ -35,6 +35,7 @@
         "lsnepomuceno/signet-pdf": "^3.0"
     },
     "require-dev": {
+        "ext-openssl": "*",
         "ext-tokenizer": "*",
         "ergebnis/composer-normalize": "^2.52",
         "larastan/larastan": "^3.10",
