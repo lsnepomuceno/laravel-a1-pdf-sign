@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use LSNepomuceno\LaravelA1PdfSign\Enums\SignatureProfile;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\Signet\Enums\SignatureProfile;
+use LSNepomuceno\Signet\Exceptions\ProcessRunTimeException;
 
 it('describes what each profile requires', function () {
     expect(SignatureProfile::Legacy->isPades())->toBeFalse()

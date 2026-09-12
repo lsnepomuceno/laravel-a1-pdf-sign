@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign\Testing;
 
 use Illuminate\Container\Container;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\CertificateReader;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\PdfSigner;
-use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Enums\{CertificationLevel, SignatureProfile};
-use PHPUnit\Framework\Assert;
+use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\Signet\Contracts\{CertificateReader, PdfSigner};
+use LSNepomuceno\Signet\Data\Certificate;
+use LSNepomuceno\Signet\Enums\{CertificationLevel, SignatureProfile};
+use LSNepomuceno\Signet\Signet;
+use LSNepomuceno\Signet\Testing\{FakeCertificateReader, FakePdfSigner};
 
 /**
  * What a consuming application asserts about its own signing.
@@ -18,11 +19,10 @@ use PHPUnit\Framework\Assert;
  * and doing that for real means a PKCS#12 bundle in somebody else's repository
  * and a real CMS built for every test that happens to touch the flow.
  *
- * The mechanism was already there, since everything resolves through the
- * container. What was missing is knowing **what to assert**: the shape of the
- * result, which builder calls are terminal, what a profile is called. That is
- * what this encodes, and it stays correct when those shapes change, which a
- * hand-rolled double in another repository does not.
+ * The recorder and its assertions are signet-pdf's `Testing\FakePdfSigner`.
+ * What this adds is the Laravel half: installing it into the container so that
+ * the facade, the manager and anything resolving the engine all reach the fake
+ * rather than only the caller who built it.
  *
  * Install it with `A1PdfSign::fake()`, which returns this.
  */
@@ -31,14 +31,30 @@ final readonly class A1PdfSignFake
     public function __construct(private FakePdfSigner $signer) {}
 
     /**
-     * Replaces the signer in the container and hands back the recorder.
+     * Replaces the engine in the container with one that signs nothing.
+     *
+     * It rebuilds `Signet` rather than rebinding `PdfSigner`, because the
+     * engine resolves its own signer: swapping the contract alone would leave
+     * `newSignature()->…->sign()` reaching the real one. The manager is a
+     * singleton holding the engine, so it is forgotten here and rebuilt on
+     * next resolution.
      */
     public static function install(Container $container): self
     {
         $signer = new FakePdfSigner();
+        $reader = new FakeCertificateReader();
+
+        $engine = $container->make(Signet::class);
+
+        $container->instance(Signet::class, new Signet(
+            config: $engine->config,
+            signer: $signer,
+            certificateReader: $reader,
+        ));
 
         $container->instance(PdfSigner::class, $signer);
-        $container->instance(CertificateReader::class, new FakeCertificateReader());
+        $container->instance(CertificateReader::class, $reader);
+        $container->forgetInstance(A1PdfSign::class);
 
         return new self($signer);
     }
@@ -48,98 +64,55 @@ final readonly class A1PdfSignFake
      *
      * `sign()` refuses without one, and the fake signer never looks at it, so
      * this exists to let the flow run rather than to represent anything. It
-     * generates no key: `Testing\DebugCertificate` does, and paying for real
-     * key generation in every test that merely passes through a signing call is
-     * what this fake exists to avoid.
+     * generates no key: `Signet\Testing\DebugCertificate` does, and paying for
+     * real key generation in every test that merely passes through a signing
+     * call is what this fake exists to avoid.
      */
     public static function certificate(): Certificate
     {
         return new Certificate('faked, not a certificate', false, [], '');
     }
 
-    /**
-     * Something was signed, and optionally a document whose bytes contain the
-     * given fragment.
-     *
-     * A fragment rather than a path, because the signer is handed bytes and
-     * never learns where they came from. In practice a caller asserts on
-     * something the document says.
-     */
     public function assertSigned(?string $contains = null): void
     {
-        Assert::assertNotEmpty($this->signer->signed, 'Expected a document to be signed, and none was.');
-
-        if ($contains === null) {
-            return;
-        }
-
-        $found = false;
-
-        foreach ($this->signer->signed as $call) {
-            $found = $found || str_contains($call['document'], $contains);
-        }
-
-        // assertTrue rather than an early return followed by fail(): a test
-        // whose only path performs no assertion is reported as risky, which is
-        // how the first version of this class behaved on success.
-        Assert::assertTrue($found, "Expected a signed document containing [{$contains}], and none did.");
+        $this->signer->assertSigned($contains);
     }
 
     public function assertSignedTimes(int $times): void
     {
-        Assert::assertCount($times, $this->signer->signed);
+        $this->signer->assertSignedTimes($times);
     }
 
-    /**
-     * The negative, which is usually the assertion that catches a bug.
-     */
     public function assertNothingSigned(): void
     {
-        Assert::assertSame([], $this->signer->signed, 'Expected nothing to be signed, and something was.');
+        $this->signer->assertNothingSigned();
     }
 
-    /**
-     * The profile was the one intended.
-     *
-     * Null means the caller left it to configuration, which is a different
-     * statement from asking for the default explicitly, so it is asserted as
-     * what it is rather than resolved here.
-     */
     public function assertSignedWithProfile(SignatureProfile $profile): void
     {
-        $found = false;
-
-        foreach ($this->signer->signed as $call) {
-            $found = $found || $call['profile'] === $profile;
-        }
-
-        Assert::assertTrue($found, "Expected a document signed at [{$profile->value}], and none was.");
+        $this->signer->assertSignedWithProfile($profile);
     }
 
-    /**
-     * A certification, which has consequences a plain signature does not.
-     */
     public function assertCertified(?CertificationLevel $level = null): void
     {
-        $found = false;
-
-        foreach ($this->signer->signed as $call) {
-            $found = $found || ($call['certification'] !== null && ($level === null || $call['certification'] === $level));
-        }
-
-        Assert::assertTrue($found, $level === null
-            ? 'Expected a certified document, and none was.'
-            : "Expected a document certified at [{$level->value}], and none was.");
+        $this->signer->assertCertified($level);
     }
 
     public function assertSealed(): void
     {
-        $found = false;
+        $this->signer->assertSealed();
+    }
 
-        foreach ($this->signer->signed as $call) {
-            $found = $found || $call['sealed'];
-        }
+    /**
+     * Two-phase signing, where the private key never enters the process.
+     */
+    public function assertPrepared(int $times = 1): void
+    {
+        $this->signer->assertPrepared($times);
+    }
 
-        Assert::assertTrue($found, 'Expected a document signed with a visible seal, and none was.');
+    public function assertCompleted(?string $cms = null): void
+    {
+        $this->signer->assertCompleted($cms);
     }
 }

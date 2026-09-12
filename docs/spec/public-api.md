@@ -213,7 +213,7 @@ the issuer against a trust store: that decision stays with the application.
 `Data\SealPlacement` carries position, size and page. All three are read.
 
 ```php
-use LSNepomuceno\LaravelA1PdfSign\Data\SealPlacement;
+use LSNepomuceno\Signet\Data\SealPlacement;
 
 ->seal(placement: new SealPlacement(x: 155, y: 250, width: 50, page: 2))
 ->seal(placement: new SealPlacement(x: 155, y: 250, width: 50))                   // the last page

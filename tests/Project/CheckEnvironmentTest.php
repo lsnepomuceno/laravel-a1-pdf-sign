@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Process;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
+use LSNepomuceno\Signet\Contracts\SignatureTransport;
 
 /**
  * The diagnostic, and what it refuses to do.

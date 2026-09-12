@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 
 use Illuminate\Console\Command;
-use LSNepomuceno\LaravelA1PdfSign\Contracts\SignatureTransport;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\A1PdfSignException;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
+use LSNepomuceno\Signet\Contracts\ProcessRunner;
+use LSNepomuceno\Signet\Contracts\SignatureTransport;
+use LSNepomuceno\Signet\Exceptions\SignetException;
 use Throwable;
 
 /**
@@ -117,7 +117,7 @@ class CheckEnvironmentCommand extends Command
             $processes->run('openssl version');
 
             return true;
-        } catch (A1PdfSignException) {
+        } catch (SignetException) {
             return false;
         }
     }

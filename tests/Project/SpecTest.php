@@ -24,7 +24,7 @@ declare(strict_types=1);
  * helper needed by a second file, which is invisible to it under --parallel.
  */
 
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
+use LSNepomuceno\Signet\Exceptions\FileNotFoundException;
 
 /**
  * Every documentation file this content points at, as an absolute path.
@@ -304,21 +304,21 @@ it('resolves every symbol of this package cited anywhere in it', function () {
 it('finds a symbol reference that has stopped resolving', function () {
     // The check has to be able to fail, and the citation forms it must catch
     // are the ones the comments here actually use.
-    expect(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner'))->toBeTrue()
-        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner::sign'))->toBeTrue()
-        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\RenamedAwayLongAgo'))->toBeFalse()
-        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\Signing\IncrementalSigner::methodThatWent'))->toBeFalse();
+    expect(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager'))->toBeTrue()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager::signFromFile'))->toBeTrue()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\RenamedAwayLongAgo'))->toBeFalse()
+        ->and(specSymbolResolves('LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager::methodThatWent'))->toBeFalse();
 });
 
 it('reads a symbol out of prose the way a comment writes it', function () {
     $cited = specSymbolReferences(
-        'See \LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner and '
-        . 'LSNepomuceno\LaravelA1PdfSign\Support\Bytes::overwrite() for the rest.',
+        'See \LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign and '
+        . 'LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager::tempPath() for the rest.',
         'somewhere',
     );
 
     expect(array_keys($cited))->toBe([
-        'LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner',
-        'LSNepomuceno\LaravelA1PdfSign\Support\Bytes::overwrite',
+        'LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign',
+        'LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager::tempPath',
     ]);
 });

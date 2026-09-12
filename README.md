@@ -45,13 +45,13 @@ being installed**, and a minimal container commonly has the first without the se
 `MissingBinaryException`, and an environment where `proc_open` is disabled raises `ProcessUnavailableException`.
 Neither is reported as a signature that failed to verify.
 
-Every exception this package raises implements `Exceptions\A1PdfSignException`, so an application can handle them
+Every exception this package raises implements `Exceptions\SignetException`, so an application can handle them
 as a group rather than by name:
 
 ```php
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\A1PdfSignException;
+use LSNepomuceno\Signet\Exceptions\SignetException;
 
-$exceptions->report(function (A1PdfSignException $e) { … });
+$exceptions->report(function (SignetException $e) { … });
 ```
 
 The classes stay granular beneath it. `InvalidCertificatePasswordException` is the one worth catching on its own,
