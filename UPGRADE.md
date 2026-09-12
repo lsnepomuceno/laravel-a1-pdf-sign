@@ -1,5 +1,78 @@
 # Upgrading
 
+## From 2.6.0 to 2.7.0
+
+**A certificate sealed by `lsnepomuceno/signet-pdf` opens here now.** One
+required extension is new and one return type widened. Nothing this package
+writes has changed, so material already stored stays exactly as it is.
+
+### Material sealed by signet-pdf opens here
+
+`Certificates\CertificateVault` seals a certificate with Laravel's envelope,
+AES-128-CBC under a 16-byte key, and `lsnepomuceno/signet-pdf` reproduced that
+format byte for byte so an application could move between the two without
+re-encrypting a certificate whose plaintext it no longer holds.
+
+**Its 2.0 moved new material onto XChaCha20-Poly1305**, under a 32-byte key and
+a `signet.v2.` envelope. The guarantee then held in one direction only: what
+this package writes still opened there, and what that package writes did not
+open here at all. `withKey()` refused the key outright, since a 32-byte string
+is not a valid AES-128-CBC key.
+
+`withKey()` now picks the reader from the key's length: 16 bytes is this
+package's own envelope, 32 is signet-pdf's. Those are the only two lengths
+either package has ever issued, so the mapping is total
+([0038](docs/decisions/0038-the-envelope-is-versioned.md)).
+
+**`seal()` is unchanged** and still writes Laravel's envelope. This is a
+compatibility fix rather than a migration: nothing has to be re-encrypted,
+re-sized or re-stored.
+
+### `ext-sodium` is now required
+
+It ships with PHP and has since 7.2, so on most systems this changes nothing. A
+build compiled without it now fails at `composer install` rather than at
+runtime.
+
+### `CertificateVault::encrypter()` returns a contract
+
+It returns `Illuminate\Contracts\Encryption\StringEncrypter` where it returned
+`Illuminate\Encryption\Encrypter`. **This breaks a call site that type-hints the
+concrete class**, and it is the only contract change in the release. Nothing
+inside this package calls it.
+
+The fuller `Encrypter` contract was deliberately not implemented: satisfying it
+means offering `decrypt($payload, $unserialize = true)`, and an `unserialize()`
+path over supplied bytes is not a trade worth making to solve a compatibility
+problem.
+
+### A key of any other length is refused
+
+`withKey()` raises `InvalidCertificateContentException` for a key that is
+neither 16 nor 32 bytes, where it previously left the refusal to Laravel's
+encrypter. A key is never padded or truncated into one of the two lengths.
+
+### Worth knowing, and not breaking
+
+- **The nightly mutation run was measuring nothing.** `--parallel` and
+  `--mutate` do not compose in this version of Pest: the suite runs, every test
+  passes, and no score is produced at all. Reproduced in a container at sixteen
+  processes and on a runner at four, so it is the flag rather than the
+  environment. It is gone from `composer test:mutate` and from the workflow.
+- **The mutation workflow installed none of the verification tools** that
+  `main_action.yml` installs. A test that cannot run cannot kill a mutation, so
+  an absent tool does not merely skip: every mutation that test would have
+  caught was reported as surviving, and the floors were measured against a suite
+  quietly smaller than the one a pull request runs. The four installs are now
+  `main_action.yml`'s, byte for byte, so a diff between the files shows drift.
+- **The floors are provenance rather than numbers** until a serial run with the
+  full toolchain replaces them. The rule is unchanged in the direction that
+  matters: raise a floor after measuring, never lower one to make a run pass.
+- The `$isBase64` parameter on `CertificateVault::open()` is covered for the
+  first time, including the caller who says a stored bundle is base64 and is
+  wrong: the strict decode fails and the raw value is kept rather than the
+  certificate lost.
+
 ## From 2.5.0 to 2.6.0
 
 **Three defects produced wrong output or a wrong answer in shipped code**, and

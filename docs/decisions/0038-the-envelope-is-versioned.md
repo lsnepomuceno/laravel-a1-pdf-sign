@@ -32,7 +32,7 @@ is this package's own, 32 is signet-pdf's. Those are the only two lengths either
 package has issued, so the mapping is total, and any other length is refused
 rather than padded into one of them.
 
-**`create()` is unchanged and still writes Laravel's envelope.** This is a
+**`seal()` is unchanged and still writes Laravel's envelope.** This is a
 compatibility fix, not a migration: every application storing material from this
 package keeps storing exactly what it stored, and nothing has to be re-encrypted
 or re-sized. Adopting the new scheme here is a separate decision with a
