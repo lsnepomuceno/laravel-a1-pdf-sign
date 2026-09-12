@@ -1,150 +1,102 @@
 # Invariants
 
 Rules that break the product, or the project, when violated. Short on purpose:
-this file is meant to be read whole before touching `src/Signing`, `src/Validation`
+this file is meant to be read whole before touching `src/Adapters`, `src/Io`
 or the dependency list.
 
-Everything here is enforced by a test, a tool, or an explicit review step. Where
-it is not, that is noted.
+Everything here is enforced by a test, a tool, or an explicit review step.
+
+**Most of what used to be here is signet-pdf's now.** Appending a revision
+rather than rebuilding, operating on the last match, never assuming whitespace
+in PDF syntax, parsing ASN.1 by declared length, leaving `K_PATH_FONTS`
+undefined: every one of those governs code that no longer lives in this
+repository. They are in
+[signet-pdf's own invariants](https://github.com/lsnepomuceno/signet-pdf/blob/main/docs/spec/invariants.md),
+and a change here cannot violate them
+([0039](../decisions/0039-the-core-lives-in-signet-pdf.md)).
+
+What follows is what a wrapper can still break.
 
 ---
 
-## 1. `ddn/sapp` is never depended on, and never copied from
+## 1. The adapters are bound, always
 
-**`ddn/sapp` is LGPL-3.0-or-later; this package is MIT.**
+`Signet\Signet` resolves its own defaults when nothing is injected:
+`Support\SymfonyProcessRunner` and `Signing\Cades\HttpTransport`. Both work.
+Both are wrong here.
 
-Porting or adapting SAPP code into `src/` is a licence violation, since an adapted
-excerpt is still a derivative work and would drag the whole package into LGPL.
+**A class built inline cannot be faked.** If the provider stops injecting
+`Adapters\IlluminateProcessRunner`, `Process::fake()` silently stops covering
+the CLI certificate reader and the signature verifier, and no consuming
+application's suite reports it. The same holds for
+`Adapters\IlluminateSignatureTransport` and `Http::fake()`.
 
-Studying the technique is legitimate: algorithms and file-format mechanics are
-not protected by copyright, and incremental update is specified in ISO 32000-1
-§7.5.6 and §12.8, a public standard. The implementation is clean-room, written
-from that standard. In practice: keep ISO 32000-1 open, not `vendor/ddn/sapp`.
+This is the whole reason the package exists rather than a `composer require`
+line in the application, so a regression here is not a small one.
 
-**It is not taken as a dependency either**, not in `require`, not in
-`require-dev`, not as `suggest`. That would be legal, since LGPL permits library
-use without contaminating the consumer, but it is ruled out: it is a legacy
-project and we would inherit its maintenance.
-
-*Enforced by* `tests/Project/ArchTest.php` (`no trace of SAPP`) and
-`composer-dependency-analyser.php`.
-
----
-
-## 2. Signing appends a revision, never rebuilds the document
-
-`Signing\IncrementalSigner` writes a new revision onto the end of the file
-(ISO 32000-1 §7.5.6). The original bytes survive byte for byte.
-
-This is the single most important behaviour in the package. It is what keeps
-annotations, form fields and every earlier signature intact, and it is what
-closes [TCPDF#430](https://github.com/tecnickcom/TCPDF/issues/430). v1 re-imported
-every page through FPDI and silently destroyed all three.
-
-Any change that makes signing produce a document rather than extend one is a
-regression regardless of what the tests say.
-
-*Enforced by* the multi-signature tests, and independently by poppler's `pdfsig`
-on `samples/six-signatures.pdf`.
+*Enforced by* `tests/Console/CheckEnvironmentTest.php`, which asserts that a
+faked process is what the environment check sees, and
+`tests/Adapters/TransportTest.php`, which asserts the same for HTTP.
 
 ---
 
-## 3. Always operate on the *last* match
+## 2. Network access stays behind the injected transport
 
-`preg_match` finds the **first** `/ByteRange` or `/Contents`, which in a
-multi-signature document belongs to an **earlier signature**. Writing there
-corrupts it.
+`Signet\Contracts\SignatureTransport` is the TSA, OCSP and CRL client. **The
+host application owns that SSRF surface**, and in a Laravel application owning
+it means `Http::fake()`, `preventStrayRequests()`, the application's proxy, its
+CA bundle, its middleware and its logging.
 
-Every read of those structures uses `preg_match_all` + `end()`: `readLast()`,
-`lastContentsOffset()`.
+Nothing else in `src/` opens a connection, and nothing may.
 
-A bug of exactly this shape passed the entire suite and was caught only by
-`pdfsig`: the archive-timestamp revision located the *signature's* placeholder
-and overwrote it.
-
-*Enforced by* review and by the poppler cross-check. The suite alone did not
-catch it once.
+*Enforced by* `tests/Adapters/TransportTest.php`, including the case that says
+a `pades-b-b` signature reaches no network at all.
 
 ---
 
-## 4. Never assume whitespace in PDF syntax, or key order
+## 3. The config file holds scalars, and nothing else
 
-tc-lib-pdf-sign emits `/Contents<`. TCPDF emitted `/Contents <`. Both are valid.
+`config/a1-pdf-sign.php` is read by `Config\SignetConfigFactory` and turned
+into `Signet\Config\SignetConfig` at resolution time.
 
-Match with `\s*`. A literal `'/Contents <'` is the exact form of the defect in
-rule 3.
+**A config file carrying an object cannot be cached.** `config:cache`
+serialises the array; an enum instance or a readonly object fails there, and it
+fails in the consuming application rather than here, on a command nobody runs
+until deployment.
 
-**This applies to reading at least as hard as to writing**, and that half was
-learned later. `Validation\PdfSignatureExtractor` matched `/ByteRange\[0 `
-literally, which is what this package emits and one of several shapes a
-document can carry: pyHanko writes `/ByteRange [0 9875 15069 565]`, so the
-extractor found no signatures and a valid document raised as unsigned.
-
-The same assumption reached key order. This package writes `/Type`,
-`/SubFilter` and `/ByteRange` ahead of the `/Contents` placeholder, so a
-window looking *backwards* from the `/ByteRange` found them. pyHanko writes
-`/Contents` first, which puts `/SubFilter` after it. Order inside a dictionary
-carries no meaning, so both are correct and only one was being read.
-
-*Enforced by* `tests/Validation/ForeignSignatureTest.php`, which validates a document
-signed by pyHanko rather than by this package.
+*Enforced by* `tests/Container/ConfigTest.php`.
 
 ---
 
-## 5. Parse ASN.1 by declared length, never by trimming
+## 4. Only `Adapters\IlluminateProcessRunner` spawns a child process
 
-`Validation\DerReader` and `Pkcs7Reader` read each structure by the length its
-header declares. Trimming trailing `0` bytes cuts legitimate DER.
+Every shell-out goes through the one audited adapter, built on
+`Illuminate\Process\Factory`. Two callers legitimately reach a process, both
+inside signet-pdf and both through the contract: the legacy PFX reader and the
+signature verifier.
 
----
-
-## 6. `K_PATH_FONTS` stays undefined
-
-tc-lib-pdf and TCPDF 6 read it in different formats, and defining it globally
-**kills TCPDF silently**, with no error and no output.
-
-The package appends revisions to bytes it already has and never emits a
-document, so no font definition is ever loaded and nothing needs the constant.
+*Enforced by* `tests/Project/ArchTest.php` (`only the shell adapter opens
+processes`).
 
 ---
 
-## 7. `Certificates\ReaderFactory` holds the container, not the `A1PdfSign` contract
+## 5. Verification instruments never reach production
 
-Resolving the contract inside the factory creates a cycle that recurses until
-the process **segfaults with no output** (exit 139), with no exception, no stack
-trace, nothing to read.
+veraPDF, qpdf, `pdfsig`, `pdftoppm`, Ghostscript, pyHanko and Arlington's
+`testgrammar` are measuring instruments. Nothing in `src/` may invoke one, and
+nothing built for testing may ship.
 
----
+The rule stays even though the tools are no longer installed anywhere near this
+package: it is about what ships, not about what is present
+([0026](../decisions/0026-verification-tools-are-instruments.md)).
 
-## 8. Only `Support\ProcessRunner` spawns a child process
-
-Every shell-out goes through the one audited helper, built on
-`Illuminate\Process\Factory` so a consuming application can `Process::fake()` it.
-
-Two places legitimately reach a process, both through the runner:
-`Certificates\OpenSslCliCertificateReader` (legacy PFX under OpenSSL 3.x) and
-`Validation\SignatureVerifier`.
-
-*Enforced by* `tests/Project/ArchTest.php` (`only the shell helper opens processes`).
+*Enforced by* `tests/Project/ArchTest.php` and
+`tests/Project/DistributionTest.php`, which asks `git archive` what a release
+actually contains.
 
 ---
 
-## 9. Network access stays behind the injected transport
-
-`Contracts\SignatureTransport` is the TSA / OCSP / CRL client, implemented by
-`Signing\Cades\HttpTransport`. The host application owns that SSRF surface, so
-nothing else in `src/` opens a connection.
-
-**It is an interface, and that is load-bearing.** Everything the profiles above
-`pades-b-b` add rides through it, so a suite that cannot substitute it can only
-test them against a live authority: reported, never blocking.
-`Testing\LocalTimestampAuthority` is the substitute, and it is what lets B-T,
-B-LT, B-LTA and the archive chain be gated
-(docs/decisions/0027-the-transport-is-a-seam.md).
-
----
-
-## 10. PSR-4 autoloading is case-sensitive
+## 6. PSR-4 autoloading is case-sensitive
 
 `InvalidX509PrivateKeyException` has a capital `X`. A file named
 `Invalidx509...` autoloads on macOS and fails in production.

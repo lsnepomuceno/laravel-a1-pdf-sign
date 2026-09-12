@@ -3,6 +3,9 @@
 <p align="center">
   Digital signatures for Laravel, from PKCS#12 or PEM, with PAdES profiles, long-term validation
   <br>and cryptographic verification of signatures a document already carries.
+  <br><br>The signing engine is <a href="https://github.com/lsnepomuceno/signet-pdf"><b>signet-pdf</b></a>.
+  This package is the Laravel half: the container, the config,
+  <br><code>Storage</code> disks as a signing source, and everything faked with the framework's own tools.
 </p>
 
 <p align="center">
@@ -20,13 +23,13 @@
 </p>
 
 <p align="center">
-  <a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/home"><b>Documentation</b></a>
+  <a href="https://lsnepomuceno.github.io/laravel-a1-pdf-sign/"><b>Documentation</b></a>
   &nbsp;·&nbsp;
-  <a href="https://laravel-a1-pdf-sign.netlify.app/docs/2.x/release-notes">Release notes</a>
+  <a href="CHANGELOG.md">Release notes</a>
   &nbsp;·&nbsp;
   <a href="UPGRADE.md">Upgrading</a>
   &nbsp;·&nbsp;
-  <a href="samples/README.md">Signed samples</a>
+  <a href="https://github.com/lsnepomuceno/signet-pdf">The engine</a>
 </p>
 
 ---
@@ -106,7 +109,6 @@ A1PdfSign::newSignature()
 
 All of these hold the whole document in memory. For one too large for that, the engine takes a stream: see [signet-pdf](https://github.com/lsnepomuceno/signet-pdf).
 
-[Signing a document →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/sign-pdf-file)
 
 ## What it does
 
@@ -228,7 +230,6 @@ $certificate = A1PdfSign::decryptCertificate($stored->hash, $stored->certificate
 **The hash is the key**, so keep it somewhere other than the ciphertext it opens. Without it the pair cannot be read
 back, by you or by anyone else.
 
-[Working with certificates →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/working-with-certificate)
 
 ## PAdES profiles
 
@@ -256,7 +257,7 @@ with no key material anywhere near it.
 A1PdfSign::extendArchive($path);
 ```
 
-[Signature profiles →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/signature-profiles)
+[Profiles, in detail →](https://github.com/lsnepomuceno/signet-pdf/blob/main/docs/guide/profiles.md)
 
 ## Signing into a template's own fields
 
@@ -378,7 +379,6 @@ $report->isTrusted();   // ?bool. null when no store was given: nobody was asked
 >
 > An untrusted signature is not an invalid one: the two questions are independent.
 
-[Validating a signature →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/validating-signature)
 
 ## ICP-Brasil
 
@@ -424,36 +424,34 @@ php artisan a1-pdf-sign:check
 
 `pdf:add-field` places an empty field for somebody else to sign later, and leaves it invisible when no rectangle is given. `pdf:extend` renews a B-LTA document before its archive timestamp ages out, which is the one operation here that a scheduler calls rather than a request.
 
-[Commands →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/commands)
 
 ## Compatibility
 
-| Package | Laravel | PHP | Documentation |
+| Package | Laravel | PHP | Engine |
 |---|---|---|---|
-| **^2** | ^13 | 8.4 – 8.5 | [2.x](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/home) |
-| ^1 | ^9 – ^12 | 8.1 – 8.4 | [1.x](https://laravel-a1-pdf-sign.netlify.app/docs/1.x/home) |
-| ^0 | ^8 | ^7.4 | [0.x](https://laravel-a1-pdf-sign.netlify.app/docs/0.x/home) |
+| **^3** | ^13 | 8.4.1 – 8.5 | [signet-pdf ^3](https://github.com/lsnepomuceno/signet-pdf) |
+| ^2 | ^13 | 8.4 – 8.5 | in-package |
+| ^1 | ^9 – ^12 | 8.1 – 8.4 | in-package |
+| ^0 | ^8 | ^7.4 | in-package |
 
-Laravel 12 is not supported by v2, despite reaching PHP 8.5: it requires `symfony/process ^7.2` while the test
-toolchain requires `^8.1`, so the two cannot be installed together.
+Laravel 12 is not supported, despite reaching PHP 8.5: it requires `symfony/process ^7.2` while the test toolchain
+requires `^8.1`, so the two cannot be installed together.
 
-Coming from 1.x? The v1 surface is **gone, not deprecated**, and [UPGRADE.md](UPGRADE.md) maps every removed API to its
-replacement.
+**v3 needs `intervention/image ^4`**, which arrives through signet-pdf. An application pinned to `^3` cannot install
+it.
+
+Coming from 2.x? Every class moved to the `LSNepomuceno\Signet\` namespace and nothing else changed.
+[UPGRADE.md](UPGRADE.md) has the table.
 
 ## Verified, not asserted
 
 Signed output is checked against tools that were not written here, because a validator sharing its assumptions with the
-signer proves very little:
+signer proves very little: **poppler** `pdfsig` reads the output independently, **veraPDF** decides PDF/A and PDF/UA
+conformance, **pyHanko** enforces `/DocMDP`, and **qpdf** checks structure.
 
-| | |
-|---|---|
-| **poppler** `pdfsig` | reads the samples independently, and has caught defects the suite passed straight through |
-| **veraPDF** | decides PDF/A and PDF/UA conformance, in CI and in the development image |
-| **pyHanko** | enforces `/DocMDP`, so a certification broken by a later revision is caught by something that is not us |
-| **qpdf** | checks structure, and reads back documents this package encrypted |
-
-[`samples/`](samples/README.md) holds one signed document per profile plus a six-signature document. Open them in any
-reader to see what the package produces.
+All four run in [signet-pdf](https://github.com/lsnepomuceno/signet-pdf), which is where the bytes are produced. They
+measure what a writer writes, and this package writes none: what it is measured on is whether the wiring, the adapters
+and the config carry your instructions through unchanged.
 
 ## Contributing
 

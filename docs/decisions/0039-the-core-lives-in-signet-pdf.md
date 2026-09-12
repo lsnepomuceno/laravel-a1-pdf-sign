@@ -116,6 +116,23 @@ case signs a real document end to end.
 
 ## Outcome
 
-Written back when the line ships: what actually moved, what the wrapper turned
-out to need that this record did not anticipate, and whether the adapter stayed
-as small as it looks here.
+**The engine left in one pull request rather than the two this record planned**,
+and a measurement is why: `intervention/image ^3.11` here against `^4.3` in
+signet, so the two packages cannot be installed together and an adapter cannot
+be written beside the code it replaces. The work landed on an integration
+branch instead, with `main` staying on 2.7.0 until the end.
+
+25,378 deletions against 1,400 insertions. The adapter is smaller than this
+record implied: eight files of wiring, three adapters, three IO classes, six
+commands and a fake.
+
+Three things the record did not anticipate, all recorded in
+[the history entry](../history/the-core-left.md): the manager builds
+`ReaderFactory` by hand because the engine's accessor takes no per-call
+override, the fake has to replace the engine rather than a binding, and type
+coverage was a CI-only gate that this work was the first to trip.
+
+**The argument about the process adapter was proved by a test rather than by
+prose.** `tests/Console/CheckEnvironmentTest.php` failed the moment the
+engine's own runner was resolved, which is the clearest statement of why the
+wrapper exists that this project has.

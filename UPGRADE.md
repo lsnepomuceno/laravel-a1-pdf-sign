@@ -1,5 +1,133 @@
 # Upgrading
 
+## From 2.7.0 to 3.0.0
+
+**The engine is a separate package now.** Everything that signs, validates,
+reads a certificate or renders a seal lives in
+[`lsnepomuceno/signet-pdf`](https://github.com/lsnepomuceno/signet-pdf), which
+is the same code extracted and made framework free. This package is the Laravel
+adapter over it: the container wiring, the config file, four adapters putting
+Laravel's own infrastructure behind signet's contracts, the entry points that
+take framework types, six artisan commands and the fake
+([0039](docs/decisions/0039-the-core-lives-in-signet-pdf.md)).
+
+**Every import changes. Nothing else has to.** The facade, its methods, their
+arguments and the config keys are what they were.
+
+### Before you start
+
+Two things fail at `composer install` rather than at runtime:
+
+- **PHP 8.4.1** is the floor, up from 8.4.
+- **Intervention Image 4**, up from 3.11, arrives as a dependency of
+  signet-pdf. An application pinned to `^3` cannot install this release. The
+  seal renders identically; the API that moved is Intervention's, not this
+  package's.
+
+`tecnickcom/tc-lib-pdf-sign`, `symfony/http-foundation` and four extensions
+leave `require`. If your application was relying on any of them arriving
+through this package, declare them yourself.
+
+### The rename, class by class
+
+Mechanical, and `sed` does most of it:
+
+```bash
+grep -rl 'LSNepomuceno\\LaravelA1PdfSign' app/ | xargs sed -i \
+    -e 's#LaravelA1PdfSign\\\(Data\|Enums\|Exceptions\|Validation\|Signing\|Certificates\|Seal\|Support\)\\#Signet\\\1\\#g'
+```
+
+| 2.x | 3.0 |
+|---|---|
+| `LSNepomuceno\LaravelA1PdfSign\Data\*` | `LSNepomuceno\Signet\Data\*` |
+| `…\Enums\SignatureProfile`, `CertificationLevel`, `FontSize`, … | `LSNepomuceno\Signet\Enums\*` |
+| `…\Exceptions\*` | `LSNepomuceno\Signet\Exceptions\*` |
+| `…\Exceptions\A1PdfSignException` | `LSNepomuceno\Signet\Exceptions\SignetException` |
+| `…\Validation\TrustStore` | `LSNepomuceno\Signet\Validation\TrustStore` |
+| `…\Signing\PendingSignature` | `LSNepomuceno\Signet\Signing\PendingSignature` |
+| `…\Certificates\CertificateVault` | `LSNepomuceno\Signet\Certificates\CertificateVault` |
+| `…\Testing\DebugCertificate` | `LSNepomuceno\Signet\Testing\DebugCertificate` |
+| `…\Support\Files`, `Pem`, `Bytes`, … | `LSNepomuceno\Signet\Support\*` |
+
+Four moved further than a namespace, because the regional layer became one of
+its own:
+
+| 2.x | 3.0 |
+|---|---|
+| `…\Data\IcpBrasilReport` | `LSNepomuceno\Signet\IcpBrasil\Data\Report` |
+| `…\Data\IcpBrasilIdentity` | `LSNepomuceno\Signet\IcpBrasil\Data\Identity` |
+| `…\Enums\IcpBrasilCertificateType` | `LSNepomuceno\Signet\IcpBrasil\Enums\CertificateType` |
+| `…\Enums\IcpBrasilFinding` | `LSNepomuceno\Signet\IcpBrasil\Enums\Finding` |
+
+**The five engine contracts are signet's**, and the local copies are deleted:
+`PdfSigner`, `SealRenderer`, `SignatureValidator`, `CertificateReader` and
+`SignatureTransport` all live under `LSNepomuceno\Signet\Contracts\`. An
+application binding its own implementation binds against those instead.
+
+`Contracts\A1PdfSign` stays where it is. It is this package's own surface.
+
+### What stays exactly as it was
+
+- `A1PdfSign::signFromFile()`, `signFromPem()`, `signFromUpload()`,
+  `encryptCertificate()`, `decryptCertificate()`, `validate()`,
+  `signatureFields()`, `extendArchive()`, `icpBrasil()`, `newSignature()`,
+  `tempPath()`
+- every key in `config/a1-pdf-sign.php`, and every env variable
+- `A1PdfSign::fake()` and its assertions
+- `php artisan pdf:sign`, `pdf:validate-signature`, `a1-pdf-sign:check`
+- **encrypted certificates.** The vault still seals with Laravel's encrypter
+  under a 16-byte per-certificate key, so material stored by 2.x opens
+  unchanged and nothing has to be re-encrypted
+
+### One renamed property
+
+`EncryptedCertificate::$hashKey` is `$hash`. It is the same value, and it is
+still what `decryptCertificate()` takes first.
+
+### `pdfFromDisk()` is `from()` plus a source
+
+The builder is signet's now, and it takes a `PdfSource` rather than knowing
+what a Laravel disk is:
+
+```php
+// 2.x
+->pdfFromDisk('s3', 'contracts/deal.pdf')
+
+// 3.0
+->from(A1PdfSign::fromDisk('s3', 'contracts/deal.pdf'))
+```
+
+The trade is worth stating: the signed document can now go **back** to a disk
+without touching the local filesystem, which 2.x could not do.
+
+```php
+->sign()->writeTo(A1PdfSign::toDisk('s3', 'contracts/deal-signed.pdf'));
+```
+
+### What you gain by upgrading
+
+Everything signet-pdf 3.0 carries, reachable from the facade:
+
+- **Two-phase signing**: `prepare()` and `complete()`, where the private key
+  never enters the process. The prepared signature carries no secret, so it
+  survives a queue.
+- **`addSignatureField()`**: place an empty field, rather than only filling one
+  somebody else placed.
+- **A receipt**: `$signed->receipt()` says what was signed, what was embedded
+  and what was not, without reparsing the document.
+- **ICP-Brasil signature policies**: `signature.policy` in the config file
+  declares AD-RB, AD-RT, AD-RC or AD-RA, and the country's own Verificador
+  accepts what the engine writes.
+- **Documents larger than memory**, through a stream source.
+- **`php artisan pdf:fields`, `pdf:add-field`, `pdf:extend`.**
+
+### Where to look when something is wrong
+
+A defect in signing, validation, the seal or certificate reading belongs to
+[signet-pdf](https://github.com/lsnepomuceno/signet-pdf/issues). A defect in
+the container wiring, the config file, an artisan command, a disk source or the
+fake belongs here.
+
 ## From 2.6.0 to 2.7.0
 
 **A certificate sealed by `lsnepomuceno/signet-pdf` opens here now.** One
