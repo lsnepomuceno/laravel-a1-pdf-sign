@@ -53,6 +53,29 @@ return [
 
         'digest_algorithm' => env('A1_PDF_SIGN_DIGEST', 'sha256'),
 
+        /*
+        | The policy a signature declares it was made under. Null declares
+        | none, which is what every signature produced before 3.0.
+        |
+        | Name an ICP-Brasil policy and the current version of it is used,
+        | since a policy is superseded on a date and an application meaning
+        | "AD-RT" means the one in force:
+        |
+        |   'policy' => 'ad-rb' | 'ad-rt' | 'ad-rc' | 'ad-ra'
+        |
+        | Or name a specific version by its OID, or supply the three fields
+        | for a policy from anywhere else:
+        |
+        |   'policy' => [
+        |       'oid' => '2.16.76.1.7.1.11.1.2',
+        |       'digest_algorithm' => 'sha256',
+        |       'digest' => '…',
+        |       'uri' => 'https://…',
+        |   ],
+        */
+
+        'policy' => env('A1_PDF_SIGN_POLICY'),
+
         'timestamp' => [
             'url' => env('A1_TSA_URL'),
             'username' => env('A1_TSA_USERNAME'),
@@ -78,6 +101,15 @@ return [
 
     'certificate' => [
         'use_path_env' => env('A1_PDF_SIGN_USE_PATH_ENV', false),
+
+        /*
+        | Intermediate certificates to embed when the bundle carries none.
+        |
+        | A set of files rather than a sequence: the chain is built from what
+        | they contain rather than trusted in the order they are listed.
+        */
+
+        'chain_paths' => [],
         'legacy' => env('A1_PDF_SIGN_LEGACY_CERTIFICATE', false),
     ],
 
