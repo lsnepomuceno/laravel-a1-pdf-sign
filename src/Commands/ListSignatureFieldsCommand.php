@@ -7,6 +7,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 use Illuminate\Console\Command;
 use LSNepomuceno\LaravelA1PdfSign\Commands\Concerns\ReadsTypedInput;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\Signet\Data\SignatureField;
 use Throwable;
 
 /**
@@ -44,7 +45,7 @@ class ListSignatureFieldsCommand extends Command
 
         $this->table(
             ['Name', 'Signed', 'Page', 'Visible'],
-            array_map(static fn($field): array => [
+            array_map(static fn(SignatureField $field): array => [
                 $field->name,
                 $field->isSigned ? 'yes' : 'no',
                 $field->pageNumber,
