@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use Illuminate\Http\UploadedFile;
+use LSNepomuceno\Signet\Contracts\{PdfDestination, PdfSource};
 use LSNepomuceno\Signet\Data\{Certificate, EncryptedCertificate, SignatureField, SignatureReport, SignedPdf};
 use LSNepomuceno\Signet\IcpBrasil\Data\Report;
 use LSNepomuceno\Signet\Signing\PendingSignature;
@@ -118,6 +119,31 @@ interface A1PdfSign
      * @throws \Throwable
      */
     public function icpBrasil(string $pfxPath, string $password = ''): Report;
+
+    /**
+     * A document on a Laravel disk, as a source the builder accepts.
+     *
+     * ```php
+     * A1PdfSign::newSignature()
+     *     ->certificate($pfx, $password)
+     *     ->from(A1PdfSign::fromDisk('s3', 'contracts/deal.pdf'))
+     *     ->sign()
+     *     ->writeTo(A1PdfSign::toDisk('s3', 'contracts/deal-signed.pdf'));
+     * ```
+     */
+    public function fromDisk(string $disk, string $path): PdfSource;
+
+    /**
+     * A document that arrived in a request, as a source.
+     */
+    public function fromUpload(UploadedFile $file): PdfSource;
+
+    /**
+     * Where a signed document should land.
+     *
+     * A null path uses the name the document already carries.
+     */
+    public function toDisk(string $disk, ?string $path = null): PdfDestination;
 
     /**
      * The configured temporary directory, or a path inside it.

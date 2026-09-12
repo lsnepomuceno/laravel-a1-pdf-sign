@@ -6,12 +6,13 @@ namespace LSNepomuceno\LaravelA1PdfSign;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\{File, Storage};
 use Illuminate\Support\Str;
 use LSNepomuceno\LaravelA1PdfSign\Adapters\IlluminateEncrypter;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
+use LSNepomuceno\LaravelA1PdfSign\Io\{DiskDestination, DiskSource, UploadedFileSource};
 use LSNepomuceno\Signet\Certificates\{CertificateParser, CertificateVault, PemCertificateReader, ReaderFactory};
-use LSNepomuceno\Signet\Contracts\CertificateReader;
+use LSNepomuceno\Signet\Contracts\{CertificateReader, PdfDestination, PdfSource};
 use LSNepomuceno\Signet\Data\{Certificate, EncryptedCertificate, SignatureReport, SignedPdf};
 use LSNepomuceno\Signet\Exceptions\FileNotFoundException;
 use LSNepomuceno\Signet\IcpBrasil\Data\Report;
@@ -147,6 +148,28 @@ final readonly class A1PdfSignManager implements A1PdfSign
         string $password = '',
     ): Report {
         return $this->signet->icpBrasil($pfxPath, $password);
+    }
+
+    /**
+     * A document on a Laravel disk, as a source the builder accepts.
+     *
+     * The disk is resolved here rather than taken as a `Filesystem`, because
+     * a caller naming a disk is the common case and `Storage::disk()` is what
+     * `Storage::fake()` replaces.
+     */
+    public function fromDisk(string $disk, string $path): PdfSource
+    {
+        return new DiskSource(Storage::disk($disk), $path);
+    }
+
+    public function fromUpload(UploadedFile $file): PdfSource
+    {
+        return new UploadedFileSource($file);
+    }
+
+    public function toDisk(string $disk, ?string $path = null): PdfDestination
+    {
+        return new DiskDestination(Storage::disk($disk), $path);
     }
 
     /**

@@ -87,19 +87,24 @@ $signed->download('contract.pdf'); // BinaryFileResponse
 
 ### The document does not have to be a local file
 
-An application keeping contracts on `s3`, `minio` or any Flysystem disk does not have to download one first:
+An application keeping contracts on `s3`, `minio` or any Flysystem disk does not have to download one first, and the signed result does not have to come back through one either:
 
 ```php
 A1PdfSign::newSignature()
     ->certificate($pfx, $password)
-    ->pdfFromDisk('s3', 'contracts/deal.pdf')
-    ->sign();
+    ->from(A1PdfSign::fromDisk('s3', 'contracts/deal.pdf'))
+    ->sign()
+    ->writeTo(A1PdfSign::toDisk('s3', 'contracts/deal-signed.pdf'));
+```
 
+`fromUpload()` does the same for a document that arrived in a request, reading it where it already is rather than copying it to a temporary file. `toDisk()` with no path keeps the name the document carries, which is the original with `_signed` appended.
+
+```php
 // or hand over the bytes yourself, from anywhere at all
 ->pdfContents($bytes, 'deal.pdf')
 ```
 
-Both hold the whole document in memory, so neither helps with a very large one.
+All of these hold the whole document in memory. For one too large for that, the engine takes a stream: see [signet-pdf](https://github.com/lsnepomuceno/signet-pdf).
 
 [Signing a document →](https://laravel-a1-pdf-sign.netlify.app/docs/2.x/sign-pdf-file)
 

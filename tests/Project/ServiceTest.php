@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use LSNepomuceno\LaravelA1PdfSign\A1PdfSignManager;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign as A1PdfSignContract;
 use LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign;
+use LSNepomuceno\Signet\Contracts\{PdfDestination, PdfSource};
 use LSNepomuceno\Signet\Data\Certificate;
 use LSNepomuceno\Signet\Data\EncryptedCertificate;
 use LSNepomuceno\Signet\Data\SignatureField;
@@ -14,6 +15,7 @@ use LSNepomuceno\Signet\Data\SignatureReport;
 use LSNepomuceno\Signet\Data\SignedPdf;
 use LSNepomuceno\Signet\IcpBrasil\Data\Identity;
 use LSNepomuceno\Signet\IcpBrasil\Data\Report;
+use LSNepomuceno\Signet\Io\StringSource;
 use LSNepomuceno\Signet\Signing\PendingSignature;
 use LSNepomuceno\Signet\Validation\TrustStore;
 
@@ -140,6 +142,26 @@ it('lets the container swap the implementation', function () {
             return new Report(
                 Identity::none(),
             );
+        }
+
+        public function fromDisk(string $disk, string $path): PdfSource
+        {
+            return new StringSource('faked');
+        }
+
+        public function fromUpload(UploadedFile $file): PdfSource
+        {
+            return new StringSource('faked');
+        }
+
+        public function toDisk(string $disk, ?string $path = null): PdfDestination
+        {
+            return new class implements PdfDestination {
+                public function write(string $contents, string $name): string
+                {
+                    return $name;
+                }
+            };
         }
 
         public function newSignature(): PendingSignature
