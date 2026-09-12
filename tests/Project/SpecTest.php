@@ -184,6 +184,17 @@ it('every documentation file is reachable from the index', function () {
             continue;
         }
 
+        // The site's own pages are indexed by `docs/.vitepress/sidebar.ts`,
+        // which reads the directory and refuses a list that disagrees with it:
+        // a page added and not listed fails the site build, and an entry with
+        // no page fails it too. That is a stricter gate than this one, not a
+        // gap in it, and duplicating the list in ARCHITECTURE.md would create
+        // the second index sidebar.ts exists to avoid.
+        if (str_starts_with($file, packageRoot() . '/docs/guide/')
+            || str_starts_with($file, packageRoot() . '/docs/releases/')) {
+            continue;
+        }
+
         $orphans[] = str_replace(packageRoot() . '/', '', $file);
     }
 

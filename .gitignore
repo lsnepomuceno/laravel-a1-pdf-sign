@@ -36,3 +36,7 @@ Temp
 node_modules
 dist
 .output
+/docs/.vitepress/dist
+/docs/.vitepress/cache
+/docs/.vitepress/node_modules
+/docs/node_modules

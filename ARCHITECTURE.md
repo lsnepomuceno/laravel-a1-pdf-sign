@@ -34,6 +34,16 @@ drifts away from the code it describes.
 | [docs/history/decision-log.md](docs/history/decision-log.md) | Questions that were put and when they were answered, including the ones the plan left open. |
 | [docs/history/the-core-left.md](docs/history/the-core-left.md) | What the extraction to signet-pdf actually cost, against what 0039 predicted. |
 
+## The site
+
+`docs/` is a VitePress site, built from a tag and published to GitHub Pages.
+`docs/guide/` is the consumer documentation; everything else on this page is
+published as it is, because the site's source directory is this one.
+
+The guide's index is `docs/.vitepress/sidebar.ts`, which reads the directory
+and refuses a list that disagrees with it. That is why the guide is not listed
+here: a second index is a second thing to forget.
+
 ## For consumers, not contributors
 
 [UPGRADE.md](UPGRADE.md) maps every removed or changed API to its replacement.
