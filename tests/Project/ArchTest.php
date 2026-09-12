@@ -37,8 +37,8 @@ arch('no weak hashing or insecure randomness')
     ->expect(['md5', 'sha1', 'rand', 'srand', 'mt_rand'])
     ->not->toBeUsed()
     ->ignoring([
-        'LSNepomuceno\LaravelA1PdfSign\Data\SignatureDetails',
-        'LSNepomuceno\LaravelA1PdfSign\Signing\Encryption\StandardSecurityHandler',
+        'LSNepomuceno\Signet\Data\SignatureDetails',
+        'LSNepomuceno\Signet\Signing\Encryption\StandardSecurityHandler',
     ]);
 
 arch('no eval or dynamic code execution')
@@ -96,12 +96,12 @@ arch('value objects are immutable')
 arch('value objects are closed for extension')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Data')
     ->toBeFinal()
-    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Data\BaseData');
+    ->ignoring('LSNepomuceno\Signet\Data\BaseData');
 
 arch('value objects stay on the shared base')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Data')
-    ->toExtend('LSNepomuceno\LaravelA1PdfSign\Data\BaseData')
-    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Data\BaseData');
+    ->toExtend('LSNepomuceno\Signet\Data\BaseData')
+    ->ignoring('LSNepomuceno\Signet\Data\BaseData');
 
 /**
  * v2 is a clean break: no deprecation layer survives into the release.
@@ -121,7 +121,7 @@ arch('no deprecated namespace lingers')
 arch('enums are string-backed, so configuration can express them as plain strings')
     ->expect('LSNepomuceno\LaravelA1PdfSign\Enums')
     ->toBeStringBackedEnums()
-    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Enums\Asn1Tag');
+    ->ignoring('LSNepomuceno\Signet\Enums\Asn1Tag');
 
 /**
  * Str::substr() and Str::length() are multibyte-aware, so running them over a
@@ -153,11 +153,13 @@ arch('facades only proxy contracts')
 
 /**
  * Everything that opens an external process has to go through the single
- * audited helper. See docs/decisions/0001-openssl-native-with-cli-fallback.md and docs/spec/invariants.md.
+ * audited adapter, which is what keeps `Process::fake()` covering the engine's
+ * shell-outs. See docs/spec/invariants.md and
+ * docs/decisions/0039-the-core-lives-in-signet-pdf.md.
  */
-arch('only the shell helper opens processes')
+arch('only the shell adapter opens processes')
     ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])
-    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner');
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Adapters\IlluminateProcessRunner');
 
 arch('console commands stay in Commands')
     ->expect('Illuminate\Console\Command')

@@ -1,0 +1,100 @@
+name: Documentation
+
+# Two jobs, and the split is the point.
+#
+# `build` runs on every pull request that touches the documentation, and it is
+# a gate rather than a preview: VitePress fails the build on a link that
+# resolves to nothing, and `docs/.vitepress/sidebar.ts` fails it on a page
+# missing from the navigation or an entry missing its page. That covers what
+# `tests/Project/SpecTest.php` cannot see, since it checks whether a path
+# exists in the repository and this checks whether it exists as a page.
+#
+# `deploy` publishes to GitHub Pages **from a tag**, never from a branch. The
+# site describes what is installable, so a change merged to `main` and not yet
+# tagged does not belong on it (CONTRIBUTING.md). A pull request and a push to
+# `main` build the site and throw it away, which keeps the gate without
+# publishing unreleased behaviour.
+#
+# `workflow_dispatch` is the escape hatch, and it does publish: it exists for a
+# documentation fix that has to reach the site without minting a release.
+#
+# The tag pattern carries no `v`, because this repository's tags do not:
+# 2.7.0, 3.0.0.
+#
+# No `paths` filter on `push`. A filter is evaluated against the commits a push
+# introduces, and a tag push introduces none, so a filtered workflow would
+# simply not run on the tag and the site would never publish.
+on:
+  push:
+    branches: [main]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'CHANGELOG.md'
+      - 'UPGRADE.md'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # lastUpdated reads the commit date of each page, and a shallow
+          # checkout gives every page the same one.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/.vitepress/package-lock.json
+
+      - name: Install
+        working-directory: docs/.vitepress
+        run: npm ci
+
+      - name: Build
+        working-directory: docs/.vitepress
+        run: npm run build
+
+      - name: Upload
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    name: Deploy
+    # A tag, or the escape hatch. Never a branch build, which is what keeps the
+    # site describing what is installable.
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

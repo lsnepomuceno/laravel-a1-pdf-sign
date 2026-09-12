@@ -5,29 +5,36 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign\Contracts;
 
 use Illuminate\Http\UploadedFile;
-use LSNepomuceno\LaravelA1PdfSign\Data\Certificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\EncryptedCertificate;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignatureReport;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
-use LSNepomuceno\LaravelA1PdfSign\Validation\TrustStore;
+use LSNepomuceno\Signet\Contracts\{PdfDestination, PdfSource};
+use LSNepomuceno\Signet\Data\{Certificate,
+    EncryptedCertificate,
+    PreparedSignature,
+    SealPlacement,
+    SignatureField,
+    SignatureReport,
+    SignedPdf};
+use LSNepomuceno\Signet\IcpBrasil\Data\Report;
+use LSNepomuceno\Signet\Signing\PendingSignature;
+use LSNepomuceno\Signet\Validation\TrustStore;
 
 /**
- * The package's entry point.
+ * The package's entry point, and the whole of what it adds to signet-pdf.
  *
- * This is the namespaced, injectable equivalent of the global helper
- * functions, which now delegate here. Resolve it from the container, or use
- * the A1PdfSign facade.
- *
- * The fluent signing builder described in docs/spec/public-api.md attaches to
- * this contract in PR 7; the methods below mirror the v1 helpers so the
- * migration is a rename, not a rewrite.
+ * Every method here either delegates to `LSNepomuceno\Signet\Signet` or does
+ * something only a Laravel application can ask for. Anything that signs,
+ * validates or reads bytes lives in signet-pdf and is reached through the
+ * facade rather than reimplemented
+ * (docs/decisions/0039-the-core-lives-in-signet-pdf.md).
  */
 interface A1PdfSign
 {
     /**
+     * The fluent builder, and the primary way to sign.
+     */
+    public function newSignature(): PendingSignature;
+
+    /**
      * Signs a PDF with a certificate read from a .pfx file on disk.
-     *
-     * Returns the document; the caller picks how it is delivered.
      *
      * @throws \Throwable
      */
@@ -39,11 +46,7 @@ interface A1PdfSign
     ): SignedPdf;
 
     /**
-     * Signs a PDF with a certificate read from PEM files on disk.
-     *
-     * $privateKeyPath is null when the key sits in the same file as the
-     * certificate. $password is empty when the key is unencrypted, which PEM
-     * permits and PKCS#12 does not. See docs/decisions/0007-pem-second-entry-one-pipeline.md.
+     * The same, from PEM.
      *
      * @throws \Throwable
      */
@@ -55,7 +58,8 @@ interface A1PdfSign
     ): SignedPdf;
 
     /**
-     * Signs a PDF with a certificate read from an uploaded .pfx file.
+     * The same, from an upload, which is the one entry point signet-pdf cannot
+     * offer: it takes `Illuminate\Http\UploadedFile`.
      *
      * @throws \Throwable
      */
@@ -67,10 +71,9 @@ interface A1PdfSign
     ): SignedPdf;
 
     /**
-     * Encrypts a certificate and its password for storage.
-     *
-     * The returned hash is the key both values were encrypted with and is
-     * required by decryptCertificate().
+     * Seals a certificate and its password, returning the material and the key
+     * that opens it. The key is not stored: without it the pair cannot be read
+     * back.
      *
      * @throws \Throwable
      */
@@ -81,7 +84,7 @@ interface A1PdfSign
     ): EncryptedCertificate;
 
     /**
-     * Restores a certificate previously encrypted by encryptCertificate().
+     * Restores what encryptCertificate() sealed.
      *
      * @throws \Throwable
      */
@@ -94,80 +97,101 @@ interface A1PdfSign
     ): Certificate;
 
     /**
-     * Inspects the signature embedded in a PDF.
+     * Verifies every signature in a document cryptographically.
      *
      * @throws \Throwable
      */
-    public function validate(string $pdfPath, ?TrustStore $trust = null): SignatureReport;
+    public function validate(
+        string|PdfSource $pdfPath,
+        ?TrustStore $trust = null,
+        string $documentPassword = '',
+    ): SignatureReport;
 
     /**
-     * Lists the signature fields a document already carries, filled or empty.
+     * The signature fields a document carries, filled or empty.
      *
-     * An application that signs into a template usually has to show its fields
-     * before it can pick one, so discovery is exposed on its own rather than
-     * only as an error message from intoField()
-     * (docs/decisions/0013-signing-into-an-existing-field.md).
-     *
-     * @return list<\LSNepomuceno\LaravelA1PdfSign\Data\SignatureField> In the
-     *                                                                  order the
-     *                                                                  form declares.
+     * @return list<SignatureField>
      *
      * @throws \Throwable
      */
-    public function signatureFields(string $pdfPath): array;
+    public function signatureFields(string|PdfSource $pdfPath): array;
 
     /**
-     * Adds a fresh archive timestamp to a document that already carries a
-     * signature, extending the PAdES B-LTA chain (ETSI EN 319 142-1).
-     *
-     * No certificate is involved: a DocTimeStamp is signed by the authority,
-     * not by the signer, so this is something a scheduled job can do to an
-     * archive with no key material anywhere near it.
-     *
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificationException
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\HasNoSignatureOrInvalidPkcs7Exception
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPdfFileException
-     * @throws \LSNepomuceno\LaravelA1PdfSign\Exceptions\ProcessRunTimeException
-     *
-     * @see docs/decisions/0022-the-archive-timestamp-is-a-chain.md
-     */
-    public function extendArchive(string $pdfPath): SignedPdf;
-
-    /**
-     * Reads the ICP-Brasil identity out of a certificate and checks it against
-     * the rules the specification states about its own bytes.
-     *
-     * **Structural only, and never a substitute for trust.** Every rule checked
-     * is decidable from the certificate alone, so a self-signed certificate
-     * built to satisfy them all will conform. Whether the chain reaches an
-     * ICP-Brasil root is a different question, answered by
-     * `Validation\TrustStore`.
-     *
-     * Useful before signing rather than after being rejected: it says which
-     * field is wrong, from the file, instead of leaving that to whatever
-     * receives the document.
-     *
-     * @param  string  $pfxPath  A PKCS#12 file, or a PEM certificate.
+     * Appends a fresh archive timestamp to an already signed document.
      *
      * @throws \Throwable
+     */
+    public function extendArchive(string|PdfSource $pdfPath, string $documentPassword = ''): SignedPdf;
+
+    /**
+     * What a Brazilian signer is known by, read out of the certificate.
      *
-     * @see docs/decisions/0029-the-identity-a-brazilian-signer-is-known-by.md
+     * @throws \Throwable
      */
-    public function icpBrasil(
-        string $pfxPath,
-        #[\SensitiveParameter]
-        string $password = '',
-    ): \LSNepomuceno\LaravelA1PdfSign\Data\IcpBrasilReport;
+    public function icpBrasil(string $pfxPath, string $password = ''): Report;
 
     /**
-     * Starts a fluent signature. Nothing happens until sign() is called.
+     * Finishes a signature whose CMS was produced elsewhere.
+     *
+     * The other half of `newSignature()->…->prepare()`: the document is
+     * digested here, the digest is signed by something that holds the private
+     * key (an HSM, a remote service, a smartcard), and the detached CMS comes
+     * back to be written in. **The private key never enters this process.**
+     *
+     * @throws \Throwable
      */
-    public function newSignature(): \LSNepomuceno\LaravelA1PdfSign\Signing\PendingSignature;
+    public function complete(
+        PreparedSignature $prepared,
+        string $cms,
+        ?Certificate $certificate = null,
+        string $documentPassword = '',
+    ): SignedPdf;
 
     /**
-     * The directory the package writes temporary files to, or a path inside it
-     * when $tempFile is true.
+     * Adds an empty signature field for somebody else to fill later.
+     *
+     * A null placement leaves it invisible, which is the safe default: a
+     * rectangle is only meaningful against a page whose size the caller knows.
+     *
+     * @throws \Throwable
+     */
+    public function addSignatureField(
+        string|PdfSource $pdfPath,
+        string $name,
+        ?SealPlacement $placement = null,
+        string $documentPassword = '',
+    ): SignedPdf;
+
+    /**
+     * A document on a Laravel disk, as a source the builder accepts.
+     *
+     * ```php
+     * A1PdfSign::newSignature()
+     *     ->certificate($pfx, $password)
+     *     ->from(A1PdfSign::fromDisk('s3', 'contracts/deal.pdf'))
+     *     ->sign()
+     *     ->writeTo(A1PdfSign::toDisk('s3', 'contracts/deal-signed.pdf'));
+     * ```
+     */
+    public function fromDisk(string $disk, string $path): PdfSource;
+
+    /**
+     * A document that arrived in a request, as a source.
+     */
+    public function fromUpload(UploadedFile $file): PdfSource;
+
+    /**
+     * Where a signed document should land.
+     *
+     * A null path uses the name the document already carries.
+     */
+    public function toDisk(string $disk, ?string $path = null): PdfDestination;
+
+    /**
+     * The configured temporary directory, or a path inside it.
+     *
+     * Laravel specific: it honours `a1-pdf-sign.temp_path` and creates the
+     * directory, which is what a queued job on a fresh container needs.
      */
     public function tempPath(bool $tempFile = false, string $fileExt = '.pfx'): string;
 }

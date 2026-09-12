@@ -6,14 +6,17 @@ namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use LSNepomuceno\LaravelA1PdfSign\Certificates\PemCertificateReader;
+use LSNepomuceno\LaravelA1PdfSign\Commands\Concerns\ReadsTypedInput;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
-use LSNepomuceno\LaravelA1PdfSign\Data\SignedPdf;
-use LSNepomuceno\LaravelA1PdfSign\Exceptions\InvalidPemContentException;
-use LSNepomuceno\LaravelA1PdfSign\Support\Files;
+use LSNepomuceno\Signet\Certificates\PemCertificateReader;
+use LSNepomuceno\Signet\Data\SignedPdf;
+use LSNepomuceno\Signet\Exceptions\InvalidPemContentException;
+use LSNepomuceno\Signet\Support\Files;
 
 class SignPdfCommand extends Command
 {
+    use ReadsTypedInput;
+
     protected $signature = 'pdf:sign
                            {pdfPath : The path to the PDF file}
                            {certificatePath : The path to the certificate, PKCS#12 or PEM}
@@ -70,12 +73,6 @@ class SignPdfCommand extends Command
     /**
      * Console options are mixed; --key is either a path or absent.
      */
-    private function stringOption(string $key): ?string
-    {
-        $value = $this->option($key);
-
-        return is_string($value) && $value !== '' ? $value : null;
-    }
 
     private function defineFileName(string $fileName): string
     {
@@ -90,13 +87,4 @@ class SignPdfCommand extends Command
         return $fileName;
     }
 
-    /**
-     * Console arguments are mixed; every one this command takes is a string.
-     */
-    private function stringArgument(string $key): string
-    {
-        $value = $this->argument($key);
-
-        return is_string($value) ? $value : '';
-    }
 }

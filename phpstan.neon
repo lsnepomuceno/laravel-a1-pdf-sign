@@ -12,10 +12,6 @@ parameters:
         - src
         - tests
 
-    # poc/ holds throwaway spikes (ARCHITECTURE-V2.md §5), not production code.
-    excludePaths:
-        - poc
-
     treatPhpDocTypesAsCertain: false
 
     ignoreErrors:
@@ -32,7 +28,4 @@ parameters:
             path: tests/*
         -
             identifier: property.nonObject
-            path: tests/*
-        -
-            identifier: property.notFound
             path: tests/*

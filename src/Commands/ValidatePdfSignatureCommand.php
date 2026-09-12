@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace LSNepomuceno\LaravelA1PdfSign\Commands;
 
 use Illuminate\Console\Command;
+use LSNepomuceno\LaravelA1PdfSign\Commands\Concerns\ReadsTypedInput;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 
 class ValidatePdfSignatureCommand extends Command
 {
+    use ReadsTypedInput;
+
     protected $signature = 'pdf:validate-signature
                                 {pdfPath : The path to the PDF file}
         ';
@@ -41,13 +44,4 @@ class ValidatePdfSignatureCommand extends Command
         }
     }
 
-    /**
-     * Console arguments are mixed; every one this command takes is a string.
-     */
-    private function stringArgument(string $key): string
-    {
-        $value = $this->argument($key);
-
-        return is_string($value) ? $value : '';
-    }
 }

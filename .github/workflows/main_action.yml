@@ -1,6 +1,13 @@
 name: CI
 
-# Pull requests targeting main, and main itself after a merge.
+# Pull requests targeting main or the 3.0 integration branch, and main itself
+# after a merge.
+#
+# `feat/v3` is there for the length of the 3.0 line (#313). The work arrives as
+# pull requests against that branch rather than against main, and without this
+# none of them is tested: a workflow filtered to main simply does not run, and
+# the pull request that finally merges the branch would be the first time CI
+# saw any of it.
 #
 # The second is not the duplication it looks like. A pull request is tested
 # against its own branch, not against main with it merged, so two branches that
@@ -13,7 +20,7 @@ name: CI
 # built.
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, feat/v3 ]
   push:
     branches: [ main ]
 
@@ -70,118 +77,15 @@ jobs:
       - name: Audit dependencies
         run: composer audit --abandoned=ignore
 
-      - name: Install qpdf
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf
-
-      # veraPDF is the reference PDF/A validator and the only thing that can
-      # establish a conformance verdict. Pinned rather than tracking "latest":
-      # a validator that changes its verdicts between builds cannot be the
-      # thing a gate is measured against.
-      # See docs/decisions/0025-what-signing-does-to-pdf-a.md.
-      - name: Install veraPDF
-        env:
-          VERAPDF_VERSION: '1.30.2'
-        run: |
-          set -eux
-          curl -sSL -o /tmp/verapdf.zip \
-            "https://software.verapdf.org/releases/${VERAPDF_VERSION%.*}/verapdf-greenfield-${VERAPDF_VERSION}-installer.zip"
-          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-src
-          cat > /tmp/verapdf-auto.xml <<'XML'
-          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-          <AutomatedInstallation langpack="eng">
-          <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
-          <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
-          <installpath>/opt/verapdf</installpath>
-          </com.izforge.izpack.panels.target.TargetPanel>
-          <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
-          <pack index="0" name="veraPDF GUI" selected="true"/>
-          <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
-          <pack index="3" name="veraPDF Corpus and Tests" selected="false"/>
-          <pack index="4" name="veraPDF Documentation" selected="false"/>
-          <pack index="5" name="veraPDF Sample Plugins" selected="false"/>
-          </com.izforge.izpack.panels.packs.PacksPanel>
-          <com.izforge.izpack.panels.install.InstallPanel id="install"/>
-          <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
-          </AutomatedInstallation>
-          XML
-          java -jar /tmp/verapdf-src/verapdf-greenfield-*/verapdf-izpack-installer-*.jar /tmp/verapdf-auto.xml
-          sudo ln -s /opt/verapdf/verapdf /usr/local/bin/verapdf
-          verapdf --version
-
-      # pyHanko is the reader that enforces /DocMDP, which pdfsig cannot
-      # surface at all. Pinned for the same reason veraPDF is.
-      #
-      # Two distributions: installing pyHanko alone gives no command, because
-      # the CLI is packaged and versioned separately.
-      # See docs/decisions/0031-certification-verified-by-a-reader.md.
-      - name: Install pyHanko
-        env:
-          PYHANKO_VERSION: '0.36.2'
-          PYHANKO_CLI_VERSION: '0.4.2'
-        run: |
-          set -eux
-          python3 -m venv /opt/pyhanko
-          /opt/pyhanko/bin/pip install --quiet \
-            "pyHanko==${PYHANKO_VERSION}" "pyhanko-cli==${PYHANKO_CLI_VERSION}"
-          sudo ln -s /opt/pyhanko/bin/pyhanko /usr/local/bin/pyhanko
-          pyhanko --version
-
-      # The Arlington PDF Model, checked against the specification's own
-      # grammar. Pinned by commit: the releases carry no binaries, and the TSV
-      # model lives in the same tree, so one SHA pins tool and grammar together.
-      # See docs/decisions/0037-what-we-write-against-the-grammar.md.
-      - name: Install the Arlington PDF Model
-        env:
-          ARLINGTON_COMMIT: '9d75f6de8cdc3883d5519f83e804238329b9eb10'
-        run: |
-          set -eux
-          git clone --quiet https://github.com/pdf-association/arlington-pdf-model.git /tmp/arlington
-          cd /tmp/arlington
-          git checkout --quiet "${ARLINGTON_COMMIT}"
-          cd TestGrammar
-          cmake -B build -DPDFSDK_PDFIUM=ON -DCMAKE_BUILD_TYPE=Release .
-          cmake --build build --config Release -j"$(nproc)"
-          sudo cp bin/linux/TestGrammar /usr/local/bin/testgrammar
-          sudo mkdir -p /opt/arlington
-          sudo cp -r /tmp/arlington/tsv /opt/arlington/tsv
-          testgrammar --help > /dev/null
-          echo "ARLINGTON_TSV=/opt/arlington/tsv/latest" >> "$GITHUB_ENV"
-
       # composer test carries --fail-on-skipped: every check has to run
-      # somewhere, and a skip is how one quietly stops. The PDF/A group used to
-      # skip itself when veraPDF was absent, and a job could go green having
-      # validated nothing.
-      - name: Run tests
-        run: composer test -- --exclude-group=network
-
-      # These reach a live timestamp authority, so an outage on their side is
-      # not a defect in this package. Reported, never blocking.
+      # somewhere, and a skip is how one quietly stops.
       #
-      # The profiles themselves are gated offline against
-      # Testing\LocalTimestampAuthority, so what is left here is the only
-      # question a local authority cannot answer: whether this package
-      # interoperates with somebody else's
-      # (docs/decisions/0027-the-transport-is-a-seam.md).
-      - name: Run tests against a live timestamp authority
-        id: interop
-        continue-on-error: true
-        run: vendor/bin/pest --group=network
-
-      # continue-on-error hides the outcome behind a green tick, and that is how
-      # three of these tests were committed broken, went green, and were noticed
-      # only by someone reading the log. Non-blocking is the decision; invisible
-      # was not.
-      - name: Say how the live authority answered
-        if: always()
-        run: |
-          if [ "${{ steps.interop.outcome }}" = "success" ]; then
-            echo "### Live timestamp authority: passed" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "### ⚠️ Live timestamp authority: FAILED" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Not blocking, because an outage on a third party's side is not a defect here." >> "$GITHUB_STEP_SUMMARY"
-            echo "It is still the only check on interoperability with a real authority, so read the step before assuming it was the weather." >> "$GITHUB_STEP_SUMMARY"
-          fi
+      # No instruments are installed any more. veraPDF, qpdf, pyHanko and the
+      # Arlington model measure written bytes, and this package writes none:
+      # they run in lsnepomuceno/signet-pdf, where the writer is
+      # (docs/decisions/0039-the-core-lives-in-signet-pdf.md).
+      - name: Run tests
+        run: composer test
 
   quality:
     name: Code style and static analysis

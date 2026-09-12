@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use LSNepomuceno\LaravelA1PdfSign\Support\ProcessRunner;
+use LSNepomuceno\Signet\Contracts\ProcessRunner;
 
 /**
  * What a consumer actually receives from Packagist.
@@ -103,6 +103,9 @@ it('still ships the things a consumer needs', function () {
         ->toContain('config/a1-pdf-sign.php')
         ->toContain('LICENSE.md')
         ->toContain('src/LaravelA1PdfSignServiceProvider.php')
-        ->toContain('src/Resources/img/sign-seal.png')
-        ->toContain('src/Resources/font/Roboto-Medium.ttf');
+        // The seal's own image and font ship with signet-pdf now, along with
+        // the renderer that reads them
+        // (docs/decisions/0039-the-core-lives-in-signet-pdf.md).
+        ->toContain('src/Adapters/IlluminateProcessRunner.php')
+        ->toContain('src/Testing/A1PdfSignFake.php');
 });
