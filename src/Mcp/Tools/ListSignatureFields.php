@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LSNepomuceno\LaravelA1PdfSign\Mcp\Tools;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -11,7 +12,7 @@ use Laravel\Mcp\{Request, Response, ResponseFactory};
 use Laravel\Mcp\Server\Attributes\{Description, Name, Title};
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\{IsIdempotent, IsOpenWorld, IsReadOnly};
-use LSNepomuceno\LaravelA1PdfSign\Agents\{Arguments, DocumentAccess};
+use LSNepomuceno\LaravelA1PdfSign\Agents\{Ability, Arguments, DocumentAccess};
 use LSNepomuceno\LaravelA1PdfSign\Contracts\A1PdfSign;
 use LSNepomuceno\Signet\Data\SignatureField;
 use LSNepomuceno\Signet\Exceptions\SignetException;
@@ -77,7 +78,10 @@ final class ListSignatureFields extends Tool
         $path = (string) Arguments::string($arguments, 'path');
 
         try {
+            $documents->authorize(Ability::Read, $disk, $path);
             $fields = $signing->signatureFields($documents->source($disk, $path));
+        } catch (AuthorizationException $exception) {
+            return Response::error("You may not read [{$path}] on the disk [{$disk}]: {$exception->getMessage()}");
         } catch (SignetException $exception) {
             return Response::error("The document's fields could not be read: {$exception->getMessage()}");
         }

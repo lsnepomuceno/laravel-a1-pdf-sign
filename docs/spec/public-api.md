@@ -112,7 +112,7 @@ signature.timestamp.{url,username,password,timeout,attempts,backoff}
 signature.ltv.{timeout,attempts,backoff}
 certificate.{legacy,use_path_env,chain_paths}
 seal.{driver,transparent,background,text.x,text.rows,font.{path,size,color}}
-agents.{disks,expose_registry}
+agents.{disks,max_bytes,expose_registry}
 agents.idempotency.{store,ttl}
 ```
 
@@ -142,8 +142,8 @@ by `conflict`
 | `Mcp\A1PdfSignServer` | `laravel/mcp` | the two above, as a server | nothing |
 | `Ai\Tools\SignPdf` | `laravel/ai` | `sign_pdf` | a signed copy, after approval |
 
-**The tool names, their arguments and the keys of what they return are public
-API**, since a prompt, a client or an application's own code depends on them.
+**The tool names, their arguments, the keys of what they return and the
+ability names and their arguments are public API**, since a prompt, a client or an application's own code depends on them.
 Adding an optional argument or a key is a minor release; renaming or removing
 one is a major one.
 
@@ -155,7 +155,8 @@ What else a consumer touches:
 | `Events\DocumentSignedByAgent` | `sourceDisk`, `sourcePath`, `disk`, `path`, `toolCallId`, `userId`, `receipt` |
 | `Exceptions\DocumentOutOfReach` | a disk, path or destination refused. Implements `SignetException` |
 | `Exceptions\SigningCertificateUnavailable` | no resolver bound. A `LogicException`, implements `SignetException` |
-| `Agents\DocumentAccess` | the guard, public so an application's own tools can use it |
+| `Agents\DocumentAccess` | the guard, public so an application's own tools can use it: `source()`, `destination()`, `authorize()`, `allows()`, `disks()`, `maxBytes()`, `exposesRegistry()` |
+| `Agents\Ability` | `Read` = `a1-pdf-sign.agents.read`, `Sign` = `a1-pdf-sign.agents.sign`. The gate abilities the tools ask, when the application defines them ([0041](../decisions/0041-agents-are-authorised-per-document.md)) |
 
 `SignPdf::withoutApproval()` throws, and that is part of the contract rather
 than a limitation to be lifted: a release that let it succeed would be a

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\{Auth, Gate, Storage};
+use LSNepomuceno\LaravelA1PdfSign\Agents\Ability;
 use LSNepomuceno\LaravelA1PdfSign\Agents\DocumentAccess;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\DocumentOutOfReach;
 use LSNepomuceno\LaravelA1PdfSign\Io\{DiskDestination, DiskSource};
@@ -118,3 +121,105 @@ it('is caught with every other failure of the package', function () {
     expect(DocumentOutOfReach::missing('contracts', 'x.pdf'))->toBeInstanceOf(SignetException::class)
         ->toBeInstanceOf(InvalidArgumentException::class);
 });
+
+/*
+|--------------------------------------------------------------------------
+| The application's gate
+|--------------------------------------------------------------------------
+*/
+
+it('allows everything on an open disk when the application defines no ability', function () {
+    // What 3.1.0 shipped, and what an application upgrading keeps until it
+    // defines one: the disk list is the control.
+    app(DocumentAccess::class)->authorize(Ability::Read, 'contracts', 'deal.pdf');
+
+    expect(app(DocumentAccess::class)->allows(Ability::Sign, 'contracts', 'deal.pdf', 'contracts', 'deal_signed.pdf'))
+        ->toBeTrue();
+});
+
+it('asks the gate with the user, the disk and the path', function () {
+    $asked = [];
+
+    Gate::define(Ability::Read->value, function (GenericUser $user, string $disk, string $path) use (&$asked) {
+        $asked[] = [$user->getAuthIdentifier(), $disk, $path];
+
+        return $path === 'deal.pdf';
+    });
+
+    Auth::setUser(new GenericUser(['id' => 7]));
+
+    app(DocumentAccess::class)->authorize(Ability::Read, 'contracts', 'deal.pdf');
+
+    expect($asked)->toBe([[7, 'contracts', 'deal.pdf']])
+        ->and(fn() => app(DocumentAccess::class)->authorize(Ability::Read, 'contracts', 'other.pdf'))
+        ->toThrow(AuthorizationException::class);
+});
+
+it('hands the signing ability the destination as well', function () {
+    Gate::define(Ability::Sign->value, fn(GenericUser $user, string $disk, string $path, string $destinationDisk, string $destinationPath) => $destinationDisk === 'contracts');
+
+    Auth::setUser(new GenericUser(['id' => 7]));
+
+    expect(app(DocumentAccess::class)->allows(Ability::Sign, 'contracts', 'deal.pdf', 'contracts', 'deal_signed.pdf'))->toBeTrue()
+        ->and(app(DocumentAccess::class)->allows(Ability::Sign, 'contracts', 'deal.pdf', 'archive', 'deal.pdf'))->toBeFalse();
+});
+
+it('refuses a guest once the application defines an ability', function () {
+    // Laravel's gate refuses a guest unless the ability's user is nullable,
+    // and an agent served over stdio has no user at all.
+    Gate::define(Ability::Read->value, fn(GenericUser $user) => true);
+
+    expect(fn() => app(DocumentAccess::class)->authorize(Ability::Read, 'contracts', 'deal.pdf'))
+        ->toThrow(AuthorizationException::class);
+});
+
+it('names the abilities the way the guide does', function () {
+    expect(Ability::Read->value)->toBe('a1-pdf-sign.agents.read')
+        ->and(Ability::Sign->value)->toBe('a1-pdf-sign.agents.sign');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Size
+|--------------------------------------------------------------------------
+*/
+
+it('refuses a document larger than the configured limit', function () {
+    config()->set('a1-pdf-sign.agents.max_bytes', 10);
+
+    expect(fn() => app(DocumentAccess::class)->source('contracts', 'deal.pdf'))
+        ->toThrow(DocumentOutOfReach::class, 'is larger than the 10 bytes agents may work with');
+
+    config()->set('a1-pdf-sign.agents.max_bytes', 52_428_800);
+    Storage::disk('contracts')->put('huge.pdf', str_repeat('x', 52_428_801));
+
+    expect(fn() => app(DocumentAccess::class)->source('contracts', 'huge.pdf'))
+        ->toThrow(DocumentOutOfReach::class, 'is larger than the 50 MB agents may work with');
+});
+
+it('ships with a limit of 50 MB', function () {
+    $shipped = require packageRoot() . '/config/a1-pdf-sign.php';
+
+    expect(data_get($shipped, 'agents.max_bytes'))->toBe(DocumentAccess::DEFAULT_MAX_BYTES)
+        ->and(DocumentAccess::DEFAULT_MAX_BYTES)->toBe(52_428_800);
+});
+
+it('keeps the limit for a config published before the key existed', function () {
+    // The merge is shallow: a 3.1.0 config's `agents` block, which has no
+    // max_bytes, replaces the package's whole. Absent has to mean the
+    // default, or publishing the config would have switched the limit off.
+    config()->set('a1-pdf-sign.agents', [
+        'disks' => ['contracts'],
+        'expose_registry' => false,
+        'idempotency' => ['store' => null, 'ttl' => 86400],
+    ]);
+
+    expect(app(DocumentAccess::class)->maxBytes())->toBe(DocumentAccess::DEFAULT_MAX_BYTES);
+});
+
+it('removes the limit when the application sets none', function (mixed $limit) {
+    config()->set('a1-pdf-sign.agents.max_bytes', $limit);
+
+    expect(app(DocumentAccess::class)->maxBytes())->toBeNull()
+        ->and(app(DocumentAccess::class)->source('contracts', 'deal.pdf'))->toBeInstanceOf(DiskSource::class);
+})->with([[null], [0], ['none']]);

@@ -21,6 +21,7 @@ and writes to the same allowlist as the read tools.
 | **The certificate never passes through the model** | the key comes from a resolver you bind, and the tool's schema has no field for it |
 | **A repeated call signs once** | the provider's tool-call id is claimed in your cache before anything is signed |
 | **Only open disks, never over a file** | source and destination both go through the same guard as the read tools |
+| **Only what your gate allows** | `a1-pdf-sign.agents.sign` is asked with both ends, when you define it |
 
 ## Choosing the certificate
 
@@ -79,6 +80,11 @@ new SignPdf(new CertificateOf($user));
 
 The resolver is called twice per signature: once to describe the certificate to
 the person approving, once to sign after they do.
+
+A queued run has no authenticated user either, so if you define
+[the signing ability](#who-may-sign-what), the gate is asked about a guest and
+refuses unless its user is nullable. Decide that in the ability, knowing the
+approval already happened in a request that had a user.
 
 ## Giving it to an agent
 
@@ -152,7 +158,10 @@ The signed copy is written to [2026/acme_signed.pdf] on the disk [contracts].
 
 A certificate past its date says `which EXPIRED on …`, and one the resolver
 could not open says so and that signing will fail, so the person sees it coming
-rather than approving a call that is going to break.
+rather than approving a call that is going to break. A call your gate refuses
+says so too, on its first line: approval is still asked, because the tool never
+answers "no approval needed", but the person knows the answer before they give
+it.
 
 This text goes to your application and to the person, not to the model, which
 is why it carries the CPF even when `agents.expose_registry` is off: the person
@@ -238,6 +247,26 @@ comes back as a result:
 ```json
 { "signed": false, "status": "refused", "message": "A file already exists at [acme_signed.pdf] on the disk [contracts], and a signed document never overwrites one. Choose another destination path." }
 ```
+
+## Who may sign what
+
+Define `a1-pdf-sign.agents.sign` and the tool asks it before looking at either
+end, with the user, the source and the destination:
+
+```php
+use LSNepomuceno\LaravelA1PdfSign\Agents\Ability;
+
+Gate::define(Ability::Sign->value, function (User $user, string $disk, string $path, string $destinationDisk, string $destinationPath) {
+    return $user->can('sign', Contract::firstWhere('path', $path))
+        && $destinationDisk === $disk;
+});
+```
+
+A refusal comes back to the model as `"status": "refused"` with
+`You may not sign this document`, nothing is written, the certificate is never
+opened, and the call's id is released. Undefined, the ability allows, as in
+3.1.0. [AI agents](/guide/agents#who-may-reach-which-document) has the rules
+both abilities share.
 
 ## A repeated call signs once
 

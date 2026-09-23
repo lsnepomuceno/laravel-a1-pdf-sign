@@ -453,7 +453,8 @@ $response->pendingApprovals->first()->reason;
 ```
 
 Approval cannot be switched off, a repeated call signs once, a signed copy never overwrites a file, and a model's
-path never leaves the disks you opened. [The agents guide](https://lsnepomuceno.github.io/laravel-a1-pdf-sign/guide/agents)
+path never leaves the disks you opened. Who may read or sign which document is your `Gate`, through two abilities
+the tools ask before they look at the document. [The agents guide](https://lsnepomuceno.github.io/laravel-a1-pdf-sign/guide/agents)
 has the whole flow, and [0040](docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md) the
 reasoning.
 

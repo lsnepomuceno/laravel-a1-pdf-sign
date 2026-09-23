@@ -1,5 +1,26 @@
 # Upgrading
 
+## Unreleased
+
+**One behaviour changes without an edit: the agent tools refuse a document
+over 50 MB.** The model chooses the file and the engine holds it in memory, so
+there is now a limit. To keep 3.1.0's behaviour:
+
+```php
+'agents' => [
+    'max_bytes' => null,
+],
+```
+
+This holds whether or not you published the config. A file published under
+3.1.0 has an `agents` block without `max_bytes`, and a missing key means the
+default: only an explicit `null` removes the limit.
+
+Authorising per document is opt-in: define `a1-pdf-sign.agents.read` or
+`a1-pdf-sign.agents.sign` on your gate
+([0041](docs/decisions/0041-agents-are-authorised-per-document.md)). Until you
+do, nothing else changes.
+
 ## From 3.0.0 to 3.1.0
 
 **Nothing to change.** The AI agent tools are new and optional, and nothing

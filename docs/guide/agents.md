@@ -55,8 +55,8 @@ a directory is the simplest way to get there:
 ],
 ```
 
-The tools answer for **any** document on an open disk, to anybody who can reach
-them. They carry no per-document authorisation, so the disk is the boundary.
+The disk list decides what is reachable at all. Who may reach which document
+is [your gate](#who-may-reach-which-document).
 
 ### What is refused
 
@@ -71,6 +71,7 @@ to the model; the guard is the control:
 | `2026/../../salaries.pdf` | `..` anywhere is refused, not normalised |
 | `contracts\deal.pdf`, a null byte | not a path a disk understands |
 | `notes.txt`, `deal.pdf.php` | only names ending in `.pdf` |
+| a document over `agents.max_bytes` | the model chooses the file, and the engine holds it in memory |
 | a destination that exists | a signed copy never overwrites |
 
 The refusal comes back to the model as the tool's error, worded so it can
@@ -81,6 +82,57 @@ correct itself: it names the disks that are open, never a disk's root.
 tools tell the model so in their schema, because a model left to guess glues
 the disk's name to the front, as DeepSeek did the first time this was tried
 against a real provider.
+
+The size limit is 50 MB by default, read from the disk's own metadata before a
+byte is loaded. Null removes it:
+
+```php
+'agents' => [
+    'max_bytes' => 50 * 1024 * 1024,
+],
+```
+
+## Who may reach which document
+
+A disk holds every customer's contracts; the user talking to the agent may see
+their own. That is a question Laravel already answers with a gate, so the tools
+ask yours ([0041](/decisions/0041-agents-are-authorised-per-document)):
+
+```php
+use LSNepomuceno\LaravelA1PdfSign\Agents\Ability;
+
+// AppServiceProvider::boot()
+Gate::define(Ability::Read->value, function (User $user, string $disk, string $path) {
+    return Contract::where('path', $path)->where('customer_id', $user->customer_id)->exists();
+});
+
+Gate::define(Ability::Sign->value, function (User $user, string $disk, string $path, string $destinationDisk, string $destinationPath) {
+    return $user->can('sign', Contract::firstWhere('path', $path));
+});
+```
+
+| Ability | Asked by | Receives |
+|---|---|---|
+| `a1-pdf-sign.agents.read` | `validate_pdf_signature`, `list_signature_fields` | the user, the disk, the path |
+| `a1-pdf-sign.agents.sign` | `sign_pdf` | the user, the disk, the path, and where the copy would go |
+
+What to know about it:
+
+- **An ability you have not defined allows.** Until you define one, the disk
+  list is the only control, exactly as in 3.1.0.
+- **Once defined, a guest is refused** unless the ability's user is nullable,
+  as Laravel does everywhere. An MCP server over stdio has no user, so a
+  `Mcp::local` server with a defined ability needs a nullable user to answer
+  anything.
+- **The gate is asked before the document is looked at.** A refused user reads
+  "you may not read", never "there is no document", so a refusal does not tell
+  them what exists.
+- The user is whoever authenticated the request: the MCP route's guard, or the
+  default guard when an AI SDK agent runs. An agent on a queue has no user; see
+  [signing on a queue](/guide/agent-signing#an-agent-running-on-a-queue).
+
+`Agents\DocumentAccess::authorize()` and `allows()` are public, so a tool of your
+own can ask the same question the same way.
 
 ## The CPF stays out of the model
 

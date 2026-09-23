@@ -13,6 +13,31 @@ a minor release; changing it is a major one.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+Agents are authorised per document by the application's own gate
+([0041](docs/decisions/0041-agents-are-authorised-per-document.md)).
+
+### Added
+
+- **Two gate abilities**, `a1-pdf-sign.agents.read` and
+  `a1-pdf-sign.agents.sign`, named by `Agents\Ability`. The tools ask them before
+  looking at the document, so a refusal never says whether a path exists. An
+  ability the application has not defined allows, as in 3.1.0.
+- **`agents.max_bytes`**, the largest document an agent may have read or
+  signed. 50 MB by default, checked from the disk's metadata before a byte is
+  loaded.
+- `DocumentAccess::authorize()`, `allows()` and `maxBytes()`, for an
+  application's own tools.
+- The guide covers throttling the MCP route, and grouping the tools behind
+  `laravel/mcp`'s `ToolSearch` in a server with many tools, which the package's
+  own server deliberately does not do.
+
+### Changed
+
+- **The agent tools refuse a document over 50 MB.** Set `agents.max_bytes` to
+  null to keep 3.1.0's behaviour.
+
 ## [3.1.0] - 2026-09-23
 
 The release that lets an agent read a signed contract, and sign one with a

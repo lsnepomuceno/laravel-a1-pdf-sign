@@ -12,8 +12,8 @@ use LSNepomuceno\Signet\Exceptions\SignetException;
  *
  * Raised by `Agents\DocumentAccess` before any byte is read or written: a disk
  * missing from `a1-pdf-sign.agents.disks`, a path that climbs out of the disk
- * with `..`, an absolute path, a file that is not a PDF, or a destination that
- * already exists.
+ * with `..`, an absolute path, a file that is not a PDF, a document larger
+ * than `a1-pdf-sign.agents.max_bytes`, or a destination that already exists.
  *
  * **The message is written to be read by a model.** Every agent tool returns
  * it verbatim as the tool's error, so it names what was refused and what would
@@ -46,6 +46,18 @@ final class DocumentOutOfReach extends InvalidArgumentException implements Signe
     public static function missing(string $disk, string $path): self
     {
         return new self("There is no document at [{$path}] on the disk [{$disk}].");
+    }
+
+    public static function tooLarge(string $disk, string $path, int $limit): self
+    {
+        // Not Number::fileSize(), which formats through ext-intl, and a
+        // message about a refused document should not need an extension the
+        // package does not require.
+        $size = $limit >= 1_048_576 ? round($limit / 1_048_576, 1) . ' MB' : "{$limit} bytes";
+
+        return new self(
+            "The document at [{$path}] on the disk [{$disk}] is larger than the {$size} agents may work with.",
+        );
     }
 
     public static function occupied(string $disk, string $path): self

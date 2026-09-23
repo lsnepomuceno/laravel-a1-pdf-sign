@@ -163,10 +163,17 @@ return [
     | tools (laravel/mcp), and the signing tool (laravel/ai). Nothing here does
     | anything until one of those packages is installed and a tool is used.
     |
+    | Who may read or sign which document is decided by your Gate, when you
+    | define the abilities a1-pdf-sign.agents.read and a1-pdf-sign.agents.sign.
+    |
     | disks            The Storage disks an agent may read from and write to.
     |                  Empty, the default, opens none: every tool refuses every
     |                  call. A disk scoped to the documents agents should see
     |                  is safer than opening a general one.
+    |
+    | max_bytes        The largest document an agent may have validated, read
+    |                  or signed. The model chooses the file and the engine
+    |                  holds it in memory. Null removes the limit.
     |
     | expose_registry  Hand the model a signer's CPF or CNPJ. Off by default:
     |                  the name is enough to answer "who signed", and the
@@ -181,6 +188,8 @@ return [
 
     'agents' => [
         'disks' => [],
+
+        'max_bytes' => 50 * 1024 * 1024,
 
         'expose_registry' => env('A1_PDF_SIGN_AGENTS_EXPOSE_REGISTRY', false),
 

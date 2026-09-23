@@ -158,6 +158,8 @@ the application builds the agent that uses them.
 - The read tools answer for any document on an open disk, to anybody the
   application lets reach the MCP route. There is no per-document authorisation
   in them, which is why a dedicated disk is what the guide recommends opening.
+  *Superseded by [0041](0041-agents-are-authorised-per-document.md), which asks
+  the application's gate per document.*
 
 ## Alternatives rejected
 
@@ -193,3 +195,16 @@ anticipate, all found while writing the tests rather than after:
 - **`tests/Project/ArchTest.php` read the package's own name as a verification
   tool.** It scans string literals in `src/` for `pdfsig`, which `A1PdfSign`
   contains. Two error messages were reworded rather than the gate loosened.
+
+**The package server does not group its tools behind `ToolSearch`**, and that
+was decided after 3.1.0 shipped rather than before, when it was pointed out.
+`laravel/mcp` 1.0 can hide a server's tools behind two meta-tools,
+`search_tools` and `execute_tools`, so a client does not load every schema up
+front. At two tools that saves nothing and adds a search before every use. It
+also costs the annotations: a client sees `execute_tools`, which the SDK marks
+open-world and not read-only, so a client that could run
+`validate_pdf_signature` without asking would ask for every call. And
+`McpServerTool` wraps a tool, which `ToolSearch` is not, so grouped tools stop
+reaching AI SDK agents that way. An application with many tools of its own
+groups ours with them, which works unchanged and is tested
+(`tests/Mcp/ServerTest.php`).

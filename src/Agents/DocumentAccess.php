@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LSNepomuceno\LaravelA1PdfSign\Agents;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Filesystem\Factory as Filesystems;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -24,7 +26,14 @@ use LSNepomuceno\LaravelA1PdfSign\Io\{DiskDestination, DiskSource};
  *   so a fresh install reaches nothing at all;
  * - an absolute path, a path with `..` in it, a backslash or a null byte;
  * - a file that is not a PDF;
+ * - a document larger than `a1-pdf-sign.agents.max_bytes`, since the model
+ *   chooses the file and the engine holds it in memory;
  * - a destination that already exists, since a signed copy never overwrites.
+ *
+ * **What the application's `Gate` says comes first**, when it defines the
+ * ability: see `Agents\Ability` and `authorize()`. The disk list decides what is
+ * reachable at all; the gate decides who may reach which document
+ * (docs/decisions/0041-agents-are-authorised-per-document.md).
  *
  * `..` is refused outright rather than normalised. Flysystem would normalise
  * `a/../b` into `b` and refuse only what escapes the disk's root, which is the
@@ -34,10 +43,46 @@ use LSNepomuceno\LaravelA1PdfSign\Io\{DiskDestination, DiskSource};
  */
 final readonly class DocumentAccess
 {
+    /**
+     * 50 MB, the limit when the application's config does not name one.
+     */
+    public const int DEFAULT_MAX_BYTES = 52_428_800;
+
     public function __construct(
         private Config $config,
         private Filesystems $filesystems,
+        private Gate $gate,
     ) {}
+
+    /**
+     * Asks the application's gate, when it defines the ability.
+     *
+     * An undefined ability allows, because the disk list is the control this
+     * package promised in 3.1.0 and an application upgrading should not find
+     * every agent call refused. A defined one is asked with the authenticated
+     * user, and a guest is refused unless the ability says otherwise, which
+     * is how Laravel's gate treats a guest everywhere.
+     *
+     * **Tools call this before they look for the document**, so a user who
+     * may not read a path cannot learn from the error whether it exists.
+     *
+     * @throws AuthorizationException
+     */
+    public function authorize(Ability $ability, string ...$arguments): void
+    {
+        if ($this->gate->has($ability->value)) {
+            $this->gate->authorize($ability->value, array_values($arguments));
+        }
+    }
+
+    /**
+     * The same question, answered rather than thrown, for describing a call
+     * before it runs.
+     */
+    public function allows(Ability $ability, string ...$arguments): bool
+    {
+        return ! $this->gate->has($ability->value) || $this->gate->allows($ability->value, array_values($arguments));
+    }
 
     /**
      * The disks the application opened to agents, in the order it listed them.
@@ -78,6 +123,12 @@ final readonly class DocumentAccess
             throw DocumentOutOfReach::missing($disk, $path);
         }
 
+        $limit = $this->maxBytes();
+
+        if ($limit !== null && $filesystem->size($path) > $limit) {
+            throw DocumentOutOfReach::tooLarge($disk, $path, $limit);
+        }
+
         return new DiskSource($filesystem, $path);
     }
 
@@ -112,6 +163,29 @@ final readonly class DocumentAccess
         $name = pathinfo($path, PATHINFO_FILENAME) . '_signed.pdf';
 
         return $directory === '.' || $directory === '' ? $name : "{$directory}/{$name}";
+    }
+
+    /**
+     * The largest document an agent may hand the engine, or null for no limit.
+     *
+     * **A missing key is the default, and only an explicit null removes it.**
+     * `mergeConfigFrom()` merges top-level keys only, so an application that
+     * published its config under 3.1.0 has an `agents` block without this key,
+     * and that block replaces the package's whole. Reading the absence as "no
+     * limit" would have switched the limit off for exactly the applications
+     * that had configured agents.
+     */
+    public function maxBytes(): ?int
+    {
+        $key = 'a1-pdf-sign.agents.max_bytes';
+
+        if (! $this->config->has($key)) {
+            return self::DEFAULT_MAX_BYTES;
+        }
+
+        $limit = $this->config->get($key);
+
+        return is_numeric($limit) && (int) $limit > 0 ? (int) $limit : null;
     }
 
     /**
