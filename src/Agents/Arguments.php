@@ -24,6 +24,19 @@ use Illuminate\JsonSchema\Types\Type;
 final readonly class Arguments
 {
     /**
+     * How a path is described to the model.
+     *
+     * **The example is the part a model copies.** It used to read
+     * `contracts/2026/deal.pdf`, and DeepSeek, asked about `deal.pdf` on the
+     * `contracts` disk, tried `contracts/deal.pdf`, `contracts/2026/deal.pdf`
+     * and three more, all of them the disk's name glued to the front. So the
+     * examples here name no disk, and the sentence says why.
+     */
+    public const string PATH = 'The document\'s path relative to the root of that disk, ending in .pdf. '
+        . 'Do not repeat the disk\'s name in it: a document at the top of the disk is just its file name, '
+        . 'such as deal.pdf, and one inside a folder is folder/deal.pdf.';
+
+    /**
      * @param  list<string>  $disks
      * @return array<string, Type>
      */
@@ -32,7 +45,7 @@ final readonly class Arguments
         return [
             'disk' => self::disk($schema, $disks, 'The disk the document is stored on.')->required(),
             'path' => $schema->string()
-                ->description('The document\'s path on that disk, relative to its root, ending in .pdf. For example: contracts/2026/deal.pdf')
+                ->description(self::PATH)
                 ->required(),
         ];
     }

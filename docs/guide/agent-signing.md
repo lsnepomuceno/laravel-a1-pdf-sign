@@ -144,10 +144,10 @@ foreach ($response->pendingApprovals as $approval) {
 matters:
 
 ```
-Sign [contracts/2026/acme.pdf] on the disk [contracts] with the certificate of MARIA DA SILVA (111.444.777-35), valid until 2027-03-01.
+Sign [2026/acme.pdf] on the disk [contracts] with the certificate of MARIA DA SILVA (111.444.777-35), valid until 2027-03-01.
 Profile: pades-b-t.
 Reason recorded in the signature: "Contract approval".
-The signed copy is written to [contracts/2026/acme_signed.pdf] on the disk [contracts].
+The signed copy is written to [2026/acme_signed.pdf] on the disk [contracts].
 ```
 
 A certificate past its date says `which EXPIRED on …`, and one the resolver
@@ -180,8 +180,8 @@ reads:
   "signed": true,
   "status": "signed",
   "disk": "contracts",
-  "path": "contracts/2026/acme_signed.pdf",
-  "source": { "disk": "contracts", "path": "contracts/2026/acme.pdf" },
+  "path": "2026/acme_signed.pdf",
+  "source": { "disk": "contracts", "path": "2026/acme.pdf" },
   "signer": "MARIA DA SILVA",
   "profile": "pades-b-t",
   "size": 48213,

@@ -76,6 +76,12 @@ to the model; the guard is the control:
 The refusal comes back to the model as the tool's error, worded so it can
 correct itself: it names the disks that are open, never a disk's root.
 
+**A path is relative to its disk, and never starts with the disk's name.**
+`deal.pdf` on the disk `contracts` is `deal.pdf`, not `contracts/deal.pdf`. The
+tools tell the model so in their schema, because a model left to guess glues
+the disk's name to the front, as DeepSeek did the first time this was tried
+against a real provider.
+
 ## The CPF stays out of the model
 
 The validation tool reports each signer's name. The CPF or CNPJ on an
