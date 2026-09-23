@@ -96,9 +96,17 @@ $ composer test:mutate # mutation testing (slow: runs nightly in CI, not on PRs)
 ```
 
 Tests are written with [Pest](https://pestphp.com). `tests/Project/ArchTest.php` holds
-architectural rules that run with the rest of the suite. Tests in the `network` group reach a
-live timestamp authority and fail without internet; skip them with
-`vendor/bin/pest --exclude-group=network`.
+architectural rules that run with the rest of the suite.
+
+The agent tools' tests are grouped by the SDK they need, `mcp` and `ai`. CI also runs the suite
+with both SDKs removed; to do the same locally, remove them and exclude those groups and
+`project`, **one flag per group**, since Pest reads a comma-separated list as a single name:
+
+``` bash
+$ composer remove --dev laravel/ai laravel/mcp
+$ vendor/bin/pest --exclude-group=mcp --exclude-group=ai --exclude-group=project
+$ git checkout composer.json composer.lock && composer install
+```
 
 Helpers shared between test files belong in `tests/Pest.php`. Defined anywhere else they are
 invisible to the other files once the suite runs with `--parallel`.

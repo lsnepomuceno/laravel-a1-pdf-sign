@@ -49,6 +49,14 @@ here: a second index is a second thing to forget.
 [UPGRADE.md](UPGRADE.md) maps every removed or changed API to its replacement.
 [README.md](README.md) is the usage documentation.
 
+## Agents
+
+The optional agent tools read through `laravel/mcp` and sign through
+`laravel/ai`, and the split is a decision rather than an accident:
+[0040](docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md).
+Invariants 6 and 7 in [the invariants](docs/spec/invariants.md) are the two
+rules that keep them safe and optional.
+
 ## The engine is not here
 
 Everything that signs, validates, reads a certificate or renders a seal is in

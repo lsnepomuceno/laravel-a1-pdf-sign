@@ -84,6 +84,25 @@ trusting the order they are listed in.
 What each does to the rendered image is
 [signet-pdf's seal reference](https://github.com/lsnepomuceno/signet-pdf/blob/main/docs/guide/seals.md).
 
+## AI agents
+
+| Key | Env | Default |
+|---|---|---|
+| `agents.disks` | | `[]` |
+| `agents.expose_registry` | `A1_PDF_SIGN_AGENTS_EXPOSE_REGISTRY` | `false` |
+| `agents.idempotency.store` | `A1_PDF_SIGN_AGENTS_CACHE_STORE` | the default cache store |
+| `agents.idempotency.ttl` | | 86400 |
+
+Read only by the optional agent tools, and inert until `laravel/mcp` or
+`laravel/ai` is installed and a tool is used.
+
+`disks` is the list of `Storage` disks an agent may read from and write to.
+**Empty opens none**, so every tool refuses every call until you choose.
+`expose_registry` hands a signer's CPF or CNPJ to the model, which is personal
+data sent to a model provider. `idempotency` is where the signing tool records
+the calls it already signed; use a store whose `add()` is atomic in
+production. All of it is explained in [AI agents](/guide/agents).
+
 ## Temporary files
 
 `temp_path`, `A1_PDF_SIGN_TEMP_PATH`. Null uses the system temporary directory.

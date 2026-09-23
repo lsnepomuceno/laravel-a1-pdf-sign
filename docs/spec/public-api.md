@@ -24,8 +24,18 @@ src/
 ├── Config/SignetConfigFactory.php
 ├── Io/                                   # disks and uploads as sources
 ├── Commands/                             # six artisan commands
-└── Testing/A1PdfSignFake.php
+├── Testing/A1PdfSignFake.php
+├── Contracts/SigningCertificateResolver.php   # which certificate an agent signs with
+├── Agents/                               # the path guard and ledger both SDKs share
+├── Mcp/                                  # needs laravel/mcp: the read tools and their server
+├── Ai/                                   # needs laravel/ai: the signing tool
+├── Events/DocumentSignedByAgent.php
+└── Exceptions/                           # DocumentOutOfReach, SigningCertificateUnavailable
 ```
+
+`Mcp/` and `Ai/` can only be loaded with their SDK installed, and nothing
+outside them names a class inside them. That is what lets both SDKs stay
+optional ([0040](../decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md)).
 
 The root namespace `LSNepomuceno\LaravelA1PdfSign` is fixed; renaming it would
 be a gratuitous break.
@@ -102,6 +112,8 @@ signature.timestamp.{url,username,password,timeout,attempts,backoff}
 signature.ltv.{timeout,attempts,backoff}
 certificate.{legacy,use_path_env,chain_paths}
 seal.{driver,transparent,background,text.x,text.rows,font.{path,size,color}}
+agents.{disks,expose_registry}
+agents.idempotency.{store,ttl}
 ```
 
 Adding a key is a minor release. Removing or renaming one is a major release,
@@ -117,6 +129,41 @@ signs. Its assertions are `assertSigned()`, `assertSignedTimes()`,
 `Testing\A1PdfSignFake::certificate()` hands back a certificate that opens
 nothing, for the builder's guard.
 
+## Agent tools
+
+Optional: each needs its SDK, and both SDKs are `suggest`ed, pinned to `^1.0`
+by `conflict`
+([0040](../decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md)).
+
+| Class | Needs | Tool name | Writes |
+|---|---|---|---|
+| `Mcp\Tools\ValidatePdfSignature` | `laravel/mcp` | `validate_pdf_signature` | nothing |
+| `Mcp\Tools\ListSignatureFields` | `laravel/mcp` | `list_signature_fields` | nothing |
+| `Mcp\A1PdfSignServer` | `laravel/mcp` | the two above, as a server | nothing |
+| `Ai\Tools\SignPdf` | `laravel/ai` | `sign_pdf` | a signed copy, after approval |
+
+**The tool names, their arguments and the keys of what they return are public
+API**, since a prompt, a client or an application's own code depends on them.
+Adding an optional argument or a key is a minor release; renaming or removing
+one is a major one.
+
+What else a consumer touches:
+
+| | |
+|---|---|
+| `Contracts\SigningCertificateResolver` | `resolve(): Certificate`. The application binds it, or passes it to `new SignPdf(...)` |
+| `Events\DocumentSignedByAgent` | `sourceDisk`, `sourcePath`, `disk`, `path`, `toolCallId`, `userId`, `receipt` |
+| `Exceptions\DocumentOutOfReach` | a disk, path or destination refused. Implements `SignetException` |
+| `Exceptions\SigningCertificateUnavailable` | no resolver bound. A `LogicException`, implements `SignetException` |
+| `Agents\DocumentAccess` | the guard, public so an application's own tools can use it |
+
+`SignPdf::withoutApproval()` throws, and that is part of the contract rather
+than a limitation to be lifted: a release that let it succeed would be a
+breaking change in what the tool promises.
+
+`Mcp\A1PdfSignServer` is not final, so an application can extend it and append
+its own tools. Its `$tools` list growing is a minor release.
+
 ## Commands
 
 `pdf:sign`, `pdf:validate-signature`, `pdf:fields`, `pdf:add-field`,
@@ -126,5 +173,8 @@ pipeline calls them.
 ## What is not public
 
 - Anything under `LSNepomuceno\Signet\`, which is signet-pdf's to promise
+- `Agents\Arguments` and `Agents\ToolCallLedger`, internal to the tools
+- The wording of a tool's description or of an approval's text, which may be
+  improved in any release. Their facts are stable; their sentences are not
 - `Commands\Concerns\ReadsTypedInput`, an internal convenience
 - The private methods of the manager

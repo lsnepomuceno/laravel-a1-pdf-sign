@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The engine that signs PDF files with A1/x509 certificates, appends revisions, builds the CAdES, writes the security store and validates signatures is that package. It is framework free, and it is where every byte of PDF is produced or read.
 
-What lives here is the half a Laravel application needs and a standalone package cannot have: the container wiring, a config file, four adapters putting Laravel's own infrastructure behind signet's contracts, three signing entry points that take framework types, six artisan commands and a fake.
+What lives here is the half a Laravel application needs and a standalone package cannot have: the container wiring, a config file, four adapters putting Laravel's own infrastructure behind signet's contracts, three signing entry points that take framework types, six artisan commands, a fake, and optional agent tools on `laravel/mcp` and `laravel/ai`.
 
 The reasoning is imported rather than summarised, so it is in context for every session:
 
@@ -42,11 +42,12 @@ composer test:types     # type coverage, gated at 100%
 
 vendor/bin/pest tests/Adapters/TransportTest.php          # single file
 vendor/bin/pest --filter="Http::fake"                     # single test
+vendor/bin/pest --exclude-group=mcp --exclude-group=ai --exclude-group=project   # what runs without the SDKs; one flag per group
 ```
 
 Tests run on Orchestra Testbench, not a host app. `openssl` on `PATH` **is** needed: `Signet\Testing\DebugCertificate` generates throwaway PKCS#12 bundles through ext-openssl, and validation shells out to the binary.
 
-Shared helpers live in `tests/Pest.php` (`debugCertificate()`, `pemCertificate()`, `testCertificate()`, `resource()`, `packageRoot()`). A helper defined inside one test file is invisible to the others under `--parallel`, which fails as `Call to undefined function`.
+Shared helpers live in `tests/Pest.php` (`debugCertificate()`, `pemCertificate()`, `testCertificate()`, `signedOnDisk()`, `resource()`, `packageRoot()`). A helper defined inside one test file is invisible to the others under `--parallel`, which fails as `Call to undefined function`.
 
 A Husky `pre-commit` hook formats staged PHP files with Pint and runs PHPStan (`npm install` to enable it). It runs on the **host**, so the host needs `vendor/`: `composer install --ignore-platform-reqs`. The Docker services keep their own `vendor/` in a named volume that masks the host one, which is why PhpStorm reports missing classes after a Docker-only install.
 
@@ -85,6 +86,16 @@ A1PdfSign::newSignature()->certificate($pfx, $pw)->pdf($path)->profile(...)->sig
 - `Config\SignetConfigFactory`: `config/a1-pdf-sign.php` into `Signet\Config\SignetConfig`. **The config file stays an array of scalars**, so `config:cache` keeps working; the objects are built at resolution. A bad value fails at boot naming its key.
 - `Commands/`: six thin artisan commands mapping `Throwable` to an exit code. Typed input comes from `Commands\Concerns\ReadsTypedInput`.
 - `Testing\A1PdfSignFake`: installs signet's recorder into the container by rebuilding the engine, not by rebinding `PdfSigner`. Rebinding alone would leave `newSignature()->…->sign()` reaching the real signer.
+
+### The agent tools, and why they are split
+
+`docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md`. Reading is `laravel/mcp` (`Mcp\Tools\ValidatePdfSignature`, `Mcp\Tools\ListSignatureFields`, `Mcp\A1PdfSignServer`), because the AI SDK runs MCP tools and the reverse is not true. Signing is `laravel/ai` (`Ai\Tools\SignPdf`), because only there can a tool insist on approval.
+
+- **Both SDKs are optional**: `require-dev` plus `suggest` plus `conflict`. `laravel/ai` may be named only in `src/Ai`, `laravel/mcp` only in `src/Mcp`, and nothing outside either names a class inside it. `ArchTest` enforces it, and the `without-agents` CI job runs the suite with both removed.
+- **Every disk and path a model names goes through `Agents\DocumentAccess`.** No tool builds a disk source itself.
+- **`SignPdf` always asks for approval, and `withoutApproval()` throws.** It takes no certificate or password from the model: `Contracts\SigningCertificateResolver` answers that. Invariant 6. Do not add a way around it.
+- Code both sides share, and that needs neither SDK, lives in `src/Agents/`.
+- `A1PdfSign` in a string literal in `src/` trips the verification-tool gate in `ArchTest` (it contains `pdfsig`). Use `::class` or reword.
 
 ## Quality gates
 

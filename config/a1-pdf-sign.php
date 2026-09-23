@@ -154,4 +154,40 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | AI agents
+    |--------------------------------------------------------------------------
+    |
+    | Read by the optional agent tools: the MCP server and its two read-only
+    | tools (laravel/mcp), and the signing tool (laravel/ai). Nothing here does
+    | anything until one of those packages is installed and a tool is used.
+    |
+    | disks            The Storage disks an agent may read from and write to.
+    |                  Empty, the default, opens none: every tool refuses every
+    |                  call. A disk scoped to the documents agents should see
+    |                  is safer than opening a general one.
+    |
+    | expose_registry  Hand the model a signer's CPF or CNPJ. Off by default:
+    |                  the name is enough to answer "who signed", and the
+    |                  number is personal data sent to a model provider.
+    |
+    | idempotency      Where the signing tool records the calls it has already
+    |                  signed, so a retried call signs once. Null uses the
+    |                  default cache store. Pick one whose add() is atomic
+    |                  (redis, memcached, database, dynamodb) in production.
+    |
+    */
+
+    'agents' => [
+        'disks' => [],
+
+        'expose_registry' => env('A1_PDF_SIGN_AGENTS_EXPOSE_REGISTRY', false),
+
+        'idempotency' => [
+            'store' => env('A1_PDF_SIGN_AGENTS_CACHE_STORE'),
+            'ttl' => 86400,
+        ],
+    ],
+
 ];

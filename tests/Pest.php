@@ -17,6 +17,19 @@ use LSNepomuceno\LaravelA1PdfSign\Tests\TestCase;
 uses(TestCase::class)->in(__DIR__);
 
 /*
+| The optional integrations, grouped by the SDK each one needs. CI runs the
+| suite once more with both SDKs removed and these groups excluded, which is
+| how "the package works without them" stays true rather than assumed.
+|
+| `project` goes with them: its walks load every class under src/ and tests/,
+| and the ones naming an SDK cannot load without it. Its rules are about the
+| source, which the main jobs check with everything installed.
+*/
+uses()->group('mcp')->in('Mcp');
+uses()->group('ai')->in('Ai');
+uses()->group('project')->in('Project');
+
+/*
 |--------------------------------------------------------------------------
 | Helpers
 |--------------------------------------------------------------------------
@@ -73,6 +86,30 @@ function testCertificate(): LSNepomuceno\Signet\Data\Certificate
 
     return app(LSNepomuceno\Signet\Certificates\NativeCertificateReader::class)
         ->read($pfx, $password);
+}
+
+/**
+ * Signs tests/Resources/test.pdf for real and stores it on a disk, opening
+ * that disk to agents.
+ *
+ * Shared by the MCP and AI SDK tests, which both need a genuinely signed
+ * document to read: a validation tool proven only against unsigned files
+ * proves very little.
+ *
+ * @return string The certificate's common name, which the report should name.
+ */
+function signedOnDisk(string $disk, string $path): string
+{
+    [$pfxPath, $password] = debugCertificate();
+
+    Illuminate\Support\Facades\Storage::disk($disk)->put(
+        $path,
+        LSNepomuceno\LaravelA1PdfSign\Facades\A1PdfSign::signFromFile($pfxPath, $password, resource('test.pdf'))->contents,
+    );
+
+    config()->set('a1-pdf-sign.agents.disks', [$disk]);
+
+    return 'Test Certificate';
 }
 
 /**

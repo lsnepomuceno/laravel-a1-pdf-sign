@@ -87,6 +87,46 @@ jobs:
       - name: Run tests
         run: composer test
 
+  # laravel/ai and laravel/mcp are suggestions, and the two jobs around this one
+  # always have them, since they are dev requirements. This removes both and
+  # runs everything that does not need them, which is what turns "optional"
+  # from a claim into a check: a class outside src/Ai or src/Mcp naming either
+  # SDK fails here, and nowhere else would
+  # (docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md).
+  #
+  # `project` goes with the SDK groups because its walks load every class in
+  # the tree, including the ones that cannot load without an SDK. Its rules are
+  # about the source, and the job above checks them with everything installed.
+  #
+  # One flag per group: Pest reads `--exclude-group=a,b` as a single group
+  # named "a,b" and excludes nothing.
+  without-agents:
+    name: Without the optional SDKs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, fileinfo, openssl, json, gd, imagick, bcmath, sqlite3
+          coverage: none
+
+      - name: Install dependencies, without laravel/ai and laravel/mcp
+        run: |
+          composer update --prefer-dist --prefer-stable --no-interaction --no-progress
+          composer remove --dev laravel/ai laravel/mcp --no-interaction --no-progress
+
+      - name: Prove neither SDK is installed
+        run: |
+          php -r 'require "vendor/autoload.php"; exit(interface_exists(Laravel\Ai\Contracts\Tool::class) || class_exists(Laravel\Mcp\Server\Tool::class) ? 1 : 0);'
+
+      - name: Run the tests that need neither SDK
+        run: vendor/bin/pest --fail-on-skipped --exclude-group=mcp --exclude-group=ai --exclude-group=project
+
   quality:
     name: Code style and static analysis
     runs-on: ubuntu-latest
