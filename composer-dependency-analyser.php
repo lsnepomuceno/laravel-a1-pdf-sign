@@ -35,6 +35,17 @@ return (new Configuration())
     ->ignoreErrorsOnPackage('laravel/framework', [ErrorType::SHADOW_DEPENDENCY])
 
     /*
+     * The two optional integrations. Each SDK is a dev requirement, so the
+     * suite and PHPStan can see it, and a suggestion for consumers, and each
+     * is reached from exactly one directory of src/. tests/Project/ArchTest.php
+     * holds the other half: nothing outside that directory may name the SDK,
+     * which is what keeps the package loadable when the SDK is absent
+     * (docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md).
+     */
+    ->ignoreErrorsOnPackageAndPaths('laravel/ai', [__DIR__ . '/src/Ai'], [ErrorType::DEV_DEPENDENCY_IN_PROD])
+    ->ignoreErrorsOnPackageAndPaths('laravel/mcp', [__DIR__ . '/src/Mcp'], [ErrorType::DEV_DEPENDENCY_IN_PROD])
+
+    /*
      * Dev-only tooling reached through Pest's global functions and Testbench's
      * base class, neither of which is a direct require.
      */

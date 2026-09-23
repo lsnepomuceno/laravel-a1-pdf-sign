@@ -1,5 +1,20 @@
 # Upgrading
 
+## Unreleased
+
+**Nothing to change.** The AI agent tools are new and optional, and nothing
+existing moved
+([0040](docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md)).
+
+Two things worth knowing if you install either SDK:
+
+- **Only `^1.0` of `laravel/ai` and `laravel/mcp` installs beside this
+  package.** It declares a `conflict` with anything else, so a mismatch fails
+  at `composer require` rather than on the first tool call.
+- **A published config file keeps working without the new `agents` keys**,
+  and without them no disk is open to agents, which is the default anyway.
+  Republish, or copy the `agents` block, when you want to open one.
+
 ## From 2.7.0 to 3.0.0
 
 **The engine is a separate package now.** Everything that signs, validates,

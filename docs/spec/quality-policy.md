@@ -55,6 +55,10 @@ behaviour:
 - only `Adapters\IlluminateProcessRunner` opens a process
 - contracts are interfaces, facades extend Laravel's and are final
 - console commands stay in `Commands`
+- `laravel/ai` is named only in `src/Ai`, `laravel/mcp` only in `src/Mcp`, and
+  nothing outside either names a class inside it
+- the agent tools reach disks only through `Agents\DocumentAccess`, and sign
+  and read through `Contracts\A1PdfSign` rather than the engine
 - every file declares `strict_types=1`, checked twice: an arch expectation over
   `src/`, and a file walk for the files that declare no class
 - no constant the host platform may not define
@@ -78,7 +82,19 @@ Testbench, grouped by what it covers:
 | `tests/Io` | disks and uploads |
 | `tests/Console` | the six artisan commands |
 | `tests/Container` | bindings, config, the fake, what the engine can reach |
+| `tests/Agents` | the path guard and the call ledger, which need neither SDK |
+| `tests/Mcp` | the read tools and their server, group `mcp` |
+| `tests/Ai` | the signing tool, and the tools inside a real AI SDK run with the model faked, group `ai` |
 | `tests/Project` | the structural rules above |
+
+### Without the optional SDKs
+
+`laravel/ai` and `laravel/mcp` are dev requirements, so the main jobs always
+have them. A separate CI job removes both and runs the suite with the `mcp` and
+`ai` groups excluded, and without `tests/Project`, whose walks load every class
+in `src/` including the two that cannot load without their SDK. It is what
+turns "the SDKs are optional" from a claim into a check
+([0040](../decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md)).
 
 **Nothing skips.** `composer test` carries `--fail-on-skipped`, because every
 check has to run somewhere and a skip is how one quietly stops.

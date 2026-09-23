@@ -96,7 +96,42 @@ actually contains.
 
 ---
 
-## 6. PSR-4 autoloading is case-sensitive
+## 6. An agent reaches only what the application opened, and signs only with a person's approval
+
+Two rules, one reason: an argument an agent tool receives was written by a
+model, and whoever writes the prompt steers the model
+([0040](../decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md)).
+
+**Every disk and path a model names goes through `Agents\DocumentAccess`.** It
+refuses a disk missing from `a1-pdf-sign.agents.disks`, which is empty by
+default, an absolute path, `..` anywhere, a file that is not a PDF, and a
+destination that exists. No agent tool builds a disk source itself.
+
+**`Ai\Tools\SignPdf` always asks.** `shouldRequestApproval()` returns an
+`Approval` for every call, `withoutApproval()` throws, and the tool takes no
+certificate or password from the model. A change that let a signature through
+without a person is not a feature request, it is this rule broken.
+
+*Enforced by* `tests/Agents/DocumentAccessTest.php`, `tests/Ai/SignPdfTest.php`,
+`tests/Ai/AgentLoopTest.php`, which drives the SDK's own loop and asserts that
+nothing is written before approval, and `tests/Project/ArchTest.php`, which
+forbids the tools from naming `Storage`, the disk classes or the engine.
+
+---
+
+## 7. The SDKs stay optional
+
+`laravel/ai` and `laravel/mcp` are suggestions. A class naming one cannot be
+loaded without it, so `laravel/ai` is named only in `src/Ai`, `laravel/mcp`
+only in `src/Mcp`, and nothing outside either directory names a class inside
+it. The provider registers nothing from them.
+
+*Enforced by* `tests/Project/ArchTest.php`, and by the CI job that removes both
+SDKs and runs the suite without them.
+
+---
+
+## 8. PSR-4 autoloading is case-sensitive
 
 `InvalidX509PrivateKeyException` has a capital `X`. A file named
 `Invalidx509...` autoloads on macOS and fails in production.

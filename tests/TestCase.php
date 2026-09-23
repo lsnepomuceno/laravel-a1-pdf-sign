@@ -25,10 +25,20 @@ class TestCase extends Orchestra
         parent::tearDown();
     }
 
+    /**
+     * The package, plus the two optional SDKs when they are installed.
+     *
+     * An application discovers them; Testbench does not. They are registered
+     * only when present because CI also runs the suite with both removed, to
+     * prove the package installs and boots without them
+     * (docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md).
+     */
     protected function getPackageProviders($app): array
     {
-        return [
+        return array_values(array_filter([
             LaravelA1PdfSignServiceProvider::class,
-        ];
+            'Laravel\Ai\AiServiceProvider',
+            'Laravel\Mcp\Server\McpServiceProvider',
+        ], class_exists(...)));
     }
 }

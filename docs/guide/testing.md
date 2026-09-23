@@ -62,3 +62,54 @@ It needs the process runner because it signs its own tokens by shelling out to
 `Signet\Testing\DebugCertificate::make()` generates a throwaway PKCS#12 bundle
 through `ext-openssl`, so a real signature in a test needs no certificate in
 your repository.
+
+## Agents
+
+The agent tools test with the SDKs' own fakes, and nothing here needs a model
+or a key.
+
+**Fake the model, keep the loop.** `YourAgent::fake()` replaces the provider,
+not the AI SDK's loop, so a faked tool call still goes through approval, the
+MCP wrapper and validation, exactly as in production:
+
+```php
+use Laravel\Ai\Responses\Data\ToolCall;
+
+ContractAssistant::fake([
+    new ToolCall('call_1', 'sign_pdf', ['disk' => 'contracts', 'path' => 'acme.pdf']),
+]);
+
+$response = new ContractAssistant()->prompt('Sign the Acme contract.');
+
+expect($response->hasPendingApprovals())->toBeTrue()
+    ->and($response->pendingApprovals->first()->reason)->toContain('Sign [acme.pdf]');
+
+Storage::disk('contracts')->assertMissing('acme_signed.pdf');
+```
+
+The SDK does not run tools when a faked run is resumed with a decision, so the
+"after approval" half is `handle()`, called the way the SDK calls it:
+
+```php
+use Laravel\Ai\Tools\Request;
+
+Event::fake([DocumentSignedByAgent::class]);
+
+new SignPdf(new CertificateOf($user))
+    ->handle(new Request(['disk' => 'contracts', 'path' => 'acme.pdf'], 'call_1'));
+
+Storage::disk('contracts')->assertExists('acme_signed.pdf');
+Event::assertDispatched(DocumentSignedByAgent::class);
+```
+
+**MCP tools test through the server**, with `laravel/mcp`'s own helpers:
+
+```php
+A1PdfSignServer::tool(ValidatePdfSignature::class, ['disk' => 'contracts', 'path' => 'acme_signed.pdf'])
+    ->assertOk()
+    ->assertStructuredContent(fn ($json) => $json->where('valid', true)->etc());
+```
+
+`Storage::fake()` covers the disks and `A1PdfSign::fake()` still covers the
+signature, since `SignPdf` signs through the facade's contract rather than
+around it. Remember to open the faked disk in `a1-pdf-sign.agents.disks`.

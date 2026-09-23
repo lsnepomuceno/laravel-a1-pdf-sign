@@ -10,7 +10,9 @@
         "x509",
         "laravel",
         "certificate",
-        "icp brasil"
+        "icp brasil",
+        "mcp",
+        "ai agents"
     ],
     "authors": [
         {
@@ -39,6 +41,8 @@
         "ext-tokenizer": "*",
         "ergebnis/composer-normalize": "^2.52",
         "larastan/larastan": "^3.10",
+        "laravel/ai": "^1.0",
+        "laravel/mcp": "^1.0",
         "laravel/pint": "^1.30",
         "nunomaduro/collision": "^8",
         "orchestra/testbench": "^11",
@@ -51,10 +55,15 @@
         "roave/security-advisories": "dev-latest",
         "shipmonk/composer-dependency-analyser": "^1.8"
     },
+    "conflict": {
+        "laravel/ai": "<1.0 || >=2.0",
+        "laravel/mcp": "<1.0 || >=2.0"
+    },
     "suggest": {
         "ext-gd": "To use GD library based image processing.",
         "ext-imagick": "To use Imagick based image processing.",
-        "lsnepomuceno/laravel-brazilian-ceps": "A package for querying zip codes for Brazilian addresses."
+        "laravel/ai": "To let an AI SDK agent sign documents, always behind a human approval (Ai\\Tools\\SignPdf).",
+        "laravel/mcp": "To serve signature validation and field listing to MCP clients and AI SDK agents (Mcp\\A1PdfSignServer)."
     },
     "autoload": {
         "psr-4": {

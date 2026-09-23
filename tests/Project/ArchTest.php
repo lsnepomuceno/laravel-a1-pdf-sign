@@ -161,6 +161,81 @@ arch('only the shell adapter opens processes')
     ->expect(['Illuminate\Process', 'Symfony\Component\Process', 'exec', 'shell_exec', 'proc_open', 'passthru', 'system', 'popen'])
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Adapters\IlluminateProcessRunner');
 
+/*
+|--------------------------------------------------------------------------
+| The optional integrations
+|--------------------------------------------------------------------------
+|
+| laravel/ai and laravel/mcp are suggestions, not requirements, so a class
+| naming either one cannot be loaded without it. Each SDK is therefore
+| confined to one directory, and nothing outside that directory names the
+| classes inside it: the service provider, the facade and everything else keep
+| loading when neither SDK is installed, which CI proves by removing both
+| (docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md).
+|
+| tests/ is exempt, since the suite exercises both.
+|
+*/
+
+arch('laravel/ai is named only in Ai')
+    ->expect('Laravel\Ai')
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Ai')
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Tests');
+
+arch('laravel/mcp is named only in Mcp')
+    ->expect('Laravel\Mcp')
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Mcp')
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Tests');
+
+arch('nothing outside Ai reaches into it')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Ai')
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Ai')
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Tests');
+
+arch('nothing outside Mcp reaches into it')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Mcp')
+    ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Mcp')
+    ->ignoring('LSNepomuceno\LaravelA1PdfSign\Tests');
+
+/**
+ * What both SDKs share needs neither. `Agents\DocumentAccess` is the guard on
+ * every path a model names, and it has to load, and be tested, in the job that
+ * removes both SDKs.
+ */
+arch('the shared agent code needs neither SDK')
+    ->expect('LSNepomuceno\LaravelA1PdfSign\Agents')
+    ->not->toUse(['Laravel\Ai', 'Laravel\Mcp']);
+
+/**
+ * The tools go through the package's own contract, `Contracts\A1PdfSign`, and
+ * never around it to the engine. That is what keeps `A1PdfSign::fake()`
+ * covering a signature an agent makes, and what keeps the tools from growing a
+ * second, unaudited way to sign.
+ */
+arch('agent tools sign and read through the contract, not the engine')
+    ->expect('LSNepomuceno\Signet\Signet')
+    ->not->toBeUsedIn([
+        'LSNepomuceno\LaravelA1PdfSign\Agents',
+        'LSNepomuceno\LaravelA1PdfSign\Ai',
+        'LSNepomuceno\LaravelA1PdfSign\Mcp',
+    ]);
+
+/**
+ * Every path an agent names goes through `Agents\DocumentAccess`. A tool
+ * building a disk source itself would skip the allowlist, so the tools may not
+ * name `Storage` or the disk classes at all.
+ */
+arch('agent tools reach disks only through DocumentAccess')
+    ->expect([
+        'Illuminate\Support\Facades\Storage',
+        'Illuminate\Contracts\Filesystem',
+        'LSNepomuceno\LaravelA1PdfSign\Io',
+    ])
+    ->not->toBeUsedIn([
+        'LSNepomuceno\LaravelA1PdfSign\Ai',
+        'LSNepomuceno\LaravelA1PdfSign\Mcp',
+    ]);
+
 arch('console commands stay in Commands')
     ->expect('Illuminate\Console\Command')
     ->toOnlyBeUsedIn('LSNepomuceno\LaravelA1PdfSign\Commands');

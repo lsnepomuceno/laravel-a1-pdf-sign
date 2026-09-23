@@ -120,6 +120,7 @@ export default defineConfig({
         { text: 'Getting started', slugs: ['getting-started', 'configuration'] },
         { text: 'Signing', slugs: ['signing', 'disks', 'certificates', 'templates'] },
         { text: 'Reading a document', slugs: ['validation', 'icp-brasil'] },
+        { text: 'AI agents', slugs: ['agents', 'mcp', 'agent-signing'] },
         { text: 'Working with it', slugs: ['commands', 'testing', 'upgrading'] },
       ]),
       '/spec/': [{ text: 'Specification', items: pages('spec') }],

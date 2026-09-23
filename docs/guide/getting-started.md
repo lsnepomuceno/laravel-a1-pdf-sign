@@ -47,4 +47,5 @@ a signer's name and reason.
 | to fill a field somebody else placed | [Templates](/guide/templates) |
 | to check a document that is already signed | [Validation](/guide/validation) |
 | to test an application that signs | [Testing](/guide/testing) |
+| an AI agent that reads or signs | [AI agents](/guide/agents) |
 | what a profile means, how a seal is drawn, what ICP-Brasil requires | [signet-pdf](https://github.com/lsnepomuceno/signet-pdf) |

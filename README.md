@@ -408,6 +408,55 @@ $report->messages();   // one line per finding, naming the field
 > certificate built to satisfy them will conform. Whether the chain reaches an ICP-Brasil root is `TrustStore`'s
 > question, and it is a different one.
 
+## AI agents
+
+An agent can read a signed document and tell you who signed it, and, **with a person's approval of every call**, sign
+one. The package ships the tools, on Laravel's own AI packages, and leaves the agent to you. Both packages are
+optional:
+
+```bash
+composer require laravel/mcp   # validate_pdf_signature, list_signature_fields
+composer require laravel/ai    # sign_pdf
+```
+
+Nothing is reachable until you open a disk to agents, which is empty by default:
+
+```php
+// config/a1-pdf-sign.php
+'agents' => ['disks' => ['contracts']],
+```
+
+**Reading goes through MCP**, so Claude Code, Cursor or Boost can ask, and an AI SDK agent runs the same tools:
+
+```php
+// routes/ai.php
+Mcp::web('/mcp/signatures', A1PdfSignServer::class)->middleware('auth:sanctum');
+```
+
+**Signing goes through the AI SDK**, because only there can a tool insist on approval. The run pauses, your
+application shows a person exactly what would be signed and with whose certificate, and it resumes with their
+decision:
+
+```php
+public function tools(): iterable
+{
+    return [
+        new McpServerTool(new ValidatePdfSignature()),
+        new SignPdf(),   // the certificate comes from a resolver you bind, never from the model
+    ];
+}
+
+$response = new ContractAssistant()->forUser($user)->prompt('Sign the Acme contract.');
+
+$response->pendingApprovals->first()->reason;
+// Sign [acme.pdf] on the disk [contracts] with the certificate of MARIA DA SILVA (111.444.777-35), valid until …
+```
+
+Approval cannot be switched off, a repeated call signs once, a signed copy never overwrites a file, and a model's
+path never leaves the disks you opened. [The agents guide](https://lsnepomuceno.github.io/laravel-a1-pdf-sign/guide/agents)
+has the whole flow, and [0040](docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md) the
+reasoning.
+
 ## Command line
 
 ```bash
@@ -439,6 +488,9 @@ requires `^8.1`, so the two cannot be installed together.
 
 **v3 needs `intervention/image ^4`**, which arrives through signet-pdf. An application pinned to `^3` cannot install
 it.
+
+The agent tools, from 3.1, need `laravel/mcp ^1` for reading and `laravel/ai ^1` for signing. Both are optional, and
+the package refuses to install beside any other major of either.
 
 Coming from 2.x? Every class moved to the `LSNepomuceno\Signet\` namespace and nothing else changed.
 [UPGRADE.md](UPGRADE.md) has the table.
