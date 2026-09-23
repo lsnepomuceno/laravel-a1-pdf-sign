@@ -144,7 +144,7 @@ export default defineConfig({
     search: { provider: 'local' },
 
     footer: {
-      message: `Version ${release.version}. Released under the MIT License.`,
+      message: `Version ${release().version}. Released under the MIT License.`,
       copyright: 'Copyright © Lucas Nepomuceno',
     },
   },

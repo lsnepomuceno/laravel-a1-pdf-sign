@@ -1,6 +1,6 @@
 # Upgrading
 
-## Unreleased
+## From 3.0.0 to 3.1.0
 
 **Nothing to change.** The AI agent tools are new and optional, and nothing
 existing moved
