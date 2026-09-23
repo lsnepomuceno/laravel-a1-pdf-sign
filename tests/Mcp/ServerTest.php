@@ -54,6 +54,19 @@ it('offers the model only the disks the application opened', function (string $t
         ->and(data_get($schema, 'required'))->toBe(['disk', 'path']);
 })->with([ValidatePdfSignature::class, ListSignatureFields::class]);
 
+it('tells the model a path does not start with the disk\'s name', function (string $tool) {
+    // Found against a real provider: shown `contracts/2026/deal.pdf` as the
+    // example, DeepSeek looked for `deal.pdf` on the `contracts` disk at
+    // `contracts/deal.pdf` and four other paths, each with the disk's name in
+    // front. The example a schema gives is the example a model copies.
+    $description = data_get(Container::getInstance()->make($tool)->toArray(), 'inputSchema.properties.path.description');
+
+    expect($description)->toBe(LSNepomuceno\LaravelA1PdfSign\Agents\Arguments::PATH)
+        ->and(LSNepomuceno\LaravelA1PdfSign\Agents\Arguments::PATH)
+        ->toContain('Do not repeat the disk\'s name', 'such as deal.pdf')
+        ->and(str_contains(LSNepomuceno\LaravelA1PdfSign\Agents\Arguments::PATH, 'contracts/'))->toBeFalse();
+})->with([ValidatePdfSignature::class, ListSignatureFields::class]);
+
 it('leaves the enum out rather than offering an empty one', function () {
     // An enum with no values is a schema nothing satisfies, and some
     // providers reject the whole tool list over it.
