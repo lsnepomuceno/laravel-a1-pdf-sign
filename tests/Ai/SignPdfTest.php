@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Auth\GenericUser;
-use Illuminate\Support\Facades\{Auth, Event, Storage};
+use Illuminate\Support\Facades\{Auth, Event, Gate, Storage};
 use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Approvals\Approval;
 use Laravel\Ai\Tools\Request;
+use LSNepomuceno\LaravelA1PdfSign\Agents\Ability;
 use LSNepomuceno\LaravelA1PdfSign\Agents\ToolCallLedger;
 use LSNepomuceno\LaravelA1PdfSign\Ai\Tools\SignPdf;
 use LSNepomuceno\LaravelA1PdfSign\Contracts\SigningCertificateResolver;
@@ -388,4 +389,57 @@ it('keeps asking after something tried', function () {
 
     expect($tool->shouldRequestApproval(new Request(['disk' => 'contracts', 'path' => 'deal.pdf'])))
         ->toBeInstanceOf(Approval::class);
+});
+
+/*
+|--------------------------------------------------------------------------
+| The application's gate
+|--------------------------------------------------------------------------
+*/
+
+it('asks the gate with both ends of the signature, and refuses what it refuses', function () {
+    $asked = [];
+
+    Gate::define(Ability::Sign->value, function (GenericUser $user, string ...$arguments) use (&$asked) {
+        $asked[] = $arguments;
+
+        return false;
+    });
+
+    Auth::setUser(new GenericUser(['id' => 42]));
+
+    $result = answer(new SignPdf(certificateResolver())->handle(new Request(['disk' => 'contracts', 'path' => 'deal.pdf'], 'call_1')));
+
+    expect($asked)->toBe([['contracts', 'deal.pdf', 'contracts', 'deal_signed.pdf']])
+        ->and($result)->toMatchArray(['signed' => false, 'status' => 'refused'])
+        ->and($result['message'])->toStartWith('You may not sign this document')
+        // Refused before anything else: a refused call gives its id back.
+        ->and(app(ToolCallLedger::class)->claim('call_1'))->toBeTrue();
+
+    Storage::disk('contracts')->assertMissing('deal_signed.pdf');
+    Event::assertNotDispatched(DocumentSignedByAgent::class);
+});
+
+it('signs what the gate allows', function () {
+    Gate::define(Ability::Sign->value, fn(GenericUser $user) => $user->getAuthIdentifier() === 42);
+    Auth::setUser(new GenericUser(['id' => 42]));
+
+    expect(answer(new SignPdf(certificateResolver())->handle(new Request(['disk' => 'contracts', 'path' => 'deal.pdf'])))['signed'])
+        ->toBeTrue();
+});
+
+it('opens no certificate for a call the gate refuses', function () {
+    Gate::define(Ability::Sign->value, fn(?GenericUser $user) => false);
+
+    expect(answer(new SignPdf(failingResolver('the certificate was opened'))
+        ->handle(new Request(['disk' => 'contracts', 'path' => 'deal.pdf'])))['status'])->toBe('refused');
+});
+
+it('tells the person approving that the call will be refused', function () {
+    // Approval is still asked for: the tool never answers "no approval
+    // needed". The person is told what will happen if they say yes.
+    Gate::define(Ability::Sign->value, fn(?GenericUser $user) => false);
+
+    expect(new SignPdf(certificateResolver())->shouldRequestApproval(new Request(['disk' => 'contracts', 'path' => 'deal.pdf']))->reason)
+        ->toContain('Your application does not allow you to sign this document, so the call will be refused.');
 });

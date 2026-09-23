@@ -114,3 +114,46 @@ it('reports the version Composer installed rather than a literal', function () {
 
     expect($version)->toBe(InstalledVersions::getPrettyVersion('lsnepomuceno/laravel-a1-pdf-sign'));
 });
+
+/*
+|--------------------------------------------------------------------------
+| Behind ToolSearch, in an application's own server
+|--------------------------------------------------------------------------
+*/
+
+it('is found by searching when an application groups it behind ToolSearch', function () {
+    LSNepomuceno\LaravelA1PdfSign\Tests\Fixtures\CatalogServer::tool(
+        new Laravel\Mcp\Server\Tools\SearchTools(new Laravel\Mcp\Server\Tools\ToolSearch([ValidatePdfSignature::class, ListSignatureFields::class])),
+        ['query' => 'signature'],
+    )->assertOk()->assertSee(['validate_pdf_signature', 'list_signature_fields', 'readOnlyHint']);
+});
+
+it('runs through execute_tools, refusals included', function () {
+    Illuminate\Support\Facades\Storage::fake('contracts');
+    signedOnDisk('contracts', 'deal_signed.pdf');
+
+    $catalog = new Laravel\Mcp\Server\Tools\ToolSearch([ValidatePdfSignature::class, ListSignatureFields::class]);
+    $execute = new Laravel\Mcp\Server\Tools\ExecuteTools($catalog, 25);
+
+    LSNepomuceno\LaravelA1PdfSign\Tests\Fixtures\CatalogServer::tool($execute, ['calls' => [
+        ['name' => 'validate_pdf_signature', 'arguments' => ['disk' => 'contracts', 'path' => 'deal_signed.pdf']],
+    ]])->assertOk()->assertSee(['"valid":true', 'Test Certificate']);
+
+    LSNepomuceno\LaravelA1PdfSign\Tests\Fixtures\CatalogServer::tool($execute, ['calls' => [
+        ['name' => 'list_signature_fields', 'arguments' => ['disk' => 'private', 'path' => 'x.pdf']],
+    ]])->assertHasErrors(['not open to agents']);
+});
+
+it('shows a client only the two meta-tools, which is why the package server does not group', function () {
+    // execute_tools is open-world and not read-only, so a client that could
+    // run validate_pdf_signature without asking would ask for every call.
+    $tools = [];
+
+    foreach (new LSNepomuceno\LaravelA1PdfSign\Tests\Fixtures\CatalogServer(new FakeTransporter())->createContext()->tools() as $tool) {
+        $tools[$tool->name()] = data_get($tool->toArray(), 'annotations');
+    }
+
+    expect(array_keys($tools))->toBe(['search_tools', 'execute_tools'])
+        ->and((array) $tools['execute_tools'])->toMatchArray(['openWorldHint' => true])
+        ->and((array) $tools['execute_tools'])->not->toHaveKey('readOnlyHint');
+});

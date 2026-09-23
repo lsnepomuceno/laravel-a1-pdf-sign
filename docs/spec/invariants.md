@@ -104,8 +104,14 @@ model, and whoever writes the prompt steers the model
 
 **Every disk and path a model names goes through `Agents\DocumentAccess`.** It
 refuses a disk missing from `a1-pdf-sign.agents.disks`, which is empty by
-default, an absolute path, `..` anywhere, a file that is not a PDF, and a
-destination that exists. No agent tool builds a disk source itself.
+default, an absolute path, `..` anywhere, a file that is not a PDF, a document
+over `agents.max_bytes`, and a destination that exists. No agent tool builds a
+disk source itself.
+
+**The application's gate is asked before the document is looked at**, when it
+defines `Agents\Ability::Read` or `Agents\Ability::Sign`, so a refusal never
+says whether a path exists
+([0041](../decisions/0041-agents-are-authorised-per-document.md)).
 
 **`Ai\Tools\SignPdf` always asks.** `shouldRequestApproval()` returns an
 `Approval` for every call, `withoutApproval()` throws, and the tool takes no

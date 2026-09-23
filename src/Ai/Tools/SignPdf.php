@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LSNepomuceno\LaravelA1PdfSign\Ai\Tools;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Auth\Factory as Auth;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -14,7 +15,7 @@ use Laravel\Ai\Approvals\Approval;
 use Laravel\Ai\Contracts\{Approvable, Tool};
 use Laravel\Ai\Tools\Request;
 use LogicException;
-use LSNepomuceno\LaravelA1PdfSign\Agents\{Arguments, DocumentAccess, ToolCallLedger};
+use LSNepomuceno\LaravelA1PdfSign\Agents\{Ability, Arguments, DocumentAccess, ToolCallLedger};
 use LSNepomuceno\LaravelA1PdfSign\Contracts\{A1PdfSign, SigningCertificateResolver};
 use LSNepomuceno\LaravelA1PdfSign\Events\DocumentSignedByAgent;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\SigningCertificateUnavailable;
@@ -42,7 +43,8 @@ use Throwable;
  *    `Agents\ToolCallLedger` before anything is signed, and a second call with
  *    the same id gets the first call's result back.
  * 4. **Only the disks the application opened, and never over an existing
- *    file.** Every path goes through `Agents\DocumentAccess`.
+ *    file.** Every path goes through `Agents\DocumentAccess`, which also asks
+ *    the application's `Gate` for `Agents\Ability::Sign` when it defines it.
  *
  * What it cannot see is code that calls `handle()` itself, or wraps the tool
  * in something that is not `Approvable`. Approval is the agent loop's to
@@ -158,6 +160,12 @@ final class SignPdf implements Approvable, Tool
             $written = true;
         } catch (SigningCertificateUnavailable $exception) {
             throw $exception;
+        } catch (AuthorizationException $exception) {
+            return self::json([
+                'signed' => false,
+                'status' => 'refused',
+                'message' => "You may not sign this document: {$exception->getMessage()}",
+            ]);
         } catch (SignetException $exception) {
             return self::json([
                 'signed' => false,
@@ -259,8 +267,11 @@ final class SignPdf implements Approvable, Tool
         $profile = Arguments::string($arguments, 'profile');
         $reason = Arguments::string($arguments, 'reason');
 
-        // Both ends are checked before the certificate is opened, so a closed
-        // disk or an occupied destination costs nothing to refuse.
+        // The gate is asked before either end is looked at, so a user who may
+        // not sign learns nothing about what exists. Both ends are checked
+        // before the certificate is opened, so a closed disk or an occupied
+        // destination costs nothing to refuse.
+        $documents->authorize(Ability::Sign, $disk, $path, $destinationDisk, $destinationPath);
         $source = $documents->source($disk, $path);
         $destination = $documents->destination($destinationDisk, $destinationPath);
         $certificate = $this->certificate();
@@ -344,8 +355,12 @@ final class SignPdf implements Approvable, Tool
         $profile = Arguments::string($arguments, 'profile');
         $reason = Arguments::string($arguments, 'reason');
 
+        $allowed = self::container()->make(DocumentAccess::class)
+            ->allows(Ability::Sign, $disk, $path, $destinationDisk, $destinationPath);
+
         $lines = array_filter([
             $this->approvalNote,
+            $allowed ? null : 'Your application does not allow you to sign this document, so the call will be refused.',
             "Sign [{$path}] on the disk [{$disk}] with {$this->describeCertificate()}.",
             $profile === null ? 'Profile: the application\'s configured default.' : "Profile: {$profile}.",
             $reason === null ? null : "Reason recorded in the signature: \"{$reason}\".",

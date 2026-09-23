@@ -50,6 +50,7 @@ document drifts away from the code it describes.
 | [0038](0038-the-envelope-is-versioned.md) | The envelope is versioned, so material sealed by signet-pdf still opens |
 | [0039](0039-the-core-lives-in-signet-pdf.md) | The core lives in signet-pdf, and this package is the Laravel adapter |
 | [0040](0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md) | Agents read through MCP, and sign through the AI SDK |
+| [0041](0041-agents-are-authorised-per-document.md) | Agents are authorised per document, by the application's gate |
 
 Nothing is currently proposed and unbuilt. The four that were, 0009, 0010, 0012
 and 0013, all shipped in 2.2, and each carries the measurement that decided its

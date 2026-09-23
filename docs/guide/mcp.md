@@ -31,6 +31,18 @@ Mcp::local('signatures', A1PdfSignServer::class);
 decision, and a web route with no middleware is a route anybody with the URL
 can call.
 
+**Throttle it.** Validation opens a process and verifies a CMS, and it is the
+call somebody can make in bulk:
+
+```php
+Mcp::web('/mcp/signatures', A1PdfSignServer::class)
+    ->middleware(['auth:sanctum', 'throttle:60,1']);
+```
+
+The authenticated user is who [your gate](/guide/agents#who-may-reach-which-document)
+is asked about. A remote client that cannot hold a Sanctum token can use the
+OAuth routes `laravel/mcp` provides, `Mcp::oauthRoutes()`.
+
 ### Adding your own tools to the same server
 
 The class is not final, so an application extends it rather than copying the
@@ -50,6 +62,41 @@ final class ContractsServer extends A1PdfSignServer
     }
 }
 ```
+
+### Behind `ToolSearch`, in a server with many tools
+
+`laravel/mcp` can hide a server's tools behind two meta-tools, `search_tools`
+and `execute_tools`, so a client does not load every schema before it needs
+one. In a server of your own with dozens of tools, ours go in the group like
+any other:
+
+```php
+use Laravel\Mcp\Server;
+use Laravel\Mcp\Server\Tools\ToolSearch;
+
+final class BackOfficeServer extends Server
+{
+    protected array $tools = [
+        ToolSearch::class => [
+            ValidatePdfSignature::class,
+            ListSignatureFields::class,
+            // … the rest of yours
+        ],
+    ];
+}
+```
+
+They work unchanged there, refusals included. **`A1PdfSignServer` does not do
+this itself**, for three reasons:
+
+- At two tools it saves nothing, and adds a search before every use.
+- A client sees `execute_tools`, which is open-world and not read-only, so a
+  client that runs `validate_pdf_signature` without asking would ask for every
+  call.
+- `McpServerTool` wraps a tool, and `ToolSearch` is not one, so the grouped tools
+  stop reaching AI SDK agents that way. On the AI SDK side, deferred loading is
+  the SDK's own `Laravel\Ai\Providers\Tools\ToolSearch`, which wraps tools
+  rather than replacing them.
 
 ## Handing them to an AI SDK agent
 
@@ -143,6 +190,9 @@ than guessing.
 
 An encrypted document is also an error: the tool takes no document password,
 since that would put it in the model's context.
+
+A user [your gate](/guide/agents#who-may-reach-which-document) refuses gets
+`You may not read [path] on the disk [disk]`, before the document is looked at.
 
 ## `list_signature_fields`
 

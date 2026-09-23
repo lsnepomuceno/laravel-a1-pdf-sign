@@ -89,6 +89,7 @@ What each does to the rendered image is
 | Key | Env | Default |
 |---|---|---|
 | `agents.disks` | | `[]` |
+| `agents.max_bytes` | | 52428800 (50 MB) |
 | `agents.expose_registry` | `A1_PDF_SIGN_AGENTS_EXPOSE_REGISTRY` | `false` |
 | `agents.idempotency.store` | `A1_PDF_SIGN_AGENTS_CACHE_STORE` | the default cache store |
 | `agents.idempotency.ttl` | | 86400 |
@@ -98,6 +99,9 @@ Read only by the optional agent tools, and inert until `laravel/mcp` or
 
 `disks` is the list of `Storage` disks an agent may read from and write to.
 **Empty opens none**, so every tool refuses every call until you choose.
+`max_bytes` is the largest document an agent may have read or signed; null
+removes it. Who may reach which document is not a key: it is your gate, with
+the abilities in `Agents\Ability`.
 `expose_registry` hands a signer's CPF or CNPJ to the model, which is personal
 data sent to a model provider. `idempotency` is where the signing tool records
 the calls it already signed; use a store whose `add()` is atomic in

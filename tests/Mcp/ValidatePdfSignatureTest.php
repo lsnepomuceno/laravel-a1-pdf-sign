@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\{Gate, Storage};
 use Illuminate\Testing\Fluent\AssertableJson;
+use LSNepomuceno\LaravelA1PdfSign\Agents\Ability;
 use LSNepomuceno\LaravelA1PdfSign\Mcp\A1PdfSignServer;
 use LSNepomuceno\LaravelA1PdfSign\Mcp\Tools\ValidatePdfSignature;
 
@@ -119,4 +121,27 @@ it('writes nothing to the disk it reads', function () {
     A1PdfSignServer::tool(ValidatePdfSignature::class, ['disk' => 'contracts', 'path' => 'deal_signed.pdf'])->assertOk();
 
     expect(Storage::disk('contracts')->allFiles())->toBe($before);
+});
+
+it('asks the application\'s gate, with the user the client authenticated as', function () {
+    signedOnDisk('contracts', 'deal_signed.pdf');
+    Gate::define(Ability::Read->value, fn(GenericUser $user, string $disk, string $path) => $user->getAuthIdentifier() === 7);
+
+    A1PdfSignServer::actingAs(new GenericUser(['id' => 7]))
+        ->tool(ValidatePdfSignature::class, ['disk' => 'contracts', 'path' => 'deal_signed.pdf'])
+        ->assertOk();
+
+    A1PdfSignServer::actingAs(new GenericUser(['id' => 8]))
+        ->tool(ValidatePdfSignature::class, ['disk' => 'contracts', 'path' => 'deal_signed.pdf'])
+        ->assertHasErrors(['You may not read [deal_signed.pdf] on the disk [contracts]']);
+});
+
+it('does not say whether a document exists to a user who may not read it', function () {
+    config()->set('a1-pdf-sign.agents.disks', ['contracts']);
+    Gate::define(Ability::Read->value, fn(GenericUser $user) => false);
+
+    A1PdfSignServer::actingAs(new GenericUser(['id' => 8]))
+        ->tool(ValidatePdfSignature::class, ['disk' => 'contracts', 'path' => 'nothing-here.pdf'])
+        ->assertHasErrors(['You may not read'])
+        ->assertDontSee('There is no document');
 });

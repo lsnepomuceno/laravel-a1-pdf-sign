@@ -92,7 +92,7 @@ A1PdfSign::newSignature()->certificate($pfx, $pw)->pdf($path)->profile(...)->sig
 `docs/decisions/0040-agents-read-through-mcp-and-sign-through-the-ai-sdk.md`. Reading is `laravel/mcp` (`Mcp\Tools\ValidatePdfSignature`, `Mcp\Tools\ListSignatureFields`, `Mcp\A1PdfSignServer`), because the AI SDK runs MCP tools and the reverse is not true. Signing is `laravel/ai` (`Ai\Tools\SignPdf`), because only there can a tool insist on approval.
 
 - **Both SDKs are optional**: `require-dev` plus `suggest` plus `conflict`. `laravel/ai` may be named only in `src/Ai`, `laravel/mcp` only in `src/Mcp`, and nothing outside either names a class inside it. `ArchTest` enforces it, and the `without-agents` CI job runs the suite with both removed.
-- **Every disk and path a model names goes through `Agents\DocumentAccess`.** No tool builds a disk source itself.
+- **Every disk and path a model names goes through `Agents\DocumentAccess`.** No tool builds a disk source itself. Tools call `authorize(Ability::…)` **before** `source()`, so a refusal is not an oracle for what exists (0041).
 - **`SignPdf` always asks for approval, and `withoutApproval()` throws.** It takes no certificate or password from the model: `Contracts\SigningCertificateResolver` answers that. Invariant 6. Do not add a way around it.
 - Code both sides share, and that needs neither SDK, lives in `src/Agents/`.
 - `A1PdfSign` in a string literal in `src/` trips the verification-tool gate in `ArchTest` (it contains `pdfsig`). Use `::class` or reword.
