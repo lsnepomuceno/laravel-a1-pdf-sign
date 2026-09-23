@@ -1,6 +1,6 @@
 # Upgrading
 
-## Unreleased
+## From 3.1.0 to 3.2.0
 
 **One behaviour changes without an edit: the agent tools refuse a document
 over 50 MB.** The model chooses the file and the engine holds it in memory, so

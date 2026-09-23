@@ -3,6 +3,13 @@
 The full notes, every version, are in [UPGRADE.md](/releases/upgrade). This
 page is the short version of the one that matters.
 
+## 3.1 to 3.2
+
+**One thing changes without an edit: the agent tools refuse a document over
+50 MB**, whether or not you published the config. Set `agents.max_bytes` to
+`null` to keep 3.1's behaviour. Authorising per document is opt-in, through
+[your gate](/guide/agents#who-may-reach-which-document).
+
 ## 3.0 to 3.1
 
 **Nothing to change.** 3.1 adds the [AI agent tools](/guide/agents), which are
