@@ -3,6 +3,12 @@
 The full notes, every version, are in [UPGRADE.md](/releases/upgrade). This
 page is the short version of the one that matters.
 
+## 3.0 to 3.1
+
+**Nothing to change.** 3.1 adds the [AI agent tools](/guide/agents), which are
+optional and inert until you install `laravel/mcp` or `laravel/ai` and open a
+disk to agents. Only `^1.0` of either installs beside the package.
+
 ## 2.x to 3.0
 
 **Every import changes. Nothing else has to.**

@@ -13,7 +13,10 @@ a minor release; changing it is a major one.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [3.1.0] - 2026-09-23
+
+The release that lets an agent read a signed contract, and sign one with a
+person watching.
 
 AI agents can read signed documents and, with a person's approval of every
 call, sign them. Everything here is additive and optional: an application that
