@@ -4,3 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    # One pull request per month rather than one per package. Every update here
+    # only rewrites composer.lock, and the separate pull requests dragged the
+    # same transitive packages along, so merging one left the rest conflicting.
+    groups:
+      composer:
+        patterns:
+          - "*"
