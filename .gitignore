@@ -8,7 +8,6 @@
 Vagrantfile
 .idea
 .php_cs.cache
-composer.lock
 .phpunit.result.cache
 .phpunit.cache/
 *.bak
